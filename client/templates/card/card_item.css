@@ -1,0 +1,94 @@
+.card {
+  width: auto;
+  height: auto;
+  margin-bottom: 15px;
+  border-bottom: 1px solid;
+  padding-bottom: 15px;
+
+/*    position: absolute;
+    top:0;
+    bottom: 0;
+    left: 0;
+    right: 0;
+
+    margin: auto;
+*/}
+
+/* Without materialize */
+
+img {
+	height: auto;
+	width: 100%;
+}
+
+#card-image {
+	vertical-align: top;
+	display: inline-block;
+	width: 150px;
+	height: auto;
+	text-align: center;
+}
+
+#card-content {
+	vertical-align: top;
+	display: inline-block;
+	margin-left: 15px;
+	width: 900px;
+}
+
+.keep{
+  padding: 3px;
+  border: 1px solid #3276b1;
+  color: #3276b1;
+  display: inline-block;
+  cursor: pointer;
+}
+
+.keep-selected {
+  padding: 3px;
+  border: 1px solid #3276b1;
+  color: white;
+  background-color: #3276b1;
+  display: inline-block;
+  cursor: pointer;
+}
+
+#name {
+	font-weight: bold;
+}
+
+.description {
+	margin-top: 10px;
+	height:	40px;
+	overflow: hidden;
+	margin-bottom: 0px;
+}
+
+.see-more {
+  cursor: pointer;
+  padding: 5px;
+  color: #3276b1;
+  width: 80px;
+}
+
+#card-info {
+	vertical-align: top;
+	display: inline-block;
+	float: right;
+	width: 40px;
+	text-align: center;
+}
+
+#price {
+	display: block;
+	height: 100%;
+	border-bottom: 1px solid black;
+	padding-bottom: 5px;
+	font-weight: bold;
+}
+
+#mark {
+	height:100%;
+	display: inline-block;
+	margin-top: 5px;
+}

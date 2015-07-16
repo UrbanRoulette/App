@@ -1,0 +1,33 @@
+<template name="formDatabaseTableRow">
+	<tr height="100">
+		<td><i class="fa fa-times"></i></td>
+		<td>{{specific}}</td>
+		<td>{{name}}</td>
+		<td>{{type}}</td>
+		<td>{{address}}</td>
+		<td class="container">
+			<div class="table-description" id="{{index}}table-see-more-description">{{{description}}}</div>
+			<div class="table-see-more-description">
+			Voir plus...
+			</div>
+		</td>
+		<td>{{price}}</td>
+		<td>{{last}}</td>
+		<td class="container">
+			<div class="table-hours" id="{{index}}table-see-more-hours"> 
+			Lundi: {{monday}}<br/>
+			Mardi: {{tuesday}}<br/>
+			Mercredi: {{wednesday}}<br/>
+			Jeudi: {{thursday}}<br/>
+			Vendredi: {{friday}}<br/>
+			Samedi: {{saturday}}<br/>
+			Dimanche: {{sunday}}<br/>
+			</div>
+			<div class="table-see-more-hours">
+			Voir plus...
+			</div>
+		</td>
+		<td><a href="{{link}}">Lien</a></td>
+		<td>{{index}}</td>
+	</tr>
+</template>	

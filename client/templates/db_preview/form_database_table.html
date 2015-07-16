@@ -1,0 +1,28 @@
+<template name="formDatabaseTable">
+<div class="col-md-12">
+	<a href="{{pathFor 'formDatabase'}}">Rentrer une activité dans la database</a><br/>
+	<a href="{{pathFor 'cardList'}}">Essayer la roulette! </a>
+	<table class="table table-striped">
+		<thead>
+		<tr>
+			<th>X</th>
+			<th>Specific</th>
+			<th>Nom</th>
+			<th>Type</th>
+			<th>Adresse</th>
+			<th>Description</th>
+			<th>Prix</th>
+			<th>Durée</th>
+			<th>Horaires d'ouverture et fermeture</th>
+			<th>Lien</th>
+			<th>Ind</th>
+		</tr>
+		</thead>
+		<tbody>
+		{{#each item}}
+			{{> formDatabaseTableRow}}
+		{{/each}}
+		</tbody>
+	</table>
+</div>
+</template>
