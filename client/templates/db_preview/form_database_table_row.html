@@ -1,33 +1,91 @@
 <template name="formDatabaseTableRow">
 	<tr height="100">
 		<td><i class="fa fa-times"></i></td>
-		<td>{{specific}}</td>
-		<td>{{name}}</td>
-		<td>{{type}}</td>
-		<td>{{address}}</td>
-		<td class="container">
-			<div class="table-description" id="{{index}}table-see-more-description">{{{description}}}</div>
-			<div class="table-see-more-description">
+		<td class="cell specific-cell">
+			<input type="text" name="hours" value="" class="table-input specific-input hidden" id="{{index}}specific-cell-input"/>
+			<div class="cell-text" id="{{index}}specific-cell-text">{{specific}}</div>
+		</td>
+		<td class="cell name-cell">
+			<input type="text" name="hours" value="" class="table-input name-input hidden" id="{{index}}name-cell-input"/>
+			<div class="cell-text" id="{{index}}name-cell-text">{{name}}</div>
+		</td>
+		<td class="cell type-cell">
+			<input type="text" name="hours" value="" class="table-input type-input hidden" id="{{index}}type-cell-input"/>
+			<div class="cell-text" id="{{index}}type-cell-text">{{type}}</div>
+		</td>
+		<td class="cell address-cell">
+			<input type="text" name="hours" value="" class="table-input address-input hidden" id="{{index}}address-cell-input"/>
+			<div class="cell-text" id="{{index}}address-cell-text">{{address}}</div>
+		</td>
+		<td class="container cell description-cell">
+			<input type="text" name="hours" value="" class="table-input description-input hidden" id="{{index}}description-cell-input"/>
+			<div class="cell-text table-description" id="{{index}}description-cell-text">{{{description}}}</div>
+			<div class="table-see-more-description" id="{{index}}table-see-more-description">
 			Voir plus...
 			</div>
 		</td>
-		<td>{{price}}</td>
-		<td>{{last}}</td>
+		<td class="cell price-cell">
+			<input type="text" name="hours" value="" class="table-input price-input hidden" id="{{index}}price-cell-input"/>
+			<div class="cell-text" id="{{index}}price-cell-text">{{price}}€</div>
+		</td>
+		<td class="cell last-cell">
+			<input type="text" name="hours" value="" class="table-input last-input hidden" id="{{index}}last-cell-input"/>
+			<div class="cell-text" id="{{index}}last-cell-text">{{last}}</div>
+		</td>
 		<td class="container">
-			<div class="table-hours" id="{{index}}table-see-more-hours"> 
-			Lundi: {{monday}}<br/>
-			Mardi: {{tuesday}}<br/>
-			Mercredi: {{wednesday}}<br/>
-			Jeudi: {{thursday}}<br/>
-			Vendredi: {{friday}}<br/>
-			Samedi: {{saturday}}<br/>
-			Dimanche: {{sunday}}<br/>
+			<div class="table-hours" id="{{index}}hours-cell-text"> 
+			Lundi: 
+			<div class="day monday-cell">
+				<input type="text" name="hours" value="" class="day table-input monday-input hidden" id="{{index}}monday-cell-input"/>
+				<div class="day cell-text" id="{{index}}monday-cell-text">{{monday}}</div>
 			</div>
-			<div class="table-see-more-hours">
+			<br/>
+			Mardi: 
+			<div class="day tuesday-cell">
+				<input type="text" name="hours" value="" class="day table-input tuesday-input hidden" id="{{index}}tuesday-cell-input"/>
+				<div class="day cell-text" id="{{index}}tuesday-cell-text">{{tuesday}}</div>
+			</div>
+			<br/>
+			Mercredi: 
+			<div class="day wednesday-cell">
+				<input type="text" name="hours" value="" class="day table-input wednesday-input hidden" id="{{index}}wednesday-cell-input"/>
+				<div class="day cell-text" id="{{index}}wednesday-cell-text">{{wednesday}}</div>
+			</div>
+			<br/>
+			Jeudi: 
+			<div class="day thursday-cell">
+				<input type="text" name="hours" value="" class="day table-input thursday-input hidden" id="{{index}}thursday-cell-input"/>
+				<div class="day cell-text" id="{{index}}thursday-cell-text">{{thursday}}</div>
+			</div>
+			<br/>
+			Vendredi: 
+			<div class="day friday-cell">
+				<input type="text" name="hours" value="" class="day table-input friday-input hidden" id="{{index}}friday-cell-input"/>
+				<div class="day cell-text" id="{{index}}friday-cell-text">{{friday}}</div>
+			</div>
+			<br/>
+			Samedi: 
+			<div class="day saturday-cell">
+				<input type="text" name="hours" value="" class="day table-input saturday-input hidden" id="{{index}}saturday-cell-input"/>
+				<div class="day cell-text" id="{{index}}saturday-cell-text">{{saturday}}</div>
+			</div>
+			<br/>
+			Dimanche: 
+			<div class="day sunday-cell">
+				<input type="text" name="hours" value="" class="day table-input sunday-input hidden" id="{{index}}sunday-cell-input"/>
+				<div class="day cell-text" id="{{index}}sunday-cell-text">{{sunday}}</div>
+			</div>
+			<br/>
+			</div>
+			<div class="table-see-more-hours" id="{{index}}table-see-more-hours">
 			Voir plus...
 			</div>
 		</td>
-		<td><a href="{{link}}">Lien</a></td>
+
+		<td class="cell link-cell">
+			<input type="text" name="hours" value="" class="table-input link-input hidden" id="{{index}}link-cell-input"/>
+			<div class="cell-text" id="{{index}}link-cell-text"><a href="{{link}}">Lien</a></div>
+		</td>
 		<td>{{index}}</td>
 	</tr>
 </template>	

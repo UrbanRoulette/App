@@ -112,12 +112,13 @@ algorithm = function(){
 	//BEGINNING OF LOOP
 
 	var security = 0;
+	benchmarkStart = new Date();
 
 	while (resultsLength < dayLength){ 
 
 		security += 1;
 		if (security === 10000){
-			console.log('Security break:' + security + 'attempts');
+			console.log('Security break:' + security + ' attempts');
 			break;
 		}
 
@@ -155,6 +156,7 @@ algorithm = function(){
 				resultsKeptIndex += 1;
 				continue;
 			}
+			
 			else {
 				endTest = new Date(start.getTime() + unit*60000*doc.last);
 
@@ -191,11 +193,6 @@ algorithm = function(){
 			countRedundantTypes[doc.type] += 1;
 			continue;
 		}
-		
-		//Resets variables to monitor probability of events to appear - (can be placed right after Redundant place or right after the last test (at the end of the loop), with different effect on probability)
-		for (var type in countRedundantTypes) {
-			countRedundantTypes[type] = 0;
-		}
 
 		//Test: For Restaurants
 		hour = start.getHours();
@@ -221,18 +218,18 @@ algorithm = function(){
 
 		for (k=0; k < docday.length; k++){
 
-			if (docday[k].indexOf('-') > -1){ //Check if there is an open AND a close hour
+			var openingHours = docday[k].split("-");
+
+			if (openingHours.length === 2){ //Check if there is an open AND a close hour
 
 				startTest = new Date(start); //Important to create a NEW Date Object
-				var regexp = /(.*)\-(.*)/;
-				regexp.exec(docday[k]);
 
-				openTime = RegExp.$1;
+				openTime = openingHours[0];
 				openHours = openTime.substr(0,2);
 				openMinutes = openTime.substr(2,2);
 				open = new Date(startTest.setHours(openHours,openMinutes,0,0));
 
-				closeTime = RegExp.$2;
+				closeTime = openingHours[1];
 				closeHours = closeTime.substr(0,2);
 				closeMinutes = closeTime.substr(2,2);
 				close = new Date(startTest.setHours(closeHours,closeMinutes,0,0));
@@ -284,6 +281,11 @@ algorithm = function(){
 		if (!check2)
 			continue;
 
+		//Resets variables to monitor probability of events to appear - (can be placed right after Redundant place or right after the last test (at the end of the loop), with different effect on probability)
+		for (var type in countRedundantTypes) {
+			countRedundantTypes[type] = 0;
+		}
+
 
 		//Creates end Date object, and Start and End strings
 		if (check3 || check4){
@@ -314,6 +316,9 @@ algorithm = function(){
 //			continue;
 		}
 	}
-	console.log(security);
+	benchmarkEnd = new Date();
+	benchmark = benchmarkEnd.getTime() - benchmarkStart.getTime();
+	console.log(benchmark + ' ms');
+	console.log(security + ' iterations');
 	Session.set('rouletteResults', rouletteResults);
 };

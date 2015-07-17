@@ -2,6 +2,9 @@ AutoForm.hooks({
     submitActivity: {
       before: {
         insert: function(doc) {
+        	if(typeof form !== 'undefined')
+        		Activitieswaiting.remove({_id: form._id});
+        	$("#hours").addClass('hidden');
 			doc.exactPrice = $('#exactPrice-radio').prop('checked');
 			doc.submitted = new Date();
 		//	if()
@@ -13,8 +16,8 @@ AutoForm.hooks({
   });
 
 Template.formDatabase.onRendered(function(){
-/*$('.summernote').summernote({
-  toolbar: [
+$('#summernote').summernote();
+/*  toolbar: [
     //[groupname, [button list]]
      
     ['style', ['bold', 'italic', 'underline', 'clear']],
@@ -30,6 +33,40 @@ Template.formDatabase.onRendered(function(){
 });
 
 Template.formDatabase.events({
+	'click #add-activity-waiting': function(e){
+		form = Activitieswaiting.findOne({}, {sort: {submitted: 1}});
+		$("[name='specific']").val(form.specific);
+		$("[name='name']").val(form.name);
+		$("[name='type']").val(form.type);
+		$("[name='address']").val(form.address);
+		$("[name='description']").code(form.description);
+		$("[name='price']").val(form.price);
+		$("[name='last']").val(form.last);
+		$("#hours").removeClass('hidden');
+		$("#hours").val(form.hours);
+		$("[name='link']").val(form.link);	
+		$("[name='contact']").val(form.contact);
+		$("[name='image']").val(form.image);
+	},
+
+	'click #remove-activity-waiting': function(e){
+		if (confirm("Etes-vous sûr de vouloir supprimer l'activité \"" + form.name + "\" ? (si pas de nom, l'attribut \"name\" n'existe pas)")) {
+			Activitieswaiting.remove({_id: form._id});
+			$("[name='specific']").val(null);
+			$("[name='name']").val(null);
+			$("[name='type']").val(null);
+			$("[name='address']").val(null);
+			$("[name='description']").val(null);
+			$("[name='price']").val(null);
+			$("[name='last']").val(null);
+			$("#hours").val(null);
+			$("[name='link']").val(null);	
+			$("[name='contact']").val(null);
+			$("[name='image']").val(null);
+			$("#hours").addClass('hidden');
+		}
+	},
+
 	'blur #defaultValue0': function(e) {
 	var value = $('#defaultValue0').val();
 	if($('#weekdays0').prop('checked')) {

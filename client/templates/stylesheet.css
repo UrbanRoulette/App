@@ -7,3 +7,11 @@
 	display: table;
 	margin-bottom:15px; 
 }
+
+a {
+	cursor: pointer;
+}
+
+.hidden {
+	display: none;
+}
