@@ -1,14 +1,3 @@
-function containsObject(obj, array) {
-    var i;
-    for (i = 0; i < array.length; i++) {
-        if (array[i] === obj) {
-            return true;
-        }
-    }
-
-    return false;
-}
-
 Template.cardItem.events({
 	'click .see-more': function(e){
 		var index = this.index;

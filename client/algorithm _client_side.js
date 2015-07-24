@@ -1,3 +1,4 @@
+/*
 //Parameters
 pace = 30; // Pace (in number of minutes) (must divide 60)
 unit = 30; //Unit for the last of each activity in database (in number of minutes)
@@ -122,14 +123,13 @@ algorithm = function(){
 			break;
 		}
 
-		/* To select random documents, see the following links:
-		http://bdadam.com/blog/finding-a-random-document-in-mongodb.html
-		http://stackoverflow.com/questions/20336361/get-random-document-from-a-meteor-collection
-		http://stackoverflow.com/questions/2824157/random-record-from-mongodb
-		http://stackoverflow.com/questions/13524641/how-to-get-random-single-document-from-1-billion-documents-in-mongodb-using-pyth
+		// To select random documents, see the following links:
+		//http://bdadam.com/blog/finding-a-random-document-in-mongodb.html
+		//http://stackoverflow.com/questions/20336361/get-random-document-from-a-meteor-collection
+		//http://stackoverflow.com/questions/2824157/random-record-from-mongodb
+		//http://stackoverflow.com/questions/13524641/how-to-get-random-single-document-from-1-billion-documents-in-mongodb-using-pyth
 
-		Method with a 'rand' field in each doc (rand = Math.random()) and then a search with {rand:{$gt:r}, with r = Math.random() could be a good solution
-		*/
+		//Method with a 'rand' field in each doc (rand = Math.random()) and then a search with {rand:{$gt:r}, with r = Math.random() could be a good solution
 
 		random = Math.floor((Math.random() * nbActivities) + 1);
 		doc = Activities.findOne({index: random});
@@ -186,8 +186,10 @@ algorithm = function(){
 		//Test: For REDUNDANT types of activities: check if one similar has not been offered to recently (ie below 'gap' variable time)
 		var redundantIndex = -1;
 		for (k=0; k < trackTypes.length; k++){
-			if(trackTypes[k].type === doc.type)
+			if(trackTypes[trackTypes.length - 1 - k].type === doc.type){
 				redundantIndex = k;
+				break;
+			}
 		}
 		if ((redundantIndex > -1) && ((start.getTime() - (trackTypes[redundantIndex].time).getTime()) < gap*unit*60000) && (countRedundantTypes[doc.type] < luck)){
 			countRedundantTypes[doc.type] += 1;
@@ -208,21 +210,20 @@ algorithm = function(){
 			if (restaurantIndex === -1)
 				continue;
 		}
-/*		//Will absolutely exclude restaurant if it is NOT eating time
-		else if ((eatingHours.indexOf(hour)) === -1 && (doc.type === 'Restaurant'))
-			continue;
-*/
+		//Will absolutely exclude restaurant if it is NOT eating time
+//		else if ((eatingHours.indexOf(hour)) === -1 && (doc.type === 'Restaurant'))
+//			continue;
+
 		//Test: If activity is open during the time slot considered
 		var docday = doc[day];
 		var check2 = false;
+		startTest = new Date(start); //Important to create a NEW Date Object
 
 		for (k=0; k < docday.length; k++){
 
 			var openingHours = docday[k].split("-");
 
 			if (openingHours.length === 2){ //Check if there is an open AND a close hour
-
-				startTest = new Date(start); //Important to create a NEW Date Object
 
 				openTime = openingHours[0];
 				openHours = openTime.substr(0,2);
@@ -243,8 +244,8 @@ algorithm = function(){
 					nextDayHours = doc[weekday[close.getDay()]];
 					closeTime = '0000';
 
-					if (nextDayHours){
-						for(i=0; i < nextDayHours.length; i++){
+					if (typeof nextDayHours !== 'undefined'){
+						for (i=0; i < nextDayHours.length; i++){
 							if(nextDayHours[i].indexOf('0000') !== -1){
 								closeTime = nextDayHours[i].slice(-4);
 								break;
@@ -322,3 +323,4 @@ algorithm = function(){
 	console.log(security + ' iterations');
 	Session.set('rouletteResults', rouletteResults);
 };
+*/

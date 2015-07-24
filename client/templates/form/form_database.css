@@ -3,6 +3,26 @@
 	margin-left: 80px;
 }
 
+#skip-activity-waiting {
+	background-color: #33CC00;
+	border-color: #33CC00;
+}
+
+#skip-activity-waiting:hover {
+	background-color: #339900;
+	border-color: #339900;
+}
+
+#remove-activity-waiting {
+	background-color: #FF0000;
+	border-color: #FF0000;
+}
+
+#remove-activity-waiting:hover {
+	background-color: #CC0000;
+	border-color: #CC0000;
+}
+
 .table-input {
 	width:100%; 
 	height:100%;
@@ -86,15 +106,41 @@ input#defaultValue1 {
 	display: block;
 }
 
-#myhealthform {
+#temporary {
+	margin: 10px 0 10px 0;
+	display: inline-block;
+	background-color: #fafafa;
+	padding: 10px;
+	border: 2px solid #979797;
+}
+
+#temporary-options {
+	border:1px solid black;
+	margin:0 0 10px 0;
+	padding: 10px;
+}
+
+#start-and-end-days {
+	display: inline-block;
+	margin-right: 20px;
+	vertical-align: middle;
+}
+
+.time-input {
+	width: 40px;
+}
+
+#timeform {
+vertical-align: middle;
   display: inline-block;
   background-color: #fafafa;
+  margin-top: 5px;
   padding: 10px;
   border: 2px solid #979797;
 }
 
 #submit-button {
-	margin-bottom: 20px;
+	margin: 30px 0 100px 0;
 }
 
 #days0 {

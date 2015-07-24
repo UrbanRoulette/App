@@ -1,0 +1,10 @@
+<template name="SMScardItem">
+	<p>	
+		[{{startString}} - {{endString}}] {{specific}} - {{name}} {{district}}
+		{{#if metrostation}}
+			 - Métro : {{metrostation}}
+		{{/if}}
+		<br/>
+		=> {{link}}
+	</p>
+</template>

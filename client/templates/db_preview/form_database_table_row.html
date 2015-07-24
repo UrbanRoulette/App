@@ -2,90 +2,116 @@
 	<tr height="100">
 		<td><i class="fa fa-times"></i></td>
 		<td class="cell specific-cell">
-			<input type="text" name="hours" value="" class="table-input specific-input hidden" id="{{index}}specific-cell-input"/>
-			<div class="cell-text" id="{{index}}specific-cell-text">{{specific}}</div>
+			<textarea type="text" name="hours" value="" class="table-input specific-input hidden" id="{{_id}}specific-cell-input"></textarea>
+			<div class="cell-text table-specific" id="{{_id}}specific-cell-text">{{specific}}</div>
 		</td>
 		<td class="cell name-cell">
-			<input type="text" name="hours" value="" class="table-input name-input hidden" id="{{index}}name-cell-input"/>
-			<div class="cell-text" id="{{index}}name-cell-text">{{name}}</div>
+			<textarea type="text" name="hours" value="" class="table-input name-input hidden" id="{{_id}}name-cell-input"></textarea>
+			<div class="cell-text table-name" id="{{_id}}name-cell-text">{{name}}</div>
 		</td>
 		<td class="cell type-cell">
-			<input type="text" name="hours" value="" class="table-input type-input hidden" id="{{index}}type-cell-input"/>
-			<div class="cell-text" id="{{index}}type-cell-text">{{type}}</div>
+			<input type="text" name="hours" value="" class="table-input type-input hidden" id="{{_id}}type-cell-input"/>
+			<div class="cell-text" id="{{_id}}type-cell-text">{{type}}</div>
 		</td>
 		<td class="cell address-cell">
-			<input type="text" name="hours" value="" class="table-input address-input hidden" id="{{index}}address-cell-input"/>
-			<div class="cell-text" id="{{index}}address-cell-text">{{address}}</div>
+			<textarea type="text" name="hours" value="" class="table-input address-input hidden" id="{{_id}}address-cell-input"></textarea>
+			<div class="cell-text table-address" id="{{_id}}address-cell-text">{{address}}</div>
+		</td>
+		<td class="cell metrostation-cell">
+			<textarea type="text" name="hours" value="" class="table-input metrostation-input hidden" id="{{_id}}metrostation-cell-input"></textarea>
+			<div class="cell-text table-metrostation" id="{{_id}}metrostation-cell-text">{{metrostation}}</div>
+		</td>
+		<td class="cell district-cell">
+			<input type="text" name="hours" value="" class="table-input district-input hidden" id="{{_id}}district-cell-input"/>
+			<div class="cell-text table-district" id="{{_id}}district-cell-text">{{district}}e</div>
 		</td>
 		<td class="container cell description-cell">
-			<input type="text" name="hours" value="" class="table-input description-input hidden" id="{{index}}description-cell-input"/>
-			<div class="cell-text table-description" id="{{index}}description-cell-text">{{{description}}}</div>
-			<div class="table-see-more-description" id="{{index}}table-see-more-description">
+			<textarea type="text" name="hours" value="" class="table-input description-input hidden" id="{{_id}}description-cell-input"></textarea>
+			<div class="cell-text table-description" id="{{_id}}description-cell-text">{{{description}}}</div>
+			<div class="table-see-more-description" id="{{_id}}table-see-more-description">
 			Voir plus...
 			</div>
 		</td>
 		<td class="cell price-cell">
-			<input type="text" name="hours" value="" class="table-input price-input hidden" id="{{index}}price-cell-input"/>
-			<div class="cell-text" id="{{index}}price-cell-text">{{price}}€</div>
+			<input type="text" name="hours" value="" class="table-input price-input hidden" id="{{_id}}price-cell-input"/>
+			<div class="cell-text" id="{{_id}}price-cell-text">{{price}}€</div>
 		</td>
 		<td class="cell last-cell">
-			<input type="text" name="hours" value="" class="table-input last-input hidden" id="{{index}}last-cell-input"/>
-			<div class="cell-text" id="{{index}}last-cell-text">{{last}}</div>
+			<input type="text" name="hours" value="" class="table-input last-input hidden" id="{{_id}}last-cell-input"/>
+			<div class="cell-text" id="{{_id}}last-cell-text">{{last}}</div>
+		</td>
+		<td class="cell requiresun-cell">
+			<input type="text" name="hours" value="" class="table-input requiresun-input hidden" id="{{_id}}requiresun-cell-input"/>
+			<div class="cell-text" id="{{_id}}requiresun-cell-text">{{requiresun}}</div>
 		</td>
 		<td class="container">
-			<div class="table-hours" id="{{index}}hours-cell-text"> 
+			<div class="table-hours" id="{{_id}}hours-cell-text"> 
 			Lundi: 
 			<div class="day monday-cell">
-				<input type="text" name="hours" value="" class="day table-input monday-input hidden" id="{{index}}monday-cell-input"/>
-				<div class="day cell-text" id="{{index}}monday-cell-text">{{monday}}</div>
+				<input type="text" name="hours" value="" class="day table-input monday-input hidden" id="{{_id}}monday-cell-input"/>
+				<div class="day cell-text" id="{{_id}}monday-cell-text">{{monday}}</div>
 			</div>
 			<br/>
 			Mardi: 
 			<div class="day tuesday-cell">
-				<input type="text" name="hours" value="" class="day table-input tuesday-input hidden" id="{{index}}tuesday-cell-input"/>
-				<div class="day cell-text" id="{{index}}tuesday-cell-text">{{tuesday}}</div>
+				<input type="text" name="hours" value="" class="day table-input tuesday-input hidden" id="{{_id}}tuesday-cell-input"/>
+				<div class="day cell-text" id="{{_id}}tuesday-cell-text">{{tuesday}}</div>
 			</div>
 			<br/>
 			Mercredi: 
 			<div class="day wednesday-cell">
-				<input type="text" name="hours" value="" class="day table-input wednesday-input hidden" id="{{index}}wednesday-cell-input"/>
-				<div class="day cell-text" id="{{index}}wednesday-cell-text">{{wednesday}}</div>
+				<input type="text" name="hours" value="" class="day table-input wednesday-input hidden" id="{{_id}}wednesday-cell-input"/>
+				<div class="day cell-text" id="{{_id}}wednesday-cell-text">{{wednesday}}</div>
 			</div>
 			<br/>
 			Jeudi: 
 			<div class="day thursday-cell">
-				<input type="text" name="hours" value="" class="day table-input thursday-input hidden" id="{{index}}thursday-cell-input"/>
-				<div class="day cell-text" id="{{index}}thursday-cell-text">{{thursday}}</div>
+				<input type="text" name="hours" value="" class="day table-input thursday-input hidden" id="{{_id}}thursday-cell-input"/>
+				<div class="day cell-text" id="{{_id}}thursday-cell-text">{{thursday}}</div>
 			</div>
 			<br/>
 			Vendredi: 
 			<div class="day friday-cell">
-				<input type="text" name="hours" value="" class="day table-input friday-input hidden" id="{{index}}friday-cell-input"/>
-				<div class="day cell-text" id="{{index}}friday-cell-text">{{friday}}</div>
+				<input type="text" name="hours" value="" class="day table-input friday-input hidden" id="{{_id}}friday-cell-input"/>
+				<div class="day cell-text" id="{{_id}}friday-cell-text">{{friday}}</div>
 			</div>
 			<br/>
 			Samedi: 
 			<div class="day saturday-cell">
-				<input type="text" name="hours" value="" class="day table-input saturday-input hidden" id="{{index}}saturday-cell-input"/>
-				<div class="day cell-text" id="{{index}}saturday-cell-text">{{saturday}}</div>
+				<input type="text" name="hours" value="" class="day table-input saturday-input hidden" id="{{_id}}saturday-cell-input"/>
+				<div class="day cell-text" id="{{_id}}saturday-cell-text">{{saturday}}</div>
 			</div>
 			<br/>
 			Dimanche: 
 			<div class="day sunday-cell">
-				<input type="text" name="hours" value="" class="day table-input sunday-input hidden" id="{{index}}sunday-cell-input"/>
-				<div class="day cell-text" id="{{index}}sunday-cell-text">{{sunday}}</div>
+				<input type="text" name="hours" value="" class="day table-input sunday-input hidden" id="{{_id}}sunday-cell-input"/>
+				<div class="day cell-text" id="{{_id}}sunday-cell-text">{{sunday}}</div>
 			</div>
 			<br/>
 			</div>
-			<div class="table-see-more-hours" id="{{index}}table-see-more-hours">
+			<div class="table-see-more-hours" id="{{_id}}table-see-more-hours">
 			Voir plus...
 			</div>
 		</td>
-
+		<td>{{temporary}}</td>
+		<td class="cell contact-cell">
+			<input type="text" name="hours" value="" class="table-input contact-input hidden" id="{{_id}}contact-cell-input"/>
+			<div class="cell-text" id="{{_id}}contact-cell-text">{{contact}}</div>
+		</td>
+		<td class="cell source-cell">
+			<input type="text" name="hours" value="" class="table-input source-input hidden" id="{{_id}}source-cell-input"/>
+			<div class="cell-text" id="{{_id}}source-cell-text">{{source}}</div>
+		</td>
 		<td class="cell link-cell">
-			<input type="text" name="hours" value="" class="table-input link-input hidden" id="{{index}}link-cell-input"/>
-			<div class="cell-text" id="{{index}}link-cell-text"><a href="{{link}}">Lien</a></div>
+			<input type="text" name="hours" value="" class="table-input link-input hidden" id="{{_id}}link-cell-input"/>
+			<div class="cell-text" id="{{_id}}link-cell-text"><a href="{{link}}">{{link}}</a></div>
+		</td>
+		<td class="cell mark-cell">
+			<input type="text" name="hours" value="" class="table-input mark-input hidden" id="{{_id}}mark-cell-input"/>
+			<div class="cell-text" id="{{_id}}mark-cell-text">{{mark}}</div>
 		</td>
 		<td>{{index}}</td>
+		<td><i class="fa fa-sign-in"></i></td>
+
 	</tr>
 </template>	

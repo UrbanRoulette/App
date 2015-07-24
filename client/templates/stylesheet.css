@@ -15,3 +15,7 @@ a {
 .hidden {
 	display: none;
 }
+
+.inline-block-class {
+	display: inline-block;
+}

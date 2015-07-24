@@ -2,13 +2,35 @@ AutoForm.hooks({
     submitActivity: {
       before: {
         insert: function(doc) {
-        	if(typeof form !== 'undefined')
+        	if(typeof form !== 'undefined'){
         		Activitieswaiting.remove({_id: form._id});
+        		if (typeof form.metrostation !== 'undefined')
+        			doc.metrostation = form.metrostation;
+        	}
         	$("#hours").addClass('hidden');
-			doc.exactPrice = $('#exactPrice-radio').prop('checked');
+//        	doc.description = doc.description.css({"font-family":"\"Helvetica Neue\", Helvetica, Arial, sans-serif;"});	
+			doc.temporary = $('#temporary-checkbox').prop('checked');
+			if($('#temporary-checkbox').prop('checked')){
+				var startYear = $("#start-year").val();
+				var startMonth = $("#start-month").val() - 1;
+				var startDay = $("#start-day").val();
+				doc.startdate = new Date(startYear, startMonth, startDay);	
+				var endYear = $("#end-year").val();
+				var endMonth = $("#end-month").val() - 1;
+				var endDay = $("#end-day").val();
+				doc.enddate = new Date(endYear, endMonth, endDay,23,59,59,999);	
+				doc.yearperiodic = $('#year-periodic-radio').prop('checked');
+			}
 			doc.submitted = new Date();
+			doc.requiresun = $('#sun-checkbox').prop('checked');
 		//	if()
-			doc.index = Activities.find().count() + 1;
+/*			Meteor.call('createIndex',function(error, result) {
+			if (error)
+				console.log(error);
+			else
+				doc.index = result;
+			});	
+*/			doc.index = Activities.find().count() + 1;
 			this.result(doc);
         }
       } 
@@ -16,20 +38,26 @@ AutoForm.hooks({
   });
 
 Template.formDatabase.onRendered(function(){
-$('#summernote').summernote();
-/*  toolbar: [
-    //[groupname, [button list]]
-     
-    ['style', ['bold', 'italic', 'underline', 'clear']],
-    ['font', ['strikethrough', 'superscript', 'subscript']],
-    ['fontsize', ['fontsize']],
-    ['color', ['color']],
-    ['para', ['ul', 'ol', 'paragraph']],
-    ['height', ['height']],
-  ]
-	});
-*/$(".list-group-item").css({'display': 'table-cell', 'padding':'0 0 0 20px', 'border': 'none'});
-// $(".autoform-add-item").trigger('click');
+	$('#summernote').summernote();
+	/*  toolbar: [
+	    //[groupname, [button list]]
+	     
+	    ['style', ['bold', 'italic', 'underline', 'clear']],
+	    ['font', ['strikethrough', 'superscript', 'subscript']],
+	    ['fontsize', ['fontsize']],
+	    ['color', ['color']],
+	    ['para', ['ul', 'ol', 'paragraph']],
+	    ['height', ['height']],
+	  ]
+		});
+	*/
+	$(".list-group-item").css({'display': 'table-cell', 'padding':'0 0 0 20px', 'border': 'none'});
+	var date = new Date();
+	var year = date.getFullYear();
+	var month = date.getMonth();
+	$("#start-year").val(year);
+	$("#end-year").val(year);
+	// $(".autoform-add-item").trigger('click');
 });
 
 Template.formDatabase.events({
@@ -39,6 +67,8 @@ Template.formDatabase.events({
 		$("[name='name']").val(form.name);
 		$("[name='type']").val(form.type);
 		$("[name='address']").val(form.address);
+		if(typeof form.metrostration !== 'undefined')
+			$("[name='metrostation.0']").val((form.metrostation)[0]);
 		$("[name='description']").code(form.description);
 		$("[name='price']").val(form.price);
 		$("[name='last']").val(form.last);
@@ -47,7 +77,11 @@ Template.formDatabase.events({
 		$("[name='link']").val(form.link);	
 		$("[name='contact']").val(form.contact);
 		$("[name='image']").val(form.image);
-	},
+		$("[name='source']").val(form.source);
+		//For Happy Hours imported from TimeOut
+/*		if(form.specific === 'Prendre un verre en Happy Hour')
+			$("#metrostation").addClass('hidden');			
+*/	},
 
 	'click #remove-activity-waiting': function(e){
 		if (confirm("Etes-vous sûr de vouloir supprimer l'activité \"" + form.name + "\" ? (si pas de nom, l'attribut \"name\" n'existe pas)")) {
@@ -63,8 +97,30 @@ Template.formDatabase.events({
 			$("[name='link']").val(null);	
 			$("[name='contact']").val(null);
 			$("[name='image']").val(null);
+			$("[name='source']").val(null);
 			$("#hours").addClass('hidden');
 		}
+	},
+
+	'click #skip-activity-waiting': function(e){	
+		Activitieswaiting.update({_id: form._id}, {$set: {submitted: new Date()}});
+		$("[name='specific']").val(null);
+		$("[name='name']").val(null);
+		$("[name='type']").val(null);
+		$("[name='address']").val(null);
+		$("[name='description']").val(null);
+		$("[name='price']").val(null);
+		$("[name='last']").val(null);
+		$("#hours").val(null);
+		$("[name='link']").val(null);	
+		$("[name='contact']").val(null);
+		$("[name='image']").val(null);
+		$("[name='source']").val(null);
+		$("#hours").addClass('hidden');
+	},
+
+	'change #temporary-checkbox': function(e) {
+		$("#temporary-options").toggleClass("hidden");
 	},
 
 	'blur #defaultValue0': function(e) {
@@ -172,6 +228,9 @@ Template.formDatabase.events({
 	'click #restaurant': function(e){
 		$("[name='type']").val('Restaurant');
 	},
+	'click #petit-dej-ou-gouter': function(e){
+		$("[name='type']").val('Petit-dej ou goûter');
+	},
 	'click #bar': function(e){
 		$("[name='type']").val('Bar');
 	},
@@ -190,14 +249,20 @@ Template.formDatabase.events({
 	'click #musee': function(e){
 		$("[name='type']").val('Musée');
 	},
+	'click #visite': function(e){
+		$("[name='type']").val('Visite');
+	},
 	'click #balade': function(e){
 		$("[name='type']").val('Balade');
 	},
 	'click #jeux': function(e){
 		$("[name='type']").val('Jeux');
 	},
-	'click #musique': function(e){
-		$("[name='type']").val('Musique');
+	'click #concert': function(e){
+		$("[name='type']").val('Concert');
+	},
+	'click #evenement': function(e){
+		$("[name='type']").val('Evènement');
 	},
 	'click #lecture': function(e){
 		$("[name='type']").val('Lecture');
@@ -207,6 +272,33 @@ Template.formDatabase.events({
 	},
 	'click #evasion': function(e){
 		$("[name='type']").val('Evasion');
+	},
+	'click #shopping': function(e){
+		$("[name='type']").val('Shopping');
+	},
+	'click #divers': function(e){
+		$("[name='type']").val('Divers');
+	},
+	'click #lieux-curieux': function(e){
+		$("[name='source']").val('300 lieux pour les curieux');
+	},
+	'click #timeout': function(e){
+		$("[name='source']").val('TimeOut');
+	},
+	'click #parisbouge': function(e){
+		$("[name='source']").val('ParisBouge');
+	},
+	'click #petitestables': function(e){
+		$("[name='source']").val('Les Petites Tables');
+	},
+	'click #bars-restos-insolites': function(e){
+		$("[name='source']").val('Paris - Bars & Restos insolites');
+	},
+	'click #le-branche': function(e){
+		$("[name='source']").val('Le Branché');
+	},
+	'click #topito': function(e){
+		$("[name='source']").val('Topito');
 	},
 
 /*	'blur #specific': function(e) {

@@ -8,6 +8,18 @@ td.container {
 	width: 75%;
 }
 
+.table-specific { 
+	width: 120px; 
+}
+
+.table-name { 
+	width: 90px; 
+}
+
+.table-address { 
+	width: 120px; 
+}
+
 .table-description { 
 	width: 100%; 
 	height: 40px; 
@@ -15,7 +27,7 @@ td.container {
 }
 
 .table-hours { 
-	width: 100%; 
+	width: 185px; 
 	height: 40px; 
 	overflow:hidden; 
 }
@@ -34,4 +46,8 @@ td.container {
 
 td.container > .see-more-selected {
 	height: auto;
+}
+
+.fa-sign-in {
+	cursor: pointer;
 }

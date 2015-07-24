@@ -1,0 +1,27 @@
+<template name='SMScardList'>
+	<div class="col-md-1"></div>
+	<div class="col-md-10">
+		<a href="{{pathFor 'formDatabase'}}"> Rentrer une activité dans la database </a> <br/>
+		<a href="{{pathFor 'database'}}">Visualiser la database</a>
+
+		<div>
+		{{#each district}}
+			{{> districtItem}}
+		{{/each}}
+		</div>
+
+		<div class="btn btn-primary" id="click-button-sms">
+			<div style="display: table-cell; vertical-align: middle;">
+				Click!
+			</div>
+		</div>
+		<div>
+		Votre tirage<br/>
+		Total : [{{priceInterval}}] euros
+		</div>
+		{{#each activity}}
+			{{> SMScardItem}}
+		{{/each}}
+	</div>
+	<div class="col-md-1"></div>
+</template>

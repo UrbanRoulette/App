@@ -1,62 +1,48 @@
 Template.formDatabaseTableRow.events({
 	'click .fa-times': function(e){
 		if (confirm("Etes-vous sûr de vouloir supprimer cette activité ?")) {
-			var index = this.index;
 			Activities.remove({_id: this._id});
-			Activities.find().forEach(function(doc){
-				if (doc.index > index) {
-					newIndex = doc.index - 1;
-					Activities.update({_id: doc._id}, {$set: {index: newIndex}});
-				}
-			});
 		}
 	},
 
 	'click .table-see-more-description': function(e){
-		var index = this.index;
-		if ($('#' + index + 'table-see-more-description').html() === "Voir plus..."){
-			$('#' + index +'description-cell-text').addClass('see-more-selected');
-			$('#' + index + 'table-see-more-description').html('Masquer');
+		var docId = this._id;
+		if ($('#' + docId + 'table-see-more-description').html() === "Voir plus..."){
+			$('#' + docId +'description-cell-text').addClass('see-more-selected');
+			$('#' + docId + 'table-see-more-description').html('Masquer');
 		}
 		else {
-			$('#' + index +'description-cell-text').removeClass('see-more-selected');
-			$('#' + index + 'table-see-more-description').html('Voir plus...');
+			$('#' + docId +'description-cell-text').removeClass('see-more-selected');
+			$('#' + docId + 'table-see-more-description').html('Voir plus...');
 		}
 	},
 	'click .table-see-more-hours': function(e){
-		var index = this.index;
-		if ($('#' + index + 'table-see-more-hours').html() === "Voir plus..."){
-			$('#' + index +'hours-cell-text').addClass('see-more-selected');
-			$('#' + index + 'table-see-more-hours').html('Masquer');
+		var docId = this._id;
+		if ($('#' + docId + 'table-see-more-hours').html() === "Voir plus..."){
+			$('#' + docId +'hours-cell-text').addClass('see-more-selected');
+			$('#' + docId + 'table-see-more-hours').html('Masquer');
 		}
 		else {
-			$('#' + index +'hours-cell-text').removeClass('see-more-selected');
-			$('#' + index + 'table-see-more-hours').html('Voir plus...');
-		}
-	},
-
-	'keydown': function(e){
-		if (e.keyCode === 27){
-			$('.table-input').addClass('hidden');
-			$('.cell-text').removeClass('hidden');	
+			$('#' + docId +'hours-cell-text').removeClass('see-more-selected');
+			$('#' + docId + 'table-see-more-hours').html('Voir plus...');
 		}
 	},
 
 	'dblclick .specific-cell': function(e){
 		$('.table-input').addClass('hidden');
 		$('.cell-text').removeClass('hidden');
-		var index = this.index;
+		var docId = this._id;
 		var text = this.specific;
-		var height = $('#' + index + 'specific-cell-text').height();
-		$('#' + index + 'specific-cell-text').toggleClass('hidden');
-		$('#' + index + 'specific-cell-input').height(height);
-		$('#' + index + 'specific-cell-input').toggleClass('hidden');
-		$('#' + index + 'specific-cell-input').val(text);
-		$('#' + index + 'specific-cell-input').focus();
+		var height = $('#' + docId + 'specific-cell-text').height();
+		$('#' + docId + 'specific-cell-text').toggleClass('hidden');
+		$('#' + docId + 'specific-cell-input').height(height);
+		$('#' + docId + 'specific-cell-input').toggleClass('hidden');
+		$('#' + docId + 'specific-cell-input').val(text);
+		$('#' + docId + 'specific-cell-input').focus();
 	},
 	'blur .specific-input': function(e){
-		var index = this.index;
-		var text = $('#' + index + 'specific-cell-input').val();
+		var docId = this._id;
+		var text = $('#' + docId + 'specific-cell-input').val();
 		Activities.update({_id: this._id}, {$set: {specific: text}});
 		$('.table-input').addClass('hidden');
 		$('.cell-text').removeClass('hidden');
@@ -65,19 +51,19 @@ Template.formDatabaseTableRow.events({
 	'dblclick .name-cell': function(e){
 		$('.table-input').addClass('hidden');
 		$('.cell-text').removeClass('hidden');
-		var index = this.index;
+		var docId = this._id;
 		var text = this.name;
-		var height = $('#' + index + 'name-cell-text').height();
-		$('#' + index + 'name-cell-text').toggleClass('hidden');
-		$('#' + index + 'name-cell-input').height(height);
-		$('#' + index + 'name-cell-input').toggleClass('hidden');
-		$('#' + index + 'name-cell-input').val(text);
-		$('#' + index + 'name-cell-input').focus();
+		var height = $('#' + docId + 'name-cell-text').height();
+		$('#' + docId + 'name-cell-text').toggleClass('hidden');
+		$('#' + docId + 'name-cell-input').height(height);
+		$('#' + docId + 'name-cell-input').toggleClass('hidden');
+		$('#' + docId + 'name-cell-input').val(text);
+		$('#' + docId + 'name-cell-input').focus();
 	},
 
 	'blur .name-input': function(e){
-		var index = this.index;
-		var text = $('#' + index + 'name-cell-input').val();
+		var docId = this._id;
+		var text = $('#' + docId + 'name-cell-input').val();
 		Activities.update({_id: this._id}, {$set: {name: text}});
 		$('.table-input').addClass('hidden');
 		$('.cell-text').removeClass('hidden');
@@ -86,19 +72,19 @@ Template.formDatabaseTableRow.events({
 	'dblclick .type-cell': function(e){
 		$('.table-input').addClass('hidden');
 		$('.cell-text').removeClass('hidden');
-		var index = this.index;
+		var docId = this._id;
 		var text = this.type;
-		var height = $('#' + index + 'type-cell-text').height();
-		$('#' + index + 'type-cell-text').toggleClass('hidden');
-		$('#' + index + 'type-cell-input').height(height);
-		$('#' + index + 'type-cell-input').toggleClass('hidden');
-		$('#' + index + 'type-cell-input').val(text);
-		$('#' + index + 'type-cell-input').focus();
+		var height = $('#' + docId + 'type-cell-text').height();
+		$('#' + docId + 'type-cell-text').toggleClass('hidden');
+		$('#' + docId + 'type-cell-input').height(height);
+		$('#' + docId + 'type-cell-input').toggleClass('hidden');
+		$('#' + docId + 'type-cell-input').val(text);
+		$('#' + docId + 'type-cell-input').focus();
 	},
 
 	'blur .type-input': function(e){
-		var index = this.index;
-		var text = $('#' + index + 'type-cell-input').val();
+		var docId = this._id;
+		var text = $('#' + docId + 'type-cell-input').val();
 		Activities.update({_id: this._id}, {$set: {type: text}});
 		$('.table-input').addClass('hidden');
 		$('.cell-text').removeClass('hidden');
@@ -107,20 +93,63 @@ Template.formDatabaseTableRow.events({
 	'dblclick .address-cell': function(e){
 		$('.table-input').addClass('hidden');
 		$('.cell-text').removeClass('hidden');
-		var index = this.index;
+		var docId = this._id;
 		var text = this.address;
-		var height = $('#' + index + 'address-cell-text').height();
-		$('#' + index + 'address-cell-text').toggleClass('hidden');
-		$('#' + index + 'address-cell-input').height(height);
-		$('#' + index + 'address-cell-input').toggleClass('hidden');
-		$('#' + index + 'address-cell-input').val(text);
-		$('#' + index + 'address-cell-input').focus();
+		var height = $('#' + docId + 'address-cell-text').height();
+		$('#' + docId + 'address-cell-text').toggleClass('hidden');
+		$('#' + docId + 'address-cell-input').height(height);
+		$('#' + docId + 'address-cell-input').toggleClass('hidden');
+		$('#' + docId + 'address-cell-input').val(text);
+		$('#' + docId + 'address-cell-input').focus();
 	},
 
 	'blur .address-input': function(e){
-		var index = this.index;
-		var text = $('#' + index + 'address-cell-input').val();
+		var docId = this._id;
+		var text = $('#' + docId + 'address-cell-input').val();
 		Activities.update({_id: this._id}, {$set: {address: text}});
+		$('.table-input').addClass('hidden');
+		$('.cell-text').removeClass('hidden');
+	},
+
+	'dblclick .metrostation-cell': function(e){
+		$('.table-input').addClass('hidden');
+		$('.cell-text').removeClass('hidden');
+		var docId = this._id;
+		var text = this.metrostation;
+		var height = $('#' + docId + 'metrostation-cell-text').height();
+		$('#' + docId + 'metrostation-cell-text').toggleClass('hidden');
+		$('#' + docId + 'metrostation-cell-input').height(height);
+		$('#' + docId + 'metrostation-cell-input').toggleClass('hidden');
+		$('#' + docId + 'metrostation-cell-input').val(text);
+		$('#' + docId + 'metrostation-cell-input').focus();
+	},
+
+	'blur .metrostation-input': function(e){
+		var docId = this._id;
+		var text = $('#' + docId + 'metrostation-cell-input').val();
+		var result = text.split(",");
+		Activities.update({_id: this._id}, {$set: {metrostation: result}});
+		$('.table-input').addClass('hidden');
+		$('.cell-text').removeClass('hidden');
+	},
+
+	'dblclick .district-cell': function(e){
+		$('.table-input').addClass('hidden');
+		$('.cell-text').removeClass('hidden');
+		var docId = this._id;
+		var text = this.district;
+		var height = $('#' + docId + 'district-cell-text').height();
+		$('#' + docId + 'district-cell-text').toggleClass('hidden');
+		$('#' + docId + 'district-cell-input').height(height);
+		$('#' + docId + 'district-cell-input').toggleClass('hidden');
+		$('#' + docId + 'district-cell-input').val(text);
+		$('#' + docId + 'district-cell-input').focus();
+	},
+
+	'blur .district-input': function(e){
+		var docId = this._id;
+		var text = $('#' + docId + 'district-cell-input').val();
+		Activities.update({_id: this._id}, {$set: {district: text}});
 		$('.table-input').addClass('hidden');
 		$('.cell-text').removeClass('hidden');
 	},
@@ -128,19 +157,19 @@ Template.formDatabaseTableRow.events({
 	'dblclick .description-cell': function(e){
 		$('.table-input').addClass('hidden');
 		$('.cell-text').removeClass('hidden');
-		var index = this.index;
+		var docId = this._id;
 		var text = this.description;
-		var height = $('#' + index + 'description-cell-text').height();
-		$('#' + index + 'description-cell-text').toggleClass('hidden');
-		$('#' + index + 'description-cell-input').height(height);
-		$('#' + index + 'description-cell-input').toggleClass('hidden');
-		$('#' + index + 'description-cell-input').val(text);
-		$('#' + index + 'description-cell-input').focus();
+		var height = $('#' + docId + 'description-cell-text').height();
+		$('#' + docId + 'description-cell-text').toggleClass('hidden');
+		$('#' + docId + 'description-cell-input').height(height);
+		$('#' + docId + 'description-cell-input').toggleClass('hidden');
+		$('#' + docId + 'description-cell-input').val(text);
+		$('#' + docId + 'description-cell-input').focus();
 	},
 
 	'blur .description-input': function(e){
-		var index = this.index;
-		var text = $('#' + index + 'description-cell-input').val();
+		var docId = this._id;
+		var text = $('#' + docId + 'description-cell-input').val();
 		Activities.update({_id: this._id}, {$set: {description: text}});
 		$('.table-input').addClass('hidden');
 		$('.cell-text').removeClass('hidden');
@@ -149,19 +178,19 @@ Template.formDatabaseTableRow.events({
 	'dblclick .price-cell': function(e){
 		$('.table-input').addClass('hidden');
 		$('.cell-text').removeClass('hidden');
-		var index = this.index;
+		var docId = this._id;
 		var text = this.price;
-		var height = $('#' + index + 'price-cell-text').height();
-		$('#' + index + 'price-cell-text').toggleClass('hidden');
-		$('#' + index + 'price-cell-input').height(height);
-		$('#' + index + 'price-cell-input').toggleClass('hidden');
-		$('#' + index + 'price-cell-input').val(text);
-		$('#' + index + 'price-cell-input').focus();
+		var height = $('#' + docId + 'price-cell-text').height();
+		$('#' + docId + 'price-cell-text').toggleClass('hidden');
+		$('#' + docId + 'price-cell-input').height(height);
+		$('#' + docId + 'price-cell-input').toggleClass('hidden');
+		$('#' + docId + 'price-cell-input').val(text);
+		$('#' + docId + 'price-cell-input').focus();
 	},
 
 	'blur .price-input': function(e){
-		var index = this.index;
-		var text = $('#' + index + 'price-cell-input').val();
+		var docId = this._id;
+		var text = $('#' + docId + 'price-cell-input').val();
 		Activities.update({_id: this._id}, {$set: {price: text}});
 		$('.table-input').addClass('hidden');
 		$('.cell-text').removeClass('hidden');
@@ -170,20 +199,86 @@ Template.formDatabaseTableRow.events({
 	'dblclick .last-cell': function(e){
 		$('.table-input').addClass('hidden');
 		$('.cell-text').removeClass('hidden');
-		var index = this.index;
+		var docId = this._id;
 		var text = this.last;
-		var height = $('#' + index + 'last-cell-text').height();
-		$('#' + index + 'last-cell-text').toggleClass('hidden');
-		$('#' + index + 'last-cell-input').height(height);
-		$('#' + index + 'last-cell-input').toggleClass('hidden');
-		$('#' + index + 'last-cell-input').val(text);
-		$('#' + index + 'last-cell-input').focus();
+		var height = $('#' + docId + 'last-cell-text').height();
+		$('#' + docId + 'last-cell-text').toggleClass('hidden');
+		$('#' + docId + 'last-cell-input').height(height);
+		$('#' + docId + 'last-cell-input').toggleClass('hidden');
+		$('#' + docId + 'last-cell-input').val(text);
+		$('#' + docId + 'last-cell-input').focus();
 	},
 
 	'blur .last-input': function(e){
-		var index = this.index;
-		var text = $('#' + index + 'last-cell-input').val();
+		var docId = this._id;
+		var text = $('#' + docId + 'last-cell-input').val();
 		Activities.update({_id: this._id}, {$set: {last: Number(text)}});
+		$('.table-input').addClass('hidden');
+		$('.cell-text').removeClass('hidden');
+	},
+
+	'dblclick .requiresun-cell': function(e){
+		$('.table-input').addClass('hidden');
+		$('.cell-text').removeClass('hidden');
+		var docId = this._id;
+		var text = this.requiresun;
+		var height = $('#' + docId + 'requiresun-cell-text').height();
+		$('#' + docId + 'requiresun-cell-text').toggleClass('hidden');
+		$('#' + docId + 'requiresun-cell-input').height(height);
+		$('#' + docId + 'requiresun-cell-input').toggleClass('hidden');
+		$('#' + docId + 'requiresun-cell-input').val(text);
+		$('#' + docId + 'requiresun-cell-input').focus();
+	},
+
+	'blur .requiresun-input': function(e){
+		var docId = this._id;
+		var text = $('#' + docId + 'requiresun-cell-input').val();
+		var bool = true;
+		if (text !== "true")
+			bool = false;
+		Activities.update({_id: this._id}, {$set: {requiresun: bool}});
+		$('.table-input').addClass('hidden');
+		$('.cell-text').removeClass('hidden');
+	},
+
+	'dblclick .contact-cell': function(e){
+		$('.table-input').addClass('hidden');
+		$('.cell-text').removeClass('hidden');
+		var docId = this._id;
+		var text = this.contact;
+		var height = $('#' + docId + 'contact-cell-text').height();
+		$('#' + docId + 'contact-cell-text').toggleClass('hidden');
+		$('#' + docId + 'contact-cell-input').height(height);
+		$('#' + docId + 'contact-cell-input').toggleClass('hidden');
+		$('#' + docId + 'contact-cell-input').val(text);
+		$('#' + docId + 'contact-cell-input').focus();
+	},
+
+	'blur .contact-input': function(e){
+		var docId = this._id;
+		var text = $('#' + docId + 'contact-cell-input').val();
+		Activities.update({_id: this._id}, {$set: {contact: text}});
+		$('.table-input').addClass('hidden');
+		$('.cell-text').removeClass('hidden');
+	},
+
+	'dblclick .source-cell': function(e){
+		$('.table-input').addClass('hidden');
+		$('.cell-text').removeClass('hidden');
+		var docId = this._id;
+		var text = this.source;
+		var height = $('#' + docId + 'source-cell-text').height();
+		$('#' + docId + 'source-cell-text').toggleClass('hidden');
+		$('#' + docId + 'source-cell-input').height(height);
+		$('#' + docId + 'source-cell-input').toggleClass('hidden');
+		$('#' + docId + 'source-cell-input').val(text);
+		$('#' + docId + 'source-cell-input').focus();
+	},
+
+	'blur .source-input': function(e){
+		var docId = this._id;
+		var text = $('#' + docId + 'source-cell-input').val();
+		Activities.update({_id: this._id}, {$set: {source: text}});
 		$('.table-input').addClass('hidden');
 		$('.cell-text').removeClass('hidden');
 	},
@@ -191,20 +286,41 @@ Template.formDatabaseTableRow.events({
 	'dblclick .link-cell': function(e){
 		$('.table-input').addClass('hidden');
 		$('.cell-text').removeClass('hidden');
-		var index = this.index;
+		var docId = this._id;
 		var text = this.link;
-		var height = $('#' + index + 'link-cell-text').height();
-		$('#' + index + 'link-cell-text').toggleClass('hidden');
-		$('#' + index + 'link-cell-input').height(height);
-		$('#' + index + 'link-cell-input').toggleClass('hidden');
-		$('#' + index + 'link-cell-input').val(text);
-		$('#' + index + 'link-cell-input').focus();
+		var height = $('#' + docId + 'link-cell-text').height();
+		$('#' + docId + 'link-cell-text').toggleClass('hidden');
+		$('#' + docId + 'link-cell-input').height(height);
+		$('#' + docId + 'link-cell-input').toggleClass('hidden');
+		$('#' + docId + 'link-cell-input').val(text);
+		$('#' + docId + 'link-cell-input').focus();
 	},
 
 	'blur .link-input': function(e){
-		var index = this.index;
-		var text = $('#' + index + 'link-cell-input').val();
+		var docId = this._id;
+		var text = $('#' + docId + 'link-cell-input').val();
 		Activities.update({_id: this._id}, {$set: {link: text}});
+		$('.table-input').addClass('hidden');
+		$('.cell-text').removeClass('hidden');
+	},
+
+	'dblclick .mark-cell': function(e){
+		$('.table-input').addClass('hidden');
+		$('.cell-text').removeClass('hidden');
+		var docId = this._id;
+		var text = this.mark;
+		var height = $('#' + docId + 'mark-cell-text').height();
+		$('#' + docId + 'mark-cell-text').toggleClass('hidden');
+		$('#' + docId + 'mark-cell-input').height(height);
+		$('#' + docId + 'mark-cell-input').toggleClass('hidden');
+		$('#' + docId + 'mark-cell-input').val(text);
+		$('#' + docId + 'mark-cell-input').focus();
+	},
+
+	'blur .mark-input': function(e){
+		var docId = this._id;
+		var text = $('#' + docId + 'mark-cell-input').val();
+		Activities.update({_id: this._id}, {$set: {mark: text}});
 		$('.table-input').addClass('hidden');
 		$('.cell-text').removeClass('hidden');
 	},
@@ -212,19 +328,19 @@ Template.formDatabaseTableRow.events({
 	'dblclick .monday-cell': function(e){
 		$('.table-input').addClass('hidden');
 		$('.cell-text').removeClass('hidden');
-		var index = this.index;
+		var docId = this._id;
 		var text = this.monday;
-		var height = $('#' + index + 'monday-cell-text').height();
-		$('#' + index + 'monday-cell-text').toggleClass('hidden');
-		$('#' + index + 'monday-cell-input').height(height);
-		$('#' + index + 'monday-cell-input').toggleClass('hidden');
-		$('#' + index + 'monday-cell-input').val(text);
-		$('#' + index + 'monday-cell-input').focus();
+		var height = $('#' + docId + 'monday-cell-text').height();
+		$('#' + docId + 'monday-cell-text').toggleClass('hidden');
+		$('#' + docId + 'monday-cell-input').height(height);
+		$('#' + docId + 'monday-cell-input').toggleClass('hidden');
+		$('#' + docId + 'monday-cell-input').val(text);
+		$('#' + docId + 'monday-cell-input').focus();
 	},
 
 	'blur .monday-input': function(e){
-		var index = this.index;
-		var text = $('#' + index + 'monday-cell-input').val();
+		var docId = this._id;
+		var text = $('#' + docId + 'monday-cell-input').val();
 		var values = text.split(",");
 		var result = [];
 		for(i=0; i < values.length; i++){
@@ -238,19 +354,19 @@ Template.formDatabaseTableRow.events({
 	'dblclick .tuesday-cell': function(e){
 		$('.table-input').addClass('hidden');
 		$('.cell-text').removeClass('hidden');
-		var index = this.index;
+		var docId = this._id;
 		var text = this.tuesday;
-		var height = $('#' + index + 'tuesday-cell-text').height();
-		$('#' + index + 'tuesday-cell-text').toggleClass('hidden');
-		$('#' + index + 'tuesday-cell-input').height(height);
-		$('#' + index + 'tuesday-cell-input').toggleClass('hidden');
-		$('#' + index + 'tuesday-cell-input').val(text);
-		$('#' + index + 'tuesday-cell-input').focus();
+		var height = $('#' + docId + 'tuesday-cell-text').height();
+		$('#' + docId + 'tuesday-cell-text').toggleClass('hidden');
+		$('#' + docId + 'tuesday-cell-input').height(height);
+		$('#' + docId + 'tuesday-cell-input').toggleClass('hidden');
+		$('#' + docId + 'tuesday-cell-input').val(text);
+		$('#' + docId + 'tuesday-cell-input').focus();
 	},
 
 	'blur .tuesday-input': function(e){
-		var index = this.index;
-		var text = $('#' + index + 'tuesday-cell-input').val();
+		var docId = this._id;
+		var text = $('#' + docId + 'tuesday-cell-input').val();
 		var values = text.split(",");
 		var result = [];
 		for(i=0; i < values.length; i++){
@@ -264,19 +380,19 @@ Template.formDatabaseTableRow.events({
 	'dblclick .wednesday-cell': function(e){
 		$('.table-input').addClass('hidden');
 		$('.cell-text').removeClass('hidden');
-		var index = this.index;
+		var docId = this._id;
 		var text = this.wednesday;
-		var height = $('#' + index + 'wednesday-cell-text').height();
-		$('#' + index + 'wednesday-cell-text').toggleClass('hidden');
-		$('#' + index + 'wednesday-cell-input').height(height);
-		$('#' + index + 'wednesday-cell-input').toggleClass('hidden');
-		$('#' + index + 'wednesday-cell-input').val(text);
-		$('#' + index + 'wednesday-cell-input').focus();
+		var height = $('#' + docId + 'wednesday-cell-text').height();
+		$('#' + docId + 'wednesday-cell-text').toggleClass('hidden');
+		$('#' + docId + 'wednesday-cell-input').height(height);
+		$('#' + docId + 'wednesday-cell-input').toggleClass('hidden');
+		$('#' + docId + 'wednesday-cell-input').val(text);
+		$('#' + docId + 'wednesday-cell-input').focus();
 	},
 
 	'blur .wednesday-input': function(e){
-		var index = this.index;
-		var text = $('#' + index + 'wednesday-cell-input').val();
+		var docId = this._id;
+		var text = $('#' + docId + 'wednesday-cell-input').val();
 		var values = text.split(",");
 		var result = [];
 		for(i=0; i < values.length; i++){
@@ -290,19 +406,19 @@ Template.formDatabaseTableRow.events({
 	'dblclick .thursday-cell': function(e){
 		$('.table-input').addClass('hidden');
 		$('.cell-text').removeClass('hidden');
-		var index = this.index;
+		var docId = this._id;
 		var text = this.thursday;
-		var height = $('#' + index + 'thursday-cell-text').height();
-		$('#' + index + 'thursday-cell-text').toggleClass('hidden');
-		$('#' + index + 'thursday-cell-input').height(height);
-		$('#' + index + 'thursday-cell-input').toggleClass('hidden');
-		$('#' + index + 'thursday-cell-input').val(text);
-		$('#' + index + 'thursday-cell-input').focus();
+		var height = $('#' + docId + 'thursday-cell-text').height();
+		$('#' + docId + 'thursday-cell-text').toggleClass('hidden');
+		$('#' + docId + 'thursday-cell-input').height(height);
+		$('#' + docId + 'thursday-cell-input').toggleClass('hidden');
+		$('#' + docId + 'thursday-cell-input').val(text);
+		$('#' + docId + 'thursday-cell-input').focus();
 	},
 
 	'blur .thursday-input': function(e){
-		var index = this.index;
-		var text = $('#' + index + 'thursday-cell-input').val();
+		var docId = this._id;
+		var text = $('#' + docId + 'thursday-cell-input').val();
 		var values = text.split(",");
 		var result = [];
 		for(i=0; i < values.length; i++){
@@ -316,19 +432,19 @@ Template.formDatabaseTableRow.events({
 	'dblclick .friday-cell': function(e){
 		$('.table-input').addClass('hidden');
 		$('.cell-text').removeClass('hidden');
-		var index = this.index;
+		var docId = this._id;
 		var text = this.friday;
-		var height = $('#' + index + 'friday-cell-text').height();
-		$('#' + index + 'friday-cell-text').toggleClass('hidden');
-		$('#' + index + 'friday-cell-input').height(height);
-		$('#' + index + 'friday-cell-input').toggleClass('hidden');
-		$('#' + index + 'friday-cell-input').val(text);
-		$('#' + index + 'friday-cell-input').focus();
+		var height = $('#' + docId + 'friday-cell-text').height();
+		$('#' + docId + 'friday-cell-text').toggleClass('hidden');
+		$('#' + docId + 'friday-cell-input').height(height);
+		$('#' + docId + 'friday-cell-input').toggleClass('hidden');
+		$('#' + docId + 'friday-cell-input').val(text);
+		$('#' + docId + 'friday-cell-input').focus();
 	},
 
 	'blur .friday-input': function(e){
-		var index = this.index;
-		var text = $('#' + index + 'friday-cell-input').val();
+		var docId = this._id;
+		var text = $('#' + docId + 'friday-cell-input').val();
 		var values = text.split(",");
 		var result = [];
 		for(i=0; i < values.length; i++){
@@ -342,19 +458,19 @@ Template.formDatabaseTableRow.events({
 	'dblclick .saturday-cell': function(e){
 		$('.table-input').addClass('hidden');
 		$('.cell-text').removeClass('hidden');
-		var index = this.index;
+		var docId = this._id;
 		var text = this.saturday;
-		var height = $('#' + index + 'saturday-cell-text').height();
-		$('#' + index + 'saturday-cell-text').toggleClass('hidden');
-		$('#' + index + 'saturday-cell-input').height(height);
-		$('#' + index + 'saturday-cell-input').toggleClass('hidden');
-		$('#' + index + 'saturday-cell-input').val(text);
-		$('#' + index + 'saturday-cell-input').focus();
+		var height = $('#' + docId + 'saturday-cell-text').height();
+		$('#' + docId + 'saturday-cell-text').toggleClass('hidden');
+		$('#' + docId + 'saturday-cell-input').height(height);
+		$('#' + docId + 'saturday-cell-input').toggleClass('hidden');
+		$('#' + docId + 'saturday-cell-input').val(text);
+		$('#' + docId + 'saturday-cell-input').focus();
 	},
 
 	'blur .saturday-input': function(e){
-		var index = this.index;
-		var text = $('#' + index + 'saturday-cell-input').val();
+		var docId = this._id;
+		var text = $('#' + docId + 'saturday-cell-input').val();
 		var values = text.split(",");
 		var result = [];
 		for(i=0; i < values.length; i++){
@@ -368,19 +484,19 @@ Template.formDatabaseTableRow.events({
 	'dblclick .sunday-cell': function(e){
 		$('.table-input').addClass('hidden');
 		$('.cell-text').removeClass('hidden');
-		var index = this.index;
+		var docId = this._id;
 		var text = this.sunday;
-		var height = $('#' + index + 'sunday-cell-text').height();
-		$('#' + index + 'sunday-cell-text').toggleClass('hidden');
-		$('#' + index + 'sunday-cell-input').height(height);
-		$('#' + index + 'sunday-cell-input').toggleClass('hidden');
-		$('#' + index + 'sunday-cell-input').val(text);
-		$('#' + index + 'sunday-cell-input').focus();
+		var height = $('#' + docId + 'sunday-cell-text').height();
+		$('#' + docId + 'sunday-cell-text').toggleClass('hidden');
+		$('#' + docId + 'sunday-cell-input').height(height);
+		$('#' + docId + 'sunday-cell-input').toggleClass('hidden');
+		$('#' + docId + 'sunday-cell-input').val(text);
+		$('#' + docId + 'sunday-cell-input').focus();
 	},
 
 	'blur .sunday-input': function(e){
-		var index = this.index;
-		var text = $('#' + index + 'sunday-cell-input').val();
+		var docId = this._id;
+		var text = $('#' + docId + 'sunday-cell-input').val();
 		var values = text.split(",");
 		var result = [];
 		for(i=0; i < values.length; i++){
@@ -389,5 +505,9 @@ Template.formDatabaseTableRow.events({
 		Activities.update({_id: this._id}, {$set: {sunday: result}});
 		$('.table-input').addClass('hidden');
 		$('.cell-text').removeClass('hidden');
+	},
+
+	'click .fa-sign-in': function(e){
+		Router.go('formDatabase', {_id: this._id});
 	},
 });
