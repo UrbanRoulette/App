@@ -7,6 +7,11 @@ AutoForm.hooks({
         		if (typeof form.metrostation !== 'undefined')
         			doc.metrostation = form.metrostation;
         	}
+        	var last = ($("#last").val()).split('h');
+        	for (k=0; k < last.length; k++){
+        		last[k] = parseInt(last[k]);
+        	}
+        	doc.last = last[0]*60 + last[1];
         	$("#hours").addClass('hidden');
 //        	doc.description = doc.description.css({"font-family":"\"Helvetica Neue\", Helvetica, Arial, sans-serif;"});	
 			doc.temporary = $('#temporary-checkbox').prop('checked');
@@ -21,16 +26,10 @@ AutoForm.hooks({
 				doc.enddate = new Date(endYear, endMonth, endDay,23,59,59,999);	
 				doc.yearperiodic = $('#year-periodic-radio').prop('checked');
 			}
+
 			doc.submitted = new Date();
 			doc.requiresun = $('#sun-checkbox').prop('checked');
-		//	if()
-/*			Meteor.call('createIndex',function(error, result) {
-			if (error)
-				console.log(error);
-			else
-				doc.index = result;
-			});	
-*/			doc.index = Activities.find().count() + 1;
+			doc.index = 0;
 			this.result(doc);
         }
       } 

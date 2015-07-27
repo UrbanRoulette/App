@@ -15,13 +15,17 @@
 				Click!
 			</div>
 		</div>
-		<div>
-		Votre tirage<br/>
-		Total : [{{priceInterval}}] euros
-		</div>
-		{{#each activity}}
-			{{> SMScardItem}}
-		{{/each}}
+		{{#if activity}}
+			<div>
+			Votre tirage {{stars}}<br/>
+			Total : [{{priceInterval}}] euros
+			<br/>
+			<br/>
+			{{#each activity}}
+				{{> SMScardItem}}
+			{{/each}}
+			</div>
+		{{/if}}
 	</div>
 	<div class="col-md-1"></div>
 </template>

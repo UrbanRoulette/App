@@ -1,10 +1,11 @@
 Template.SMScardList.events({
 	'click #click-button-sms': function(e){
 		var startDate = new Date();
+		var timezoneOffset = startDate.getTimezoneOffset();
 		var district = Session.get('district');
 		var resultsKeptSessionVar = Session.get('resultsKept');
 //		rouletteResults = Meteor.call('algorithm', startDate, district);
-		Meteor.apply('algorithm',[startDate, district],true,function(error, result) {
+		Meteor.apply('algorithm',[startDate, timezoneOffset, district],true,function(error, result) {
 			if (error)
 				console.log(error);
 			else {
@@ -30,7 +31,7 @@ Template.SMScardList.helpers({
 		return Session.get('rouletteResults');
 	},
 	district: function(){
-		return [1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20];
+		return [1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20, "Paris"];
 	},
 	priceInterval: function(){
 		if(Session.get('rouletteResults')){
@@ -49,6 +50,31 @@ Template.SMScardList.helpers({
 			var minPrice = Math.round(totalPrice*(1-deviation));
 			var maxPrice = Math.round(totalPrice*(1+deviation));
 			return minPrice + '-' + maxPrice;
+		}
+	},
+	stars: function(){
+		if(Session.get('rouletteResults')){ //So that helpers is reactive
+			var probability = [];
+			size = 10;
+			factor = size/10;
+			for(k=0;k<1*size;k++){
+				if(k < 1*factor)
+					probability.push(1);
+				else if(k >= 1*factor && k < 3*factor)
+					probability.push(2);
+				else if(k >= 3*factor && k < 6*factor)
+					probability.push(3);
+				else if(k >= 6*factor && k < 8*factor)
+					probability.push(4);
+				else if(k >= 8*factor && k < 10*factor)
+					probability.push(5);
+			}
+			random = Math.floor(Math.random()*size);
+			stars = '';
+			for(i=1;i<=probability[random];i++){
+				stars += '✪';
+			} 
+			return stars;
 		}
 	}
 });

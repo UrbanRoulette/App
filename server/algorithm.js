@@ -1,10 +1,10 @@
 Meteor.startup(function(){
 	//Parameters
 	pace = 15; // Pace (in number of minutes) (must divide 60)
-	unit = 30; //Unit for the last of each activity in database (in number of minutes)
-	dayLength = 16; //Length of day (in number of unit). Ex: If unit=30 (ie half-hour), then dayLength = 2 means 1 hour
-	gap = 12; //Gap between two activities (in number of unit). During this gap, activity of the same category will not be offered, unless it has been randomly chosen more than var 'luck' times 
-	luck = 3; //Number of tries from which an activity can appear even if it is redundant
+	unit = 1; //Unit for the last of each activity in database (in number of minutes)
+	dayLength = 8*60; //Length of day (in number of unit). Ex: If unit=30 (ie half-hour), then dayLength = 2 means 1 hour
+	gap = 6*60; //Gap between two activities (in number of unit). During this gap, activity of the same category will not be offered, unless it has been randomly chosen more than var 'luck' times 
+	luck = 5; //Number of tries from which an activity can appear even if it is redundant
 
 	//Variables
 	weekday = new Array(7);
@@ -19,6 +19,30 @@ Meteor.startup(function(){
 	lunchHours = [12,13,14];
 	dinnerHours = [19,20,21];
 	eatingHours = lunchHours.concat(dinnerHours);
+
+	areas = [
+	[0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20], //All districts (Paris)
+	[1,2,3,4,5,6,7,8,9],
+	[2,1,2,4,8,9,10,11],
+	[3,1,2,4,11,10],
+	[4,1,2,3,5,6,11,12,13],
+	[5,1,4,6,13,12,14],
+	[6,5,7,4,1,14,15],
+	[7,1,6,15,8,16],
+	[8,1,2,9,7,17,16],
+	[9,2,10,18,17,8,1],
+	[10,11,3,2,9,18,19],
+	[11,10,3,4,12,20,19],
+	[12,11,3,4,5,20,13],
+	[13,12,4,5,6,14],
+	[14,5,6,7,13,15],
+	[15,6,7,14,16],
+	[16,7,8,15],
+	[17,18,9,2,1,8],
+	[18,19,10,9,8,17],
+	[19,20,11,10,18],
+	[20,19,10,11,12,3,4]
+	];
 
 	//Functions
 	roundTime = function(date, pace){  
@@ -54,6 +78,7 @@ Meteor.startup(function(){
 		specific: doc.specific,
 		name: doc.name,
 		address: doc.address,
+		district: doc.district,
 		metrostation: metrostation,
 		description: doc.description,
 		type: doc.type,
@@ -94,21 +119,54 @@ Meteor.startup(function(){
 
 Meteor.methods({
 
-	algorithm: function(startDate, district){
+	algorithm: function(startDate, timezoneOffset, district){
+
+		if (district === "Paris")
+			district = 0;
 
 		check(startDate, Date);
-		check(district, Number);
+		check(timezoneOffset, Number);
+		check(district, Match.Optional(Number));
 //		check(resultsKeptSessionVar,[Object]);
 
+		//About TIME DIFFERENCES BETWEEN CLIENT AND SERVER
+		//http://stackoverflow.com/questions/1201378/how-does-datetime-touniversaltime-work
+		//http://stackoverflow.com/questions/25367789/can-i-make-node-js-date-always-be-in-utc-gmt
+		//http://stackoverflow.com/questions/23112301/gettimezoneoffset-method-return-different-time-on-localhost-and-on-server
+		//http://stackoverflow.com/questions/18014341/how-to-convert-time-correctly-across-timezones?rq=1
+		//We can also use moment.js (client and server): http://momentjs.com/docs/#/manipulating/utc/
+		startDate = new Date(startDate.getTime() - timezoneOffset*60000); //Note: getTime() is UTC by essence, always.
 
 		if (typeof district !== 'undefined'){
-			nbActivities = Activities.find({district: district}).count();
+			//To work with areas
+			area = areas[district];
+			areaSize = area.length; 
+			nbActivitiesArray = [];
+			nbActivitiesTotal = 0;
+//			allOtherIndexesOfArea = [];
+			for (k=0; k < areaSize; k++){
+				var districtNumber = area[k];
+				var number = Activities.find({district: districtNumber}).count();
+				nbActivitiesArray.push(number);	
+				nbActivitiesTotal += number;
+/*				Activities.find({district: districtNumber}).forEach(function(doc){
+					allOtherIndexesOfArea.push(doc.district);
+				});	
+*/			}
+			nbActivities = nbActivitiesArray[0];
+			//End of code for areas
+
+			//To un-comment if not working with areas
+//			nbActivities = Activities.find({district: district}).count();
+			
 			//Converted to string to look through indexes after that
 			if (district < 10)
 				district = '0' + district;
 		}
-		else
-			nbActivities = Activities.find().count();	
+		else {
+			nbActivities = Activities.find().count();
+			nbActivitiesTotal = nbActivities;	
+		}
 
 		start = roundTime(startDate, pace);
 
@@ -117,27 +175,32 @@ Meteor.methods({
 		var trackDocsIndex = []; //Will check if all elements have been tried. If yes, breaks the 'while' loop
 		var lastDoc = false; 
 		var trackResultsId = []; //Will check if document has already been selected as a result
-		var trackTypes = [];
+		var trackTypes = []; //Will check that activities of the same types are not offered too closely
 
 		var badWeather = false;
 
 		//Variables to monitor probability of events to appear
 		var countRedundantTypes = {
 			'Restaurant': 0,
+			'Petit-dej ou goûter': 0,
 			'Bar': 0,
 			'Cinéma': 0,
 			'Sport': 0,
-			'Boite':0,
+			'Boite': 0,
 			'Théâtre': 0,
 			'Musée': 0,
+			'Viste': 0,
 			'Balade': 0,
 			'Jeux': 0,
+			'Concert':0,
+			'Evènement': 0,
 			'Musique': 0,
 			'Lecture': 0,
 			'Insolite': 0,
-			'Evasion': 0
+			'Evasion': 0,
+			'Shopping': 0,
+			'Divers': 0
 		};
-
 		//RESULTS KEPT: In order to have the right order of the results kept
 		//Current code will NOT WORK server side. See if mrt:client-call package can help...
 
@@ -150,7 +213,7 @@ Meteor.methods({
 		var security = 0;
 		benchmarkStart = new Date();
 
-		//BEGINNING OF LOOP
+		// ************** BEGINNING OF LOOP ************** //
 
 		while (resultsLength < dayLength){ 
 
@@ -160,6 +223,20 @@ Meteor.methods({
 				break;
 			}
 
+			//To work with areas: defines new district IF ALL ACTIVITIES in required district have been tried
+			if ((typeof district !== 'undefined') && (trackDocsIndex.length >= nbActivitiesArray[0])){
+					var randomDistrictIndex = Math.floor((Math.random()) * (areaSize - 1) + 1);
+					district = area[randomDistrictIndex];
+					nbActivities = nbActivitiesArray[randomDistrictIndex];
+					//Other solution with array of all Indexes			
+/*					var randomDistrictIndex = Math.floor((Math.random()) * allOtherIndexesOfArea.length);
+					random = allOtherIndexesOfArea[randomDistrictIndex];
+*/					//Converted to string to look through indexes after that
+					if (district < 10)
+						district = '0' + district;	
+			}
+			//End of code for areas
+
 			/* To select random documents, see the following links:
 			http://bdadam.com/blog/finding-a-random-document-in-mongodb.html
 			http://stackoverflow.com/questions/20336361/get-random-document-from-a-meteor-collection
@@ -168,7 +245,6 @@ Meteor.methods({
 
 			Method with a 'rand' field in each doc (rand = Math.random()) and then a search with {rand:{$gt:r}, with r = Math.random() could be a good solution
 			*/
-
 			random = Math.floor((Math.random() * nbActivities) + 1);
 			//If district is taken into account
 			if (typeof district !== 'undefined'){
@@ -181,7 +257,6 @@ Meteor.methods({
 				trackDocsIndex.push(doc.index);
 
 			//IF SOME RESULTS HAVE BEEN KEPT
-
 /*			if((typeof resultsKept !== 'undefined') && (resultsKeptIndex < resultsKept.length)){
 
 				resultKept = resultsKept[resultsKeptIndex];
@@ -228,33 +303,35 @@ Meteor.methods({
 					random = random.toString() + district.toString();
 					random = parseInt(random);
 				}
-				//
 				doc = Activities.findOne({index: random});
 				if (trackDocsIndex.indexOf(doc.index) === -1)
 					trackDocsIndex.push(doc.index);
 			}
 
 			//Test: if all documents have been tested without success, break the loop
-			if (trackDocsIndex.length === nbActivities && lastDoc)
+			if (trackDocsIndex.length === nbActivitiesTotal && lastDoc)
 				break;
-			if (trackDocsIndex.length === nbActivities)
+			if (trackDocsIndex.length === nbActivitiesTotal)
 				lastDoc = true;
 
 			//Test: Activity has not already been suggested
 			if (trackResultsId.indexOf(doc._id) > -1)
 				continue;
 
-			//Test: For REDUNDANT types of activities: check if one similar has not been offered to recently (ie below 'gap' variable time)
+			//Test: For REDUNDANT types of activities: check if one similar has not been offered too recently (ie below 'gap' variable time)
 			var redundantIndex = -1;
 			for (k=0; k < trackTypes.length; k++){
-				if(trackTypes[trackTypes.length - 1 - k].type === doc.type){
-					redundantIndex = k;
+				if((trackTypes[trackTypes.length - 1 - k]).type === doc.type){
+					redundantIndex = trackTypes.length - 1 - k;
 					break;
 				}
 			}
-			if ((redundantIndex > -1) && ((start.getTime() - (trackTypes[redundantIndex].time).getTime()) < gap*unit*60000) && (countRedundantTypes[doc.type] < luck)){
-				countRedundantTypes[doc.type] += 1;
-				continue;
+			if (redundantIndex > -1){
+				var difference = start.getTime() - ((trackTypes[redundantIndex]).time).getTime();
+				if (difference < gap*unit*60000 && (countRedundantTypes[doc.type] < luck)){
+					countRedundantTypes[doc.type] += 1;
+					continue;
+				}
 			}
 
 			//Test: For Restaurants
@@ -266,15 +343,15 @@ Meteor.methods({
 					if(trackTypes[k].type === 'Restaurant')
 						restaurantIndex = k;
 				}
-				if ((restaurantIndex > -1) && (start.getTime() - (trackTypes[restaurantIndex].time).getTime()) >= gap*unit*60000)
+				if ((restaurantIndex > -1) && ((start.getTime() - ((trackTypes[restaurantIndex]).time).getTime()) >= gap*unit*60000))
 					continue;
 				if (restaurantIndex === -1)
 					continue;
 			}
-/*			//Will absolutely exclude restaurant if it is NOT eating time
+			//Will absolutely exclude restaurant if it is NOT eating time
 			else if ((eatingHours.indexOf(hour)) === -1 && (doc.type === 'Restaurant'))
 				continue;
-*/
+
 			//Test: If activity is open during the time slot considered
 			var docday = doc[day];
 			var check2 = false;
@@ -391,8 +468,6 @@ Meteor.methods({
 		}
 		benchmarkEnd = new Date();
 		benchmark = benchmarkEnd.getTime() - benchmarkStart.getTime();
-//		console.log(benchmark + ' ms');
-//		console.log(security + ' iterations');
 		return {rouletteResults: rouletteResults, 
 				benchmark: benchmark, 
 				security: security

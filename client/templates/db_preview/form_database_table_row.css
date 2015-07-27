@@ -8,6 +8,10 @@ td.container {
 	width: 75%;
 }
 
+.cell-text {
+	cursor: text;
+}
+
 .table-specific { 
 	width: 120px; 
 }
