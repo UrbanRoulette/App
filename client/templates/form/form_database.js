@@ -299,6 +299,9 @@ Template.formDatabase.events({
 	'click #topito': function(e){
 		$("[name='source']").val('Topito');
 	},
+	'click #paris-zigzag': function(e){
+		$("[name='source']").val('Paris ZigZag');
+	},
 
 /*	'blur #specific': function(e) {
 		specific = JSON.stringify($("[name='specific']").val());

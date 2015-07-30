@@ -12,12 +12,12 @@ Template.SMScardList.events({
 				Session.set('rouletteResults', result.rouletteResults);
 				console.log(result.benchmark + ' ms');
 				console.log(result.security + ' itérations');
+				console.log(result.message);
 				var rouletteResults = Session.get('rouletteResults');
 				rouletteResultsId = [];
 				for (k=0; k < rouletteResults.length; k++){
 					rouletteResultsId.push(rouletteResults[k]._id);
 				}
-				Router.go('SMScardList');
 				e.stopPropagation();
 			}
 		});	
@@ -31,7 +31,7 @@ Template.SMScardList.helpers({
 		return Session.get('rouletteResults');
 	},
 	district: function(){
-		return [1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20, "Paris"];
+		return [0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20];
 	},
 	priceInterval: function(){
 		if(Session.get('rouletteResults')){
