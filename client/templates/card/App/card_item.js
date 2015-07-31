@@ -49,5 +49,11 @@ Template.cardItem.helpers({
 			if (check)
 				return 'keep-selected';
 		}
+	},
+	control: function(){
+		if(this.district === 99)
+			return false;
+		else
+			return true;
 	}
 });

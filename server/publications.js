@@ -13,3 +13,8 @@ Meteor.publish('activitieswaiting', function(){
 Meteor.publish('rouletteResults',function(rouletteResultsId){
 	return Activities.find({_id: {$in : rouletteResultsId}});	
 });
+
+Meteor.publish('singleActivity', function(id) {
+//  check(id, String);
+  return Activities.find(id);
+});

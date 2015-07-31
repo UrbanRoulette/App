@@ -20,29 +20,30 @@ Meteor.startup(function(){
 	dinnerHours = [19,20];
 	eatingHours = lunchHours.concat(dinnerHours);
 
-	districts = [0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20];
+	districts = [0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,99];
 	areas = [
-			[0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20], //All districts (Paris)
-			[1,2,3,4,5,6,7,8,9],
-			[2,1,2,4,8,9,10,11],
-			[3,1,2,4,11,10],
-			[4,1,2,3,5,6,11,12,13],
-			[5,1,4,6,13,12,14],
-			[6,5,7,4,1,14,15],
-			[7,1,6,15,8,16],
-			[8,1,2,9,7,17,16],
-			[9,2,10,18,17,8,1],
-			[10,11,3,2,9,18,19],
-			[11,10,3,4,12,20,19],
-			[12,11,3,4,5,20,13],
-			[13,12,4,5,6,14],
-			[14,5,6,7,13,15],
-			[15,6,7,14,16],
-			[16,7,8,15],
-			[17,18,9,2,1,8],
-			[18,19,10,9,8,17],
-			[19,20,11,10,18],
-			[20,19,10,11,12,3,4]
+			[0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,99], //All districts (Paris)
+			[1,2,3,4,5,6,7,8,9,99],
+			[2,1,2,4,8,9,10,11,99],
+			[3,1,2,4,11,10,99],
+			[4,1,2,3,5,6,11,12,13,99],
+			[5,1,4,6,13,12,14,99],
+			[6,5,7,4,1,14,15,99],
+			[7,1,6,15,8,16,99],
+			[8,1,2,9,7,17,16,99],
+			[9,2,10,18,17,8,1,99],
+			[10,11,3,2,9,18,19,99],
+			[11,10,3,4,12,20,19,99],
+			[12,11,3,4,5,20,13,99],
+			[13,12,4,5,6,14,99],
+			[14,5,6,7,13,15,99],
+			[15,6,7,14,16,99],
+			[16,7,8,15,99],
+			[17,18,9,2,1,8,99],
+			[18,19,10,9,8,17,99],
+			[19,20,11,10,18,99],
+			[20,19,10,11,12,3,4,99],
+			[99]
 			];
 
 	nbActivities_perDistrict = {};		
@@ -206,10 +207,12 @@ Meteor.methods({
 			//http://stackoverflow.com/questions/23112301/gettimezoneoffset-method-return-different-time-on-localhost-and-on-server
 			//http://stackoverflow.com/questions/18014341/how-to-convert-time-correctly-across-timezones?rq=1
 			//We can also use moment.js (client and server): http://momentjs.com/docs/#/manipulating/utc/
+			
 		startDate = new Date(startDate.getTime() - timezoneOffset*60000); //Note: getTime() is UTC by essence, always.
 		start = roundTime(startDate, pace);
 
-		area = areas[district];
+		var indexOfdistrict = districts.indexOf(district);
+		area = areas[indexOfdistrict];
 		//Converted to string to look through indexes after that
 
 		ActivityNumbers_perTypeDistrict = {}; //Will contain, for each Type&District combination, an array of activity numbers : [1,2,3,4,..]
@@ -295,8 +298,6 @@ Meteor.methods({
 		// ************** BEGINNING OF LOOP ************** //
 
 		while (resultsLength < dayLength){ 
-
-			var	typesForbidden = [];
 
 			//IF SOME RESULTS HAVE BEEN KEPT
 /*			if((typeof resultsKept !== 'undefined') && (resultsKeptIndex < resultsKept.length)){
@@ -397,10 +398,9 @@ Meteor.methods({
 					}	
 				}
 				//Will absolutely exclude restaurant if it is NOT eating time (and that it has not yet been removed by typeBelowGap)
-				else if (eatingHours.indexOf(hour) === -1 && typesBelowGap.indexOf(typeTreated) === -1){
+				else if (eatingHours.indexOf(hour) === -1 && typesBelowGap.indexOf(typeTreated) === -1)
 					delete_Item_from_Equiprobability_Obj(equiprobability_Types_perDistrict[district],typeTreated,nbActivities_perTypeDistrict_inLoop[typeTreated + district]);
-					typesForbidden.push(typeTreated);	
-				}
+				
 
 				/* To select random documents, see the following links:
 					http://bdadam.com/blog/finding-a-random-document-in-mongodb.html

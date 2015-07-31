@@ -1,5 +1,5 @@
 Template.formDatabaseTable.helpers({
 	item: function() {
-		return Activities.find({}, {sort: {index: 1}});
+		return Activities.find({}, {sort: {district: 1}});
 	}
 });

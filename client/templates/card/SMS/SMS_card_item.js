@@ -1,17 +1,12 @@
-/* NOT WORKING
 Template.SMScardItem.helpers({
-	nbOfStations: function(){
-		if(this.metrostation !== 'undefined' || this.metrostation !== null){
-			var a = this.metrostation.split(',');
-			var b = this.metrostation.split('ou');
-			if (a.length > 1 || b.length >1)
-				return 2;
-			}
+	control: function(){
+		if(this.district === 99)
+			return false;
 		else
-			return 1;
+			return true;
 	}
 });
-*/
+
 
 
 

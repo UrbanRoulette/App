@@ -1,8 +1,8 @@
 .type-district {
 	cursor: pointer;
-	font-size: 30px;
-	padding: 20px;
-	margin: 25px;
+	font-size: 15px;
+	padding: 10px;
+	margin: 10px;
 	border: 1px solid #3276b1;
 	color: #3276b1;
 	display: inline-block;
@@ -10,9 +10,9 @@
 
 .type-district-selected {
 	cursor: pointer;
-	font-size: 30px;
-	padding: 20px;
-	margin: 25px;
+	font-size: 15px;
+	padding: 10px;
+	margin: 10px;
 	border: 1px solid #3276b1;
 	color: white;
 	background-color: #3276b1;
