@@ -11,7 +11,6 @@ Template.SMScardList.events({
 			else {
 				Session.set('rouletteResults', result.rouletteResults);
 				console.log(result.benchmark + ' ms');
-				console.log(result.security + ' itérations');
 				console.log(result.message);
 				var rouletteResults = Session.get('rouletteResults');
 				rouletteResultsId = [];
