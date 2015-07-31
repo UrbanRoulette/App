@@ -20,9 +20,10 @@ Meteor.startup(function(){
 	dinnerHours = [19,20];
 	eatingHours = lunchHours.concat(dinnerHours);
 
-	districts = [0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,99];
+	districts = [0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,99];//All districts
+
 	areas = [
-			[0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,99], //All districts (Paris)
+			[0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,99], //Paris (all districts)
 			[1,2,3,4,5,6,7,8,9,99],
 			[2,1,2,4,8,9,10,11,99],
 			[3,1,2,4,11,10,99],
@@ -76,10 +77,19 @@ Meteor.startup(function(){
 
 	nbActivities_perTypeDistrict = {};
 	nbActivities_perTypeDistrict_inLoop = {};
-	for (k=0; k < areas[0].length; k++){
-			var dKey = (areas[0])[k];
+	copies_Activities_perTypeDistrict = {};
+
+	for (k=0; k < districts.length; k++){
+			var dKey = districts[k];
+			
 			for (i=0 ; i < types.length; i++){
-				var number = Activities.find({$and: [{district: dKey}, {type: types[i]}]}).count();		
+				copies_Activities_perTypeDistrict[types[i] + dKey] = {};
+				var number = 0;
+//				var number = Activities.find({$and: [{district: dKey}, {type: types[i]}]}).count();	
+				Activities.find({$and: [{district: dKey}, {type: types[i]}]}).forEach(function(doc){ 
+					number += 1;
+					copies_Activities_perTypeDistrict[types[i] + dKey][number] = doc.copies;
+				});	// jshint ignore:line
 				nbActivities_perTypeDistrict[types[i] + dKey] = number;
 				nbActivities_perTypeDistrict_inLoop[types[i] + dKey] = number;
 			}
@@ -157,16 +167,6 @@ Meteor.startup(function(){
 		return timeString;
 	};
 
-	getMaxKeyValue = function(obj) {
-		var max = 0;
-		for (var key in obj) {
-			if(max < obj[key])
-				max = obj[key];
-		}
-		return max;
-	};
-
-
 	delete_Item_from_Equiprobability_Obj = function(obj,item,nb){
 		var val = obj[item];
 		delete obj[item];
@@ -178,16 +178,22 @@ Meteor.startup(function(){
 		}		
 	};
 
-	getValuefromIndex = function(array,obj,ind){
+	get_randomItem_from_Equiprobability_Obj = function(array,obj){
+		var max = 0;
 		var result;
+		for (var key in obj) {
+			if(max < obj[key])
+				max = obj[key];
+		}		
 		for(i=0; i < array.length; i++){
-			if(obj[array[i]] > ind){
+			if(obj[array[i]] > (Math.random() * max)){
 				result = array[i];
 				break;
 			}
 		}
 		return result;
 	};
+
 });
 
 Meteor.methods({
@@ -222,6 +228,7 @@ Meteor.methods({
 
 		equiprobability_Districts = {}; //Will contain all districts of the area (equiprobable)
 		equiprobability_Types_perDistrict = {}; //Will contain an array with all types (equiprobable) present in the district		
+		equiprobability_Activities_perTypeDistrict = {};
 
 		//Putting values in the various variables declared right above
 		countActivitiesDistrict = 0;
@@ -257,8 +264,14 @@ Meteor.methods({
 				ActivityNumbers_notFittingWeather_perTypeDistrict[t + d] = [];
 				ActivityNumbers_closePeriod_perTypeDistrict[t + d] = [];
 
-				for (l=1; l <= number; l++)
+				equiprobability_Activities_perTypeDistrict[t + d] = {};
+
+				countActivitiesNumber = 0;
+				for (l=1; l <= number; l++){
 					ActivityNumbers_perTypeDistrict[t + d].push(l);
+					countActivitiesNumber += copies_Activities_perTypeDistrict[t + d][l];
+					equiprobability_Activities_perTypeDistrict[t + d][l] = countActivitiesNumber;
+				}
 					
 			}
 
@@ -335,10 +348,8 @@ Meteor.methods({
 			else
 */				check3 = true;
 
-			//Check if we can reintegrate some excluded types that were suggested more than 'gap' ago
-			
 			typesBelowGap = [];
-			//Determines types of activities that are too recent (REDUNDANT TYPES)
+			//Determines types of activities that are too recent (i.e below 'gap' time)
 			for (k=0; k < track_Types.length; k++){
 
 				var difference = start.getTime() - (track_Types[k].time).getTime();
@@ -356,24 +367,19 @@ Meteor.methods({
 
 			do { //Loop for **** DISTRICTS ******
 				
+				delete_Item_from_Equiprobability_Obj(equiprobability_Districts,district,nbActivities_perDistrict[district]);
+
 				if (Object.keys(equiprobability_Districts).length === 0) 
 					break;
 
-				//Search in priority in the previous result's district, if district required has no more activity (unless district === 0, which means all city)
-				if (nbActivities_perDistrict[district] === 0 && district !== 0)
-					district = lastDistrict;
+				if (Object.keys(equiprobability_Types_perDistrict[district]).length === 0){
 
-				if (Object.keys(equiprobability_Types_perDistrict[district]).length === 0 || nbActivities_perDistrict[district] === 0){
-
-					delete_Item_from_Equiprobability_Obj(equiprobability_Districts,district,nbActivities_perDistrict[district]);
-
-					//Determines district
-					var nbActivities_Possible_Districts = getMaxKeyValue(equiprobability_Districts);
-					var randomDistrictIndex = Math.floor(Math.random() * nbActivities_Possible_Districts);
-					district = getValuefromIndex(area,equiprobability_Districts,randomDistrictIndex);
-
-					if(typeof district === 'undefined')
-						continue;	
+					//Search in priority in the previous result's district, if district required has no more activity (unless district === 0, which means all city)
+					if (Object.keys(equiprobability_Types_perDistrict[lastDistrict]).length !== 0 && district !== 0)
+						district = lastDistrict;
+					//Determines new district
+					else 
+						district = get_randomItem_from_Equiprobability_Obj(area,equiprobability_Districts);
 				}
 
 				//The variable districtStr will be used when constructing the random index below
@@ -384,8 +390,7 @@ Meteor.methods({
 
 				//Removes REDUNDANT TYPES from equiprobability_Types_perDistrict[district]
 				for (k=0; k < typesBelowGap.length; k++)
-					delete_Item_from_Equiprobability_Obj(equiprobability_Types_perDistrict[district],typesBelowGap[k],nbActivities_perTypeDistrict_inLoop[typesBelowGap[k] + district]);
-				
+					delete_Item_from_Equiprobability_Obj(equiprobability_Types_perDistrict[district],typesBelowGap[k],nbActivities_perTypeDistrict_inLoop[typesBelowGap[k] + district]);				
 
 				//FOR RESTAURANTS
 				hour = start.getHours();
@@ -417,33 +422,26 @@ Meteor.methods({
 						break;
 
 					//Determines random type
-					var nbActivities_Possible_Types_forDistrict = getMaxKeyValue(equiprobability_Types_perDistrict[district]);
-					randomTypeIndex = Math.floor(Math.random() * nbActivities_Possible_Types_forDistrict);
-					randomType = getValuefromIndex(types,equiprobability_Types_perDistrict[district],randomTypeIndex);
-					randomTypeNb = types.indexOf(randomType);
-					
-					//If a type has no activity and is subsequent to current random type, it will be deleted too
+					randomType = get_randomItem_from_Equiprobability_Obj(types,equiprobability_Types_perDistrict[district]);
 					delete_Item_from_Equiprobability_Obj(equiprobability_Types_perDistrict[district],randomType,nbActivities_perTypeDistrict_inLoop[randomType + district]);
 
+					randomTypeNb = types.indexOf(randomType);
 					if(randomTypeNb < 10)
 						randomTypeNb = '0' + randomTypeNb;
 					else
 						randomTypeNb = randomTypeNb.toString();
 
-					
 					do { //Loop for **** ACTIVITIES ******
 
-						if (ActivityNumbers_perTypeDistrict[randomType + district].length === 0)
+						if (Object.keys(equiprobability_Activities_perTypeDistrict[randomType + district]).length === 0)
 							break;
 
-						randActivityIndex = Math.floor(Math.random() * ((ActivityNumbers_perTypeDistrict[randomType + district]).length));
-						randActivityNb = (ActivityNumbers_perTypeDistrict[randomType + district])[randActivityIndex];
-						ActivityNumbers_perTypeDistrict[randomType + district].splice(randActivityIndex,1);
-
+						randActivityNb = get_randomItem_from_Equiprobability_Obj(ActivityNumbers_perTypeDistrict[randomType + district], equiprobability_Activities_perTypeDistrict[randomType + district]);						
+						delete_Item_from_Equiprobability_Obj(equiprobability_Activities_perTypeDistrict[randomType + district],randActivityNb,copies_Activities_perTypeDistrict[randomType + district][randActivityNb]);
+				
 						randomIndex = parseInt(randActivityNb + randomTypeNb + districtStr);
 
 						// ***** BEGINNING OF TESTS *******
-
 						if(track_ResultsIndex.indexOf(randomIndex) > -1)
 							continue;
 
@@ -612,7 +610,9 @@ Meteor.methods({
 			}
 
 			//Resetting all variables with new values
+			equiprobability_Districts = {};
 			countActivitiesDistrict = 0;
+
 			for (k=0; k < area.length; k++){
 
 				var ds = area[k];
@@ -632,17 +632,25 @@ Meteor.methods({
 					}
 
 					nbActivities_perTypeDistrict_inLoop[tp + ds] = n;
-
 					nbActivities_perType[tp] += n;
 					nbActivities_perDistrict[ds] += n;
-//						nbActivities_Total += n;
+					
+					if (n > 0){
+						countActivitiesType += n;
+						equiprobability_Types_perDistrict[ds][tp] = countActivitiesType;
+					}	
 
-					countActivitiesType += n;
-					equiprobability_Types_perDistrict[ds][tp] = countActivitiesType;				
+					countActivitiesNumber = 0;
+					for (l=1; l <= n; l++){
+						ActivityNumbers_perTypeDistrict[tp + ds].push(l);
+						countActivitiesNumber += copies_Activities_perTypeDistrict[tp + ds][l];
+						equiprobability_Activities_perTypeDistrict[tp + ds][l] = countActivitiesNumber;
+					}			
 		
 				}
 				countActivitiesDistrict += nbActivities_perDistrict[ds];
-				equiprobability_Districts[ds] = countActivitiesDistrict;
+				if(nbActivities_perDistrict[ds] > 0)
+					equiprobability_Districts[ds] = countActivitiesDistrict;
 			}
 
 		}

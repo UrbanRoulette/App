@@ -1,6 +1,10 @@
 <template name="formDatabaseTableRow">
 	<tr height="100">
 		<td><i class="fa fa-times"></i></td>
+		<td class="cell copies-cell">
+			<input type="text" name="hours" value="" class="table-input copies-input hidden" id="{{_id}}copies-cell-input"/>
+			<div class="cell-text" id="{{_id}}copies-cell-text">{{copies}}</div>
+		</td>
 		<td class="cell specific-cell">
 			<textarea type="text" name="hours" value="" class="table-input specific-input hidden" id="{{_id}}specific-cell-input"></textarea>
 			<div class="cell-text table-specific" id="{{_id}}specific-cell-text">{{specific}}</div>

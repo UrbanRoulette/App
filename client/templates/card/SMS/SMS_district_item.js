@@ -1,5 +1,5 @@
 Template.SMSdistrictItem.events({
-	'click .type-district': function(e){
+	'click .sms-type-district': function(e){
 		Session.set('district',this.valueOf());
 	}
 });

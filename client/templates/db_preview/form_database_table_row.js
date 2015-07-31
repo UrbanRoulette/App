@@ -28,6 +28,27 @@ Template.formDatabaseTableRow.events({
 		}
 	},
 
+	'dblclick .copies-cell': function(e){
+		$('.table-input').addClass('hidden');
+		$('.cell-text').removeClass('hidden');
+		var docId = this._id;
+		var text = this.copies;
+		var height = $('#' + docId + 'copies-cell-text').height();
+		$('#' + docId + 'copies-cell-text').toggleClass('hidden');
+		$('#' + docId + 'copies-cell-input').height(height);
+		$('#' + docId + 'copies-cell-input').toggleClass('hidden');
+		$('#' + docId + 'copies-cell-input').val(text);
+		$('#' + docId + 'copies-cell-input').focus();
+	},
+
+	'blur .copies-input': function(e){
+		var docId = this._id;
+		var text = $('#' + docId + 'copies-cell-input').val();
+		Activities.update({_id: this._id}, {$set: {copies: Number(text)}});
+		$('.table-input').addClass('hidden');
+		$('.cell-text').removeClass('hidden');
+	},
+
 	'dblclick .specific-cell': function(e){
 		$('.table-input').addClass('hidden');
 		$('.cell-text').removeClass('hidden');
