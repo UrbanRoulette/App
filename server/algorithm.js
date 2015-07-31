@@ -78,18 +78,23 @@ Meteor.startup(function(){
 	nbActivities_perTypeDistrict = {};
 	nbActivities_perTypeDistrict_inLoop = {};
 	copies_Activities_perTypeDistrict = {};
+	requiresun_Activities_perTypeDistrict = {};
 
 	for (k=0; k < districts.length; k++){
 			var dKey = districts[k];
 			
 			for (i=0 ; i < types.length; i++){
+
 				copies_Activities_perTypeDistrict[types[i] + dKey] = {};
+				requiresun_Activities_perTypeDistrict[types[i] + dKey] = {};
+
 				var number = 0;
-//				var number = Activities.find({$and: [{district: dKey}, {type: types[i]}]}).count();	
 				Activities.find({$and: [{district: dKey}, {type: types[i]}]}).forEach(function(doc){ 
 					number += 1;
 					copies_Activities_perTypeDistrict[types[i] + dKey][number] = doc.copies;
+					requiresun_Activities_perTypeDistrict[types[i] + dKey][number] = doc.requiresun;
 				});	// jshint ignore:line
+
 				nbActivities_perTypeDistrict[types[i] + dKey] = number;
 				nbActivities_perTypeDistrict_inLoop[types[i] + dKey] = number;
 			}
@@ -223,62 +228,35 @@ Meteor.methods({
 
 		ActivityNumbers_perTypeDistrict = {}; //Will contain, for each Type&District combination, an array of activity numbers : [1,2,3,4,..]
 		ActivityNumbers_notOpenToday_perTypeDistrict = {};
-		ActivityNumbers_notFittingWeather_perTypeDistrict = {};
 		ActivityNumbers_closePeriod_perTypeDistrict = {};
 
-		equiprobability_Districts = {}; //Will contain all districts of the area (equiprobable)
-		equiprobability_Types_perDistrict = {}; //Will contain an array with all types (equiprobable) present in the district		
-		equiprobability_Activities_perTypeDistrict = {};
+		equiprobability_Types_perDistrict = {}; //Will contain an array with all types (equiprobable) present in the district	
+		//Activities according to weather	
+		equiprobability_all_Activities_perTypeDistrict = {};
+		equiprobability_requiresun_Activities_perTypeDistrict = {};
+		equiprobability_other_Activities_perTypeDistrict = {};
 
-		//Putting values in the various variables declared right above
-		countActivitiesDistrict = 0;
+		//Initializing loop
 		for (k=0; k < area.length; k++){
 
 			var d = area[k];
-			equiprobability_Types_perDistrict[d] = {};
-
-			nbActivities_perDistrict[d] = 0;
-
-			countActivitiesType = 0;
 
 			for (i=0 ; i < types.length; i++){
 
-				if(k === 0){
-					nbActivities_perType[t] = 0;
-//					countRedundantTypes[t] = 0;
-				}
-
 				var t = types[i];
-				var number = nbActivities_perTypeDistrict[t + d];
-
-				nbActivities_perType[t] += number;
-				nbActivities_perDistrict[d] += number;
-
-				if(number > 0){
-					countActivitiesType += number;
-					equiprobability_Types_perDistrict[d][t] = countActivitiesType;	
-				}		
 
 				ActivityNumbers_perTypeDistrict[t + d] = [];
 				ActivityNumbers_notOpenToday_perTypeDistrict[t + d] = [];
-				ActivityNumbers_notFittingWeather_perTypeDistrict[t + d] = [];
 				ActivityNumbers_closePeriod_perTypeDistrict[t + d] = [];
 
-				equiprobability_Activities_perTypeDistrict[t + d] = {};
+				equiprobability_all_Activities_perTypeDistrict[t + d] = {};
+				equiprobability_requiresun_Activities_perTypeDistrict[t + d] = {};
+				equiprobability_other_Activities_perTypeDistrict[t + d] = {};
 
-				countActivitiesNumber = 0;
-				for (l=1; l <= number; l++){
-					ActivityNumbers_perTypeDistrict[t + d].push(l);
-					countActivitiesNumber += copies_Activities_perTypeDistrict[t + d][l];
-					equiprobability_Activities_perTypeDistrict[t + d][l] = countActivitiesNumber;
-				}
-					
+				var number = nbActivities_perTypeDistrict[t + d];
+				for (l=1; l <= number; l++)
+					ActivityNumbers_perTypeDistrict[t + d].push(l);					
 			}
-
-			countActivitiesDistrict += nbActivities_perDistrict[d];			
-			if(nbActivities_perDistrict[d] > 0)
-				equiprobability_Districts[d] = countActivitiesDistrict;
-
 		}
 
 		var districtRequired = district; //Useful to keep in a variable the original district that was requested by the user
@@ -291,6 +269,9 @@ Meteor.methods({
 		var track_Types = []; //Will check that activities of the same types are not offered too closely
 		var typesBelowGap = [];
 
+		//!! Only one weather variable can be true
+		var normalWeather = true;
+		var goodWeather = false;
 		var badWeather = false;
 
 		var check3 = false;
@@ -348,6 +329,64 @@ Meteor.methods({
 			else
 */				check3 = true;
 
+			//Putting values in variables
+			equiprobability_Districts = {};
+			count_equiprobability_Districts = 0;
+
+			for (k=0; k < area.length; k++){
+
+				var ds = area[k];
+
+				nbActivities_perDistrict[ds] = 0;
+
+				count_equiprobability_Types = 0;
+				equiprobability_Types_perDistrict[ds] = {};
+
+				for (i=0; i < types.length; i++){
+
+					var tp = types[i];
+					var n = ActivityNumbers_perTypeDistrict[tp + ds].length;
+
+					if(k === 0){
+						nbActivities_perType[tp] = 0;
+	//					countRedundantTypes[tp] = 0;
+					}
+					
+					nbActivities_perType[tp] += n;
+					nbActivities_perDistrict[ds] += n;
+					nbActivities_perTypeDistrict_inLoop[tp + ds] = n;
+					
+					if (n > 0){
+						count_equiprobability_Types += n;
+						equiprobability_Types_perDistrict[ds][tp] = count_equiprobability_Types;
+					}	
+
+					count_equiprobability_requiresun_Activities = 0;
+					count_equiprobability_other_Activities = 0;
+
+					for (l=1; l <= n; l++){
+
+						ActivityNumbers_perTypeDistrict[tp + ds].push(l);
+						var sunBoolean = requiresun_Activities_perTypeDistrict[tp + ds][l];
+
+						if(sunBoolean){
+							count_equiprobability_requiresun_Activities += copies_Activities_perTypeDistrict[tp + ds][l];
+							equiprobability_requiresun_Activities_perTypeDistrict[tp + ds][l] = count_equiprobability_requiresun_Activities;
+						}
+						else {
+							count_equiprobability_other_Activities += copies_Activities_perTypeDistrict[tp + ds][l];
+							equiprobability_other_Activities_perTypeDistrict[tp + ds][l] = count_equiprobability_other_Activities;
+						}
+						equiprobability_all_Activities_perTypeDistrict[tp + ds][l] = count_equiprobability_requiresun_Activities + count_equiprobability_other_Activities;
+
+					}		
+		
+				}
+				count_equiprobability_Districts += nbActivities_perDistrict[ds];
+				if(nbActivities_perDistrict[ds] > 0)
+					equiprobability_Districts[ds] = count_equiprobability_Districts;
+			}
+
 			typesBelowGap = [];
 			//Determines types of activities that are too recent (i.e below 'gap' time)
 			for (k=0; k < track_Types.length; k++){
@@ -399,13 +438,12 @@ Meteor.methods({
 				if (eatingHours.indexOf(hour) > -1 && typesBelowGap.indexOf(typeTreated) === -1){
 					for(i=0; i < types.length; i++) {
 						if(types[i] !== typeTreated)
-							delete equiprobability_Types_perDistrict[area[k]][types[i]];
+							delete equiprobability_Types_perDistrict[district][types[i]];
 					}	
 				}
 				//Will absolutely exclude restaurant if it is NOT eating time (and that it has not yet been removed by typeBelowGap)
 				else if (eatingHours.indexOf(hour) === -1 && typesBelowGap.indexOf(typeTreated) === -1)
 					delete_Item_from_Equiprobability_Obj(equiprobability_Types_perDistrict[district],typeTreated,nbActivities_perTypeDistrict_inLoop[typeTreated + district]);
-				
 
 				/* To select random documents, see the following links:
 					http://bdadam.com/blog/finding-a-random-document-in-mongodb.html
@@ -430,15 +468,29 @@ Meteor.methods({
 						randomTypeNb = '0' + randomTypeNb;
 					else
 						randomTypeNb = randomTypeNb.toString();
-
+					
+					var sun_obj = equiprobability_requiresun_Activities_perTypeDistrict[randomType + district];
+					var other_obj = equiprobability_other_Activities_perTypeDistrict[randomType + district];
+					var all_obj = equiprobability_all_Activities_perTypeDistrict[randomType + district];
+					
 					do { //Loop for **** ACTIVITIES ******
 
-						if (Object.keys(equiprobability_Activities_perTypeDistrict[randomType + district]).length === 0)
+						if (Object.keys(all_obj).length === 0 || (Object.keys(sun_obj).length === 0 && Object.keys(other_obj).length === 0))
 							break;
 
-						randActivityNb = get_randomItem_from_Equiprobability_Obj(ActivityNumbers_perTypeDistrict[randomType + district], equiprobability_Activities_perTypeDistrict[randomType + district]);						
-						delete_Item_from_Equiprobability_Obj(equiprobability_Activities_perTypeDistrict[randomType + district],randActivityNb,copies_Activities_perTypeDistrict[randomType + district][randActivityNb]);
-				
+						if (goodWeather && Object.keys(sun_obj).length !== 0) {
+							randActivityNb = get_randomItem_from_Equiprobability_Obj(ActivityNumbers_perTypeDistrict[randomType + district], sun_obj);
+							delete_Item_from_Equiprobability_Obj(sun_obj,randActivityNb,copies_Activities_perTypeDistrict[randomType + district][randActivityNb]);
+						}
+						else if (goodWeather || badWeather) {
+							randActivityNb = get_randomItem_from_Equiprobability_Obj(ActivityNumbers_perTypeDistrict[randomType + district], other_obj);
+							delete_Item_from_Equiprobability_Obj(other_obj,randActivityNb,copies_Activities_perTypeDistrict[randomType + district][randActivityNb]);
+						}
+						else if (normalWeather) {
+							randActivityNb = get_randomItem_from_Equiprobability_Obj(ActivityNumbers_perTypeDistrict[randomType + district], all_obj);
+							delete_Item_from_Equiprobability_Obj(all_obj,randActivityNb,copies_Activities_perTypeDistrict[randomType + district][randActivityNb]);
+						}
+
 						randomIndex = parseInt(randActivityNb + randomTypeNb + districtStr);
 
 						// ***** BEGINNING OF TESTS *******
@@ -529,12 +581,6 @@ Meteor.methods({
 							}
 						}
 
-						//Test: If weather is bad, does the activity requires sun?
-						if(badWeather && doc.requiresun){
-							ActivityNumbers_notFittingWeather_perTypeDistrict[randomType + district].push(randActivityNb);
-							continue;
-						}
-
 						allChecks = false;
 					}
 					while (allChecks);
@@ -600,59 +646,13 @@ Meteor.methods({
 					for(l=1; l <= nbActivities_perTypeDistrict[types[i] + area[k]]; l++){
 
 						var test1 = ActivityNumbers_notOpenToday_perTypeDistrict[types[i] + area[k]].indexOf(l);
-						var test2 = ActivityNumbers_notFittingWeather_perTypeDistrict[types[i] + area[k]].indexOf(l);
-						var test3 = ActivityNumbers_closePeriod_perTypeDistrict[types[i] + area[k]].indexOf(l);
+						var test2 = ActivityNumbers_closePeriod_perTypeDistrict[types[i] + area[k]].indexOf(l);
 
-						if(test1 === -1 && test2 === -1 && test3 === -1)
+						if(test1 === -1 && test2 === -1)
 							ActivityNumbers_perTypeDistrict[types[i] + area[k]].push(l);
 					}
 				}
 			}
-
-			//Resetting all variables with new values
-			equiprobability_Districts = {};
-			countActivitiesDistrict = 0;
-
-			for (k=0; k < area.length; k++){
-
-				var ds = area[k];
-
-				nbActivities_perDistrict[ds] = 0;
-
-				countActivitiesType = 0;
-				equiprobability_Types_perDistrict[ds] = {};
-
-				for (i=0; i < types.length; i++){
-					var tp = types[i];
-					var n = ActivityNumbers_perTypeDistrict[tp + ds].length;
-
-					if(k === 0){
-						nbActivities_perType[tp] = 0;
-	//					countRedundantTypes[tp] = 0;
-					}
-
-					nbActivities_perTypeDistrict_inLoop[tp + ds] = n;
-					nbActivities_perType[tp] += n;
-					nbActivities_perDistrict[ds] += n;
-					
-					if (n > 0){
-						countActivitiesType += n;
-						equiprobability_Types_perDistrict[ds][tp] = countActivitiesType;
-					}	
-
-					countActivitiesNumber = 0;
-					for (l=1; l <= n; l++){
-						ActivityNumbers_perTypeDistrict[tp + ds].push(l);
-						countActivitiesNumber += copies_Activities_perTypeDistrict[tp + ds][l];
-						equiprobability_Activities_perTypeDistrict[tp + ds][l] = countActivitiesNumber;
-					}			
-		
-				}
-				countActivitiesDistrict += nbActivities_perDistrict[ds];
-				if(nbActivities_perDistrict[ds] > 0)
-					equiprobability_Districts[ds] = countActivitiesDistrict;
-			}
-
 		}
 
 		if(resultsLength < dayLength){
