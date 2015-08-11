@@ -1,19 +1,20 @@
 AutoForm.hooks({    
     submitActivity: {
       before: {
-        insert: function(doc) {
-        	if(typeof form !== 'undefined'){
+        method: function(doc) {
+//         	this.event.preventDefault();
+/*        	if(typeof form !== 'undefined'){
         		Activitieswaiting.remove({_id: form._id});
         		if (typeof form.metrostation !== 'undefined')
         			doc.metrostation = form.metrostation;
         	}
-        	var last = ($("#last").val()).split('h');
-        	for (k=0; k < last.length; k++){
-        		last[k] = parseInt(last[k]);
-        	}
-        	doc.last = last[0]*60 + last[1];
+*/
+			doc.requiresun = $('#sun-checkbox').prop('checked');
+
+			var last = ($("#last").val()).split('h');
+        	doc.last = parseInt(last[0])*60 + parseInt(last[1]);
         	$("#hours").addClass('hidden');
-//        	doc.description = doc.description.css({"font-family":"\"Helvetica Neue\", Helvetica, Arial, sans-serif;"});	
+
 			doc.temporary = $('#temporary-checkbox').prop('checked');
 			if($('#temporary-checkbox').prop('checked')){
 				var startYear = $("#start-year").val();
@@ -28,10 +29,10 @@ AutoForm.hooks({
 			}
 
 			doc.submitted = new Date();
-			doc.requiresun = $('#sun-checkbox').prop('checked');
-			doc.index = 0;
-			this.result(doc);
-        }
+			doc.draws = 0;
+
+			return doc;
+		}
       } 
     }     
   });
@@ -234,7 +235,7 @@ Template.formDatabase.events({
 		$("[name='type']").val('Bar');
 	},
 	'click #cinema': function(e){
-		$("[name='type']").val('Cinéma');
+		$("[name='type']").val('Cinéma/Film');
 	},
 	'click #sport': function(e){
 		$("[name='type']").val('Sport');
@@ -274,6 +275,12 @@ Template.formDatabase.events({
 	},
 	'click #shopping': function(e){
 		$("[name='type']").val('Shopping');
+	},
+	'click #cuisine': function(e){
+		$("[name='type']").val('Cuisine');
+	},
+	'click #decouverte': function(e){
+		$("[name='type']").val('Découverte');
 	},
 	'click #divers': function(e){
 		$("[name='type']").val('Divers');

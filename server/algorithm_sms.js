@@ -1,128 +1,8 @@
 Meteor.startup(function(){
-	//Parameters
-	pace = 15; // Pace (in number of minutes) (must divide 60)
-	unit = 1; //Unit for the last of each activity in database (in number of minutes)
-	dayLength = 6*60;//6*60; //Length of day (in number of unit). Ex: If unit=30 (ie half-hour), then dayLength = 2 means 1 hour
-	gap = dayLength; //Gap between two activities (in number of unit). During this gap, activity of the same category will not be offered, unless it has been randomly chosen more than var 'luck' times 
-	luck = 5; //Number of tries from which an activity can appear even if it is redundant
 
-	//Variables
-	weekday = new Array(7);
-	weekday[0]=  "sunday";
-	weekday[1] = "monday";
-	weekday[2] = "tuesday";
-	weekday[3] = "wednesday";
-	weekday[4] = "thursday";
-	weekday[5] = "friday";
-	weekday[6] = "saturday";
+	Draws.remove({});
 
-	lunchHours = [12,13];
-	dinnerHours = [19,20];
-	eatingHours = lunchHours.concat(dinnerHours);
-
-	districts = [0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,77,78,91,92,93,94,95,99];//All districts
-
-	areas = [
-			[0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,99], //Paris (all districts)
-			[1,2,3,4,5,6,7,8,9,99],
-			[2,1,4,8,9,10,11,99],
-			[3,1,2,4,11,10,99],
-			[4,1,2,3,5,6,11,12,13,99],
-			[5,1,4,6,13,12,14,99],
-			[6,5,7,4,1,14,15,99],
-			[7,1,6,15,8,16,99],
-			[8,1,2,9,7,17,16,99],
-			[9,2,10,18,17,8,1,99],
-			[10,11,3,2,9,18,19,99],
-			[11,10,3,4,12,20,19,99],
-			[12,11,3,4,5,20,13,99],
-			[13,12,4,5,6,14,99],
-			[14,5,6,7,13,15,99],
-			[15,6,7,14,16,99],
-			[16,7,8,15,99],
-			[17,18,9,2,1,8,99],
-			[18,19,10,9,8,17,99],
-			[19,20,11,10,18,99],
-			[20,19,10,11,12,3,4,99],
-			[77],
-			[78],
-			[91],
-			[92],
-			[93],
-			[94],
-			[95],
-			[99]
-			];
-
-	nbActivities_perDistrict = {};		
-
-	types = ['Balade', //0
-				'Bar',
-				'Boite',
-				'Cinéma/Film',
-				'Concert',
-				'Cuisine', //5
-				'Découverte',
-				'Divers',
-				'Evasion',
-				'Evènement',
-				'Insolite', //10
-				'Jeux',
-				'Lecture',
-				'Musée',
-				'Musique',
-				'Petit-dej ou goûter', //15
-				'Restaurant',
-				'Shopping',
-				'Sport',
-				'Théâtre',
-				'Visite' //20
-				];
-
-	nbActivities_perType = {};
-	//Redundant type system will use an identical but different object
-	countRedundantTypes = {};
-
-
-	nbActivities_perTypeDistrict = {};
-	nbActivities_perTypeDistrict_inLoop = {};
-	copies_Activities_perTypeDistrict = {};
-	requiresun_Activities_perTypeDistrict = {};
-
-	for (k=0; k < districts.length; k++){
-			var dKey = districts[k];
-			
-			for (i=0 ; i < types.length; i++){
-
-				copies_Activities_perTypeDistrict[types[i] + dKey] = {};
-				requiresun_Activities_perTypeDistrict[types[i] + dKey] = {};
-
-				var number = 0;
-				Activities.find({$and: [{district: dKey}, {type: types[i]}]}).forEach(function(doc){ 
-					number += 1;
-					copies_Activities_perTypeDistrict[types[i] + dKey][number] = doc.copies;
-					requiresun_Activities_perTypeDistrict[types[i] + dKey][number] = doc.requiresun;
-				});	// jshint ignore:line
-
-				nbActivities_perTypeDistrict[types[i] + dKey] = number;
-				nbActivities_perTypeDistrict_inLoop[types[i] + dKey] = number;
-			}
-	}
-
-	//Functions used in algorithm
-	roundTime = function(date, pace){  
-		var h = date.getHours();
-		var m = date.getMinutes();
-		var result = m/pace;
-		var quotient = Math.floor(result);
-		if((quotient + 1) === 60/pace)
-			date.setHours(h+1,0,0,0); //Important to set seconds and milliseconds to 0!
-		else 
-			date.setHours(h,(quotient+1)*pace,0,0);
-		return date;
-	};
-
-	createActivityObject = function(doc){
+	createString = function(doc){
 
 		metrostation = null;
 		if (typeof doc.metrostation !== 'undefined'){
@@ -138,88 +18,29 @@ Meteor.startup(function(){
 				metrostation = metrostation + ' ou ' + stations[nbstations - 1];
 			}	
 		}
-		var activity = {
-		_id: doc._id,
-		specific: doc.specific,
-		name: doc.name,
-		address: doc.address,
-		district: doc.district,
-		metrostation: metrostation,
-		description: doc.description,
-		type: doc.type,
-		price: doc.price,
-		mark: doc.mark,
-		link: doc.link,
-		contact: doc.contact,
-		image: doc.image,
-		index: doc.index,
-		startString: startString,
-		startTime: start,
-		endString: endString,
-		endTime: end,
-		last: doc.last
-	};
-		return activity;
+        
+        var carditem = '\n';
+        carditem += "[" + startString + "-" + endString + "] " + doc.specific + " - " + doc.name;
+        carditem = (doc.district !== 99) ? (carditem + ' - ' + doc.district +'e') : carditem;
+        carditem += '\n';
+        carditem = (metrostation !== null) ? (carditem + 'Métro : ' + metrostation + '\n') : carditem;
+        carditem += '=>' + doc.link;
+        carditem += '\n';
+
+     	return carditem;
 	};
 
-	timeString = function(time){
-		var h = time.getHours();
-		var m = time.getMinutes();
-		var timeString = '';
-		if (h>=10){
-			if (m>=10)
-				timeString = h.toString() + 'h' + m.toString();
-			else
-				timeString = h.toString() + 'h0' + m.toString();
-		}
-		else {
-			if (m>=10)
-				timeString = '0' + h.toString() + 'h' + m.toString();
-			else
-				timeString = '0' + h.toString() + 'h0' + m.toString();
-		}
-		return timeString;
-	};
-
-	delete_Item_from_Equiprobability_Obj = function(obj,item,nb){
-		var val = obj[item];
-		delete obj[item];
-		for(var t in obj){
-			if(obj[t] > val)
-				obj[t] -= nb;	
-			else if (obj[t] === val || obj[t] === 0)
-				delete obj[t];
-		}		
-	};
-
-	get_randomItem_from_Equiprobability_Obj = function(array,obj){
-		var max = 0;
-		var result;
-		for (var key in obj) {
-			if(max < obj[key])
-				max = obj[key];
-		}		
-		for(i=0; i < array.length; i++){
-			if(obj[array[i]] > (Math.random() * max)){
-				result = array[i];
-				break;
-			}
-		}
-		return result;
-	};
-
-});
-
-Meteor.methods({
-
-	algorithm: function(district, timezoneOffset){
+	algorithm_SMS = function(district){
 
 		benchmarkStart = new Date();
+		draw = {};
 
 //		check(startDate, Date);
-		check(timezoneOffset, Number);
+//		check(timezoneOffset, Number);
 		check(district, Match.Optional(Number));
+//		check(timestamp, Number);
 //		check(resultsKeptSessionVar,[Object]);
+
 
 		//About TIME DIFFERENCES BETWEEN CLIENT AND SERVER
 			//http://stackoverflow.com/questions/1201378/how-does-datetime-touniversaltime-work
@@ -227,11 +48,12 @@ Meteor.methods({
 			//http://stackoverflow.com/questions/23112301/gettimezoneoffset-method-return-different-time-on-localhost-and-on-server
 			//http://stackoverflow.com/questions/18014341/how-to-convert-time-correctly-across-timezones?rq=1
 			//We can also use moment.js (client and server): http://momentjs.com/docs/#/manipulating/utc/
-			
+		
 		startDate = new Date();
-		startDate = new Date(startDate.getTime() - timezoneOffset*60000); //Note: getTime() is UTC by essence, always.
+		draw.startDate = startDate;
+		startDate = new Date(startDate.getTime() + 120*60000); //Note: getTime() is UTC by essence, always.
 		start = roundTime(startDate, pace);
-
+		
 		var indexOfdistrict = districts.indexOf(district);
 		area = areas[indexOfdistrict];
 
@@ -262,15 +84,17 @@ Meteor.methods({
 				equiprobability_requiresun_Activities_perTypeDistrict[t + d] = {};
 				equiprobability_other_Activities_perTypeDistrict[t + d] = {};
 
-/*				var number = nbActivities_perTypeDistrict[t + d];
+				var number = nbActivities_perTypeDistrict[t + d];
 				for (l=1; l <= number; l++)
 					ActivityNumbers_perTypeDistrict[t + d].push(l);					
-*/			}
+			}
 		}
 
 		var districtRequired = district; //Useful to keep in a variable the original district that was requested by the user
+		var lastDistrict = district;//Will know which was the district of the last activity suggested
 
 		var rouletteResults = [];
+		var activitiesString = '';
 		var resultsLength = 0;
 		var track_ResultsIndex = []; //Will check if document has already been selected as a result
 
@@ -337,6 +161,7 @@ Meteor.methods({
 			}
 			else
 */				check3 = true;
+
 			//Resets district to the original district required by the user
 			lastDistrict = district;
 			district = districtRequired;
@@ -360,7 +185,6 @@ Meteor.methods({
 
 						if(test1 === -1 && test2 === -1)
 							ActivityNumbers_perTypeDistrict[types[i] + area[k]].push(l);
-
 					}
 				}
 			}
@@ -382,7 +206,6 @@ Meteor.methods({
 
 					var tp = types[i];
 					var n = ActivityNumbers_perTypeDistrict[tp + ds].length;
-
 
 					if(k === 0){
 						nbActivities_perType[tp] = 0;
@@ -506,6 +329,7 @@ Meteor.methods({
 					var all_obj = equiprobability_all_Activities_perTypeDistrict[randomType + district];
 					
 					do { //Loop for **** ACTIVITIES ******
+
 						if (Object.keys(all_obj).length === 0 || (Object.keys(sun_obj).length === 0 && Object.keys(other_obj).length === 0))
 							break;
 
@@ -630,6 +454,7 @@ Meteor.methods({
 				endString = timeString(end);
 
 				rouletteResults.push(createActivityObject(doc));
+				activitiesString += createString(doc);
 				track_ResultsIndex.push(doc.index);
 				track_Types.push({
 					type: doc.type,
@@ -654,6 +479,10 @@ Meteor.methods({
 /*			for (i=0;i < types.length; i++) 
 				countRedundantTypes[types[i]] = 0;
 */
+			//Resets district to the original district required by the user
+			lastDistrict = district;
+			district = districtRequired;
+
 			//Resets day
 			previousday = day;
 			day = weekday[start.getDay()];
@@ -670,10 +499,65 @@ Meteor.methods({
 		benchmarkEnd = new Date();
 		benchmark = benchmarkEnd.getTime() - benchmarkStart.getTime();
 
-		return {rouletteResults: rouletteResults, 
-				benchmark: benchmark, 
-				message: message
-				};
-	}
+//	      textmessage = 'Votre tirage ';
+
+	      var probability = [];
+	      size = 10;
+	      factor = size/10;
+	      for(k=0;k<1*size;k++){
+	        if(k < 1*factor)
+	          probability.push(1);
+	        else if(k >= 1*factor && k < 3*factor)
+	          probability.push(2);
+	        else if(k >= 3*factor && k < 6*factor)
+	          probability.push(3);
+	        else if(k >= 6*factor && k < 8*factor)
+	          probability.push(4);
+	        else if(k >= 8*factor && k < 10*factor)
+	          probability.push(5);
+	      }
+
+	      var random = Math.floor(Math.random()*size);
+	      var stars = '';
+	      for(i=1;i<=probability[random];i++)
+	        stars += '+';
+
+//	      textmessage += stars + '\n';
+
+	      var totalPrice = 0;
+	      var resultsId = [];
+	      var resultsType = [];
+
+	      for (k=0; k < rouletteResults.length; k++){
+	      	resultsId.push(rouletteResults[k]._id);
+	      	resultsType.push(rouletteResults[k].type);
+	      	if(rouletteResults[k].type === 'Restaurant')
+	      		draw.restaurant = rouletteResults[k];
+	        if(rouletteResults[k].price !== 'undefined' && rouletteResults[k].price !== null){
+	          var str = (rouletteResults[k].price).replace(/,/,'.');
+	          if(str.indexOf('.') > -1 && str.slice(-1) === '0')
+	            str = str.slice(0, -1);
+	          activityPrice = Number(str);
+	          totalPrice += activityPrice; 
+	        }
+	      }
+
+	      draw.resultsId = resultsId;
+	      draw.resultsType = resultsType;
+
+	      var deviation = 0.2;
+	      var minPrice = Math.round(totalPrice*(1-deviation));
+	      var maxPrice = Math.round(totalPrice*(1+deviation));
+	      var priceInterval =  minPrice + '€' + ' - ' + maxPrice + '€';
+
+//	      textmessage += priceInterval + '\n';
+		textmessage = '€';
+	      textmessage += activitiesString;
+//	      textmessage += '\n"Roulette" pour un autre tirage !';
+
+	      return textmessage;  
+	};
 });
+
+//Meteor.methods({'send_sms': send_sms()});
 

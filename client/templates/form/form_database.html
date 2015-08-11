@@ -17,7 +17,7 @@
 		<div class="btn btn-primary activity-waiting" id="remove-activity-waiting">Supprimer cette activité en attente</div>
 	</div>
 	<div class="col-md-6">
-		{{#autoForm collection="Activities" id="submitActivity" type="insert"}}
+		{{#autoForm collection="Activities" id="submitActivity" type="method" meteormethod="insertActivity"}}
 			<fieldset>
 				<legend>Rentrez une activité !</legend>
 				{{> afQuickField name="specific" id="specific" value=specific}}
@@ -27,7 +27,7 @@
 				<div class="type" id="restaurant">Restaurant</div>
 				<div class="type" id="petit-dej-ou-gouter">Petit-dej ou goûter</div>
 				<div class="type" id="bar">Bar</div>
-				<div class="type" id="cinema">Cinéma</div>
+				<div class="type" id="cinema">Cinéma/Film</div>
 				<div class="type" id="sport">Sport</div>
 				<div class="type" id="boite">Boite</div>
 				<div class="type" id="theatre">Théâtre</div>
@@ -41,6 +41,8 @@
 				<div class="type" id="insolite">Insolite</div>
 				<div class="type" id="evasion">Evasion</div>
 				<div class="type" id="shopping">Shopping</div>
+				<div class="type" id="cuisine">Cuisine</div>
+				<div class="type" id="decouverte">Découverte</div>
 				<div class="type" id="divers">Divers</div>
 				{{> afQuickField name="address" id="address" value=address}}
 				{{> afQuickField name="district" id="district" value=district}}
@@ -115,7 +117,7 @@
 						Périodique (se répète tous les ans) (ex: parcs)
 					</form>
 				</div>
-				{{> afQuickField name="link" id="link" value=link}}
+				{{> afQuickField name="longUrl" id="longUrl" value=longUrl}}
 				{{> afQuickField name="contact" id="contact" value=contact}}
 				{{> afQuickField name="image" id="image" value=image}}
 				{{> afQuickField name="source" id="source" value=source}}

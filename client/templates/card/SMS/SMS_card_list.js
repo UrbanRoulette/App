@@ -1,11 +1,10 @@
 Template.SMScardList.events({
 	'click #click-button-sms': function(e){
-		var startDate = new Date();
-		var timezoneOffset = startDate.getTimezoneOffset();
-		var district = Session.get('district');
+		var timezoneOffset = (new Date()).getTimezoneOffset();
+		var district = Session.get('district');	
 		var resultsKeptSessionVar = Session.get('resultsKept');
-//		rouletteResults = Meteor.call('algorithm', startDate, district);
-		Meteor.apply('algorithm',[startDate, timezoneOffset, district],true,function(error, result) {
+
+		Meteor.apply('algorithm',[district, timezoneOffset],true,function(error, result) {
 			if (error)
 				console.log(error);
 			else {
@@ -20,7 +19,7 @@ Template.SMScardList.events({
 				e.stopPropagation();
 			}
 		});	
-
+	
 	},
 });
 
