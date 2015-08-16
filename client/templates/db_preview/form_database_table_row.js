@@ -95,20 +95,33 @@ Template.formDatabaseTableRow.events({
 		$('.cell-text').removeClass('hidden');
 		var docId = this._id;
 		var text = this.type;
+		var number = parseInt((this.index).toString().slice(0,(this.index).toString().length - 4));
 		var height = $('#' + docId + 'type-cell-text').height();
 		$('#' + docId + 'type-cell-text').toggleClass('hidden');
 		$('#' + docId + 'type-cell-input').height(height);
 		$('#' + docId + 'type-cell-input').toggleClass('hidden');
 		$('#' + docId + 'type-cell-input').val(text);
 		$('#' + docId + 'type-cell-input').focus();
+		Meteor.call('update_other_Indexes',this.district,text,number,function(error,result){
+			if(error)
+				console.log(error);
+			else
+				console.log('Other indexes updated succesfully');
+		});
+
 	},
 
 	'blur .type-input': function(e){
 		var docId = this._id;
 		var text = $('#' + docId + 'type-cell-input').val();
-		Activities.update({_id: this._id}, {$set: {type: text}});
 		$('.table-input').addClass('hidden');
 		$('.cell-text').removeClass('hidden');
+		Meteor.call('updateIndex',docId,this.district,text,function(error,result){
+			if(error)
+				console.log(error);
+			else
+				console.log('Doc index updated succesfully');
+		});
 	},
 
 	'dblclick .address-cell': function(e){
@@ -159,20 +172,32 @@ Template.formDatabaseTableRow.events({
 		$('.cell-text').removeClass('hidden');
 		var docId = this._id;
 		var text = this.district;
+		var number = parseInt((this.index).toString().slice(0,(this.index).toString().length - 4));
 		var height = $('#' + docId + 'district-cell-text').height();
 		$('#' + docId + 'district-cell-text').toggleClass('hidden');
 		$('#' + docId + 'district-cell-input').height(height);
 		$('#' + docId + 'district-cell-input').toggleClass('hidden');
 		$('#' + docId + 'district-cell-input').val(text);
 		$('#' + docId + 'district-cell-input').focus();
+		Meteor.call('update_other_Indexes',parseInt(text),this.type,number,function(error,result){
+			if(error)
+				console.log(error);
+			else
+				console.log('Other indexes updated succesfully');
+		});
 	},
 
 	'blur .district-input': function(e){
 		var docId = this._id;
 		var text = $('#' + docId + 'district-cell-input').val();
-		Activities.update({_id: this._id}, {$set: {district: text}});
 		$('.table-input').addClass('hidden');
 		$('.cell-text').removeClass('hidden');
+		Meteor.call('updateIndex',docId,parseInt(text),this.type,function(error,result){
+			if(error)
+				console.log(error);
+			else
+				console.log('Doc index updated succesfully');
+		});
 	},
 
 	'dblclick .description-cell': function(e){

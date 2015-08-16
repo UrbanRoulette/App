@@ -2,6 +2,14 @@ Meteor.publish('activities', function(){
 	return Activities.find({});
 });
 
+Meteor.publish('movies', function(){
+	return Movies.find({});
+});
+
+Meteor.publish('cinemas', function(){
+	return Cinemas.find({});
+});
+
 Meteor.publish('activityToModify', function(activityId){
 	return Activities.findOne({_id: activityId});
 });

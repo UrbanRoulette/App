@@ -3,111 +3,10 @@ Meteor.startup(function(){
 	pace = 15; // Pace (in number of minutes) (must divide 60)
 	unit = 1; //Unit for the last of each activity in database (in number of minutes)
 	dayLength = 6*60;//6*60; //Length of day (in number of unit). Ex: If unit=30 (ie half-hour), then dayLength = 2 means 1 hour
+	activitiesLength = 4; //Nb of activities in the roulette
 	gap = dayLength; //Gap between two activities (in number of unit). During this gap, activity of the same category will not be offered, unless it has been randomly chosen more than var 'luck' times 
+	transportation = 15; //TIme of transportation between two activities in number of 'units'
 	luck = 5; //Number of tries from which an activity can appear even if it is redundant
-
-	//Variables
-	weekday = new Array(7);
-	weekday[0]=  "sunday";
-	weekday[1] = "monday";
-	weekday[2] = "tuesday";
-	weekday[3] = "wednesday";
-	weekday[4] = "thursday";
-	weekday[5] = "friday";
-	weekday[6] = "saturday";
-
-	lunchHours = [12,13];
-	dinnerHours = [19,20];
-	eatingHours = lunchHours.concat(dinnerHours);
-
-	districts = [0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,77,78,91,92,93,94,95,99];//All districts
-
-	areas = [
-			[0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,99], //Paris (all districts)
-			[1,2,3,4,5,6,7,8,9,99],
-			[2,1,4,8,9,10,11,99],
-			[3,1,2,4,11,10,99],
-			[4,1,2,3,5,6,11,12,13,99],
-			[5,1,4,6,13,12,14,99],
-			[6,5,7,4,1,14,15,99],
-			[7,1,6,15,8,16,99],
-			[8,1,2,9,7,17,16,99],
-			[9,2,10,18,17,8,1,99],
-			[10,11,3,2,9,18,19,99],
-			[11,10,3,4,12,20,19,99],
-			[12,11,3,4,5,20,13,99],
-			[13,12,4,5,6,14,99],
-			[14,5,6,7,13,15,99],
-			[15,6,7,14,16,99],
-			[16,7,8,15,99],
-			[17,18,9,2,1,8,99],
-			[18,19,10,9,8,17,99],
-			[19,20,11,10,18,99],
-			[20,19,10,11,12,3,4,99],
-			[77],
-			[78],
-			[91],
-			[92],
-			[93],
-			[94],
-			[95],
-			[99]
-			];
-
-	nbActivities_perDistrict = {};		
-
-	types = ['Balade', //0
-				'Bar',
-				'Boite',
-				'Cinéma/Film',
-				'Concert',
-				'Cuisine', //5
-				'Découverte',
-				'Divers',
-				'Evasion',
-				'Evènement',
-				'Insolite', //10
-				'Jeux',
-				'Lecture',
-				'Musée',
-				'Musique',
-				'Petit-dej ou goûter', //15
-				'Restaurant',
-				'Shopping',
-				'Sport',
-				'Théâtre',
-				'Visite' //20
-				];
-
-	nbActivities_perType = {};
-	//Redundant type system will use an identical but different object
-	countRedundantTypes = {};
-
-
-	nbActivities_perTypeDistrict = {};
-	nbActivities_perTypeDistrict_inLoop = {};
-	copies_Activities_perTypeDistrict = {};
-	requiresun_Activities_perTypeDistrict = {};
-
-	for (k=0; k < districts.length; k++){
-			var dKey = districts[k];
-			
-			for (i=0 ; i < types.length; i++){
-
-				copies_Activities_perTypeDistrict[types[i] + dKey] = {};
-				requiresun_Activities_perTypeDistrict[types[i] + dKey] = {};
-
-				var number = 0;
-				Activities.find({$and: [{district: dKey}, {type: types[i]}]}).forEach(function(doc){ 
-					number += 1;
-					copies_Activities_perTypeDistrict[types[i] + dKey][number] = doc.copies;
-					requiresun_Activities_perTypeDistrict[types[i] + dKey][number] = doc.requiresun;
-				});	// jshint ignore:line
-
-				nbActivities_perTypeDistrict[types[i] + dKey] = number;
-				nbActivities_perTypeDistrict_inLoop[types[i] + dKey] = number;
-			}
-	}
 
 	//Functions used in algorithm
 	roundTime = function(date, pace){  
@@ -138,9 +37,23 @@ Meteor.startup(function(){
 				metrostation = metrostation + ' ou ' + stations[nbstations - 1];
 			}	
 		}
+
+		var specific = doc.specific;
+/*		var specific2 = null;
+		if(typeof specifictoTime !== 'undefined'){
+			if(Object.keys(specifictoTime) > 0){
+				var hours = start.getHours();
+				var minutes = start.getMinutes();
+				var key = hours.toString() + minutes.toString();
+				specific2 = specifictoTime[key] ? specifictoTime[key] : specific2;			
+			}
+		}
+		if(specific2 !== null)
+			specific += ' (' + specific2 +')';
+*/
 		var activity = {
 		_id: doc._id,
-		specific: doc.specific,
+		specific: specific,
 		name: doc.name,
 		address: doc.address,
 		district: doc.district,
@@ -212,14 +125,16 @@ Meteor.startup(function(){
 
 Meteor.methods({
 
-	algorithm: function(district, timezoneOffset){
+	algorithm: function(district,date,timezoneOffset){
 
-		benchmarkStart = new Date();
+		var benchmarkStart = new Date();
 
-//		check(startDate, Date);
+		check(district, Number);
+		check(date, Date);
 		check(timezoneOffset, Number);
-		check(district, Match.Optional(Number));
+//		check(timestamp, Number);
 //		check(resultsKeptSessionVar,[Object]);
+
 
 		//About TIME DIFFERENCES BETWEEN CLIENT AND SERVER
 			//http://stackoverflow.com/questions/1201378/how-does-datetime-touniversaltime-work
@@ -227,11 +142,12 @@ Meteor.methods({
 			//http://stackoverflow.com/questions/23112301/gettimezoneoffset-method-return-different-time-on-localhost-and-on-server
 			//http://stackoverflow.com/questions/18014341/how-to-convert-time-correctly-across-timezones?rq=1
 			//We can also use moment.js (client and server): http://momentjs.com/docs/#/manipulating/utc/
-			
-		startDate = new Date();
-		startDate = new Date(startDate.getTime() - timezoneOffset*60000); //Note: getTime() is UTC by essence, always.
-		start = roundTime(startDate, pace);
+		draw = {};
 
+		startDate = new Date(date.getTime() - timezoneOffset*60000); //Note: getTime() is UTC by essence, always.
+		draw.startDate = new Date(startDate);
+		start = roundTime(startDate, pace);
+		
 		var indexOfdistrict = districts.indexOf(district);
 		area = areas[indexOfdistrict];
 
@@ -262,15 +178,18 @@ Meteor.methods({
 				equiprobability_requiresun_Activities_perTypeDistrict[t + d] = {};
 				equiprobability_other_Activities_perTypeDistrict[t + d] = {};
 
-/*				var number = nbActivities_perTypeDistrict[t + d];
+				var number = nbActivities_perTypeDistrict[t + d];
 				for (l=1; l <= number; l++)
 					ActivityNumbers_perTypeDistrict[t + d].push(l);					
-*/			}
+			}
 		}
 
-		var districtRequired = district; //Useful to keep in a variable the original district that was requested by the user
+		districtRequired = district; //Useful to keep in a variable the original district that was requested by the user
+		var lastDistrict = district;//Will know which was the district of the last activity suggested
 
-		var rouletteResults = [];
+		rouletteResults = [];
+		resultsId = [];
+		resultsType = [];
 		var resultsLength = 0;
 		var track_ResultsIndex = []; //Will check if document has already been selected as a result
 
@@ -300,7 +219,7 @@ Meteor.methods({
 
 		// ************** BEGINNING OF LOOP ************** //
 
-		while (resultsLength < dayLength){ 
+		while (track_ResultsIndex.length < activitiesLength /*resultsLength < dayLength*/){ 
 
 			//IF SOME RESULTS HAVE BEEN KEPT
 /*			if((typeof resultsKept !== 'undefined') && (resultsKeptIndex < resultsKept.length)){
@@ -313,6 +232,7 @@ Meteor.methods({
 				if (start.getTime() >= startTime.getTime()){
 
 					rouletteResults.push(resultKept);
+					track_ResultsIndex.push(resultKept.index);
 					track_Types.push({
 						type: resultKept.type,
 						time: start
@@ -337,6 +257,7 @@ Meteor.methods({
 			}
 			else
 */				check3 = true;
+
 			//Resets district to the original district required by the user
 			lastDistrict = district;
 			district = districtRequired;
@@ -360,7 +281,6 @@ Meteor.methods({
 
 						if(test1 === -1 && test2 === -1)
 							ActivityNumbers_perTypeDistrict[types[i] + area[k]].push(l);
-
 					}
 				}
 			}
@@ -382,7 +302,6 @@ Meteor.methods({
 
 					var tp = types[i];
 					var n = ActivityNumbers_perTypeDistrict[tp + ds].length;
-
 
 					if(k === 0){
 						nbActivities_perType[tp] = 0;
@@ -461,7 +380,7 @@ Meteor.methods({
 
 				//The variable district_str will be used when constructing the random index below
 				district_str = (district < 10) ? '0' + district : district.toString();
-				
+
 				//Removes REDUNDANT TYPES from equiprobability_Types_perDistrict[district]
 				for (k=0; k < typesBelowGap.length; k++)
 					delete_Item_from_Equiprobability_Obj(equiprobability_Types_perDistrict[district],typesBelowGap[k],nbActivities_perTypeDistrict_inLoop[typesBelowGap[k] + district]);				
@@ -506,6 +425,7 @@ Meteor.methods({
 					var all_obj = equiprobability_all_Activities_perTypeDistrict[randomType + district];
 					
 					do { //Loop for **** ACTIVITIES ******
+
 						if (Object.keys(all_obj).length === 0 || (Object.keys(sun_obj).length === 0 && Object.keys(other_obj).length === 0))
 							break;
 
@@ -530,7 +450,10 @@ Meteor.methods({
 
 						doc = Activities.findOne({index: randomIndex});
 
-						if(typeof doc[day] === 'undefined'){
+						if(typeof doc === 'undefined')
+							continue;
+
+						if(typeof doc[day] === 'undefined' || doc[day] === null){
 							ActivityNumbers_notOpenToday_perTypeDistrict[randomType + district].push(randActivityNb);
 							continue;
 						}
@@ -541,8 +464,11 @@ Meteor.methods({
 						startVar = new Date(start); //Important to create a NEW Date Object
 
 						for (k=0; k < docday.length; k++){
-
-							var openingHours = docday[k].split("-");
+							
+							if(docday[k] !== null)
+								openingHours = docday[k].split("-");
+							else
+								continue;
 
 							if (openingHours.length === 2){ //Check if there is an open AND a close hour
 
@@ -593,8 +519,9 @@ Meteor.methods({
 								openMinutes = openTime.substr(2,2);
 								open = new Date(startVar.setHours(openHours, openMinutes, 0));
 
-								if(start.getTime() <= open.getTime() && (start.getTime() + pace*60000) >= open.getTime()){
+								if(start.getTime() <= open.getTime() && (start.getTime() + pace*60000) > open.getTime()){
 									check2 = true;
+									start = new Date(open);
 									break;
 								}
 							}	
@@ -622,14 +549,20 @@ Meteor.methods({
 
 			if (allChecks)
 				break;
-
 			//Creates end Date object, and Start and End strings
 			if (check3 || check4){
 				startString = timeString(start);
 				end = new Date(start.getTime() + unit*60000*doc.last); //We add time to the timestamp
 				endString = timeString(end);
 
-				rouletteResults.push(createActivityObject(doc));
+				var obj = createActivityObject(doc);
+				rouletteResults.push(obj);
+
+				resultsId.push(doc._id);
+				resultsType.push(doc.type);
+		     	if(obj.type === 'Restaurant')
+		      		draw.restaurant = obj;
+
 				track_ResultsIndex.push(doc.index);
 				track_Types.push({
 					type: doc.type,
@@ -639,7 +572,7 @@ Meteor.methods({
 			}
 
 			if (check3){  //If the randomly chosen activity is open at start
-				start = new Date(end);
+				start = new Date(end.getTime() + transportation*60000*unit);
 			}
 
 			if (check4) {
@@ -654,26 +587,33 @@ Meteor.methods({
 /*			for (i=0;i < types.length; i++) 
 				countRedundantTypes[types[i]] = 0;
 */
+			//Resets district to the original district required by the user
+			lastDistrict = district;
+			district = districtRequired;
+
 			//Resets day
 			previousday = day;
 			day = weekday[start.getDay()];
 
 		}
 
-		if(resultsLength < dayLength){
-			console.log('Boucle avortée');
+		draw.resultsId = resultsId;
+	    draw.resultsType = resultsType;
+
+		if(track_ResultsIndex.length < activitiesLength){
 			message = 'Il n\'y avait plus d\'activité pertinente à proposer au-delà de ' + endString;
 		}
 		else
 			message = 'Roulette complète';
 
-		benchmarkEnd = new Date();
+		var benchmarkEnd = new Date();
 		benchmark = benchmarkEnd.getTime() - benchmarkStart.getTime();
 
 		return {rouletteResults: rouletteResults, 
 				benchmark: benchmark, 
 				message: message
 				};
-	}
+	},
+
 });
 

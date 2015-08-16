@@ -282,6 +282,9 @@ Template.formDatabase.events({
 	'click #decouverte': function(e){
 		$("[name='type']").val('Découverte');
 	},
+	'click #repos': function(e){
+		$("[name='type']").val('Repos');
+	},
 	'click #divers': function(e){
 		$("[name='type']").val('Divers');
 	},
