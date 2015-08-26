@@ -21,7 +21,8 @@
 			<fieldset>
 				<legend>Rentrez une activité !</legend>
 				{{> afQuickField name="specific" id="specific" value=specific}}
-				<input type="checkbox" name="" value="" id="sun-checkbox"/> Besoin de beau temps
+				<input type="checkbox" name="" value="" id="sun-checkbox"/> Besoin de beau temps<br/>
+				<input type="checkbox" name="" value="" id="booking-checkbox"/> Besoin de réserver absolument
 				{{> afQuickField name="name" id="name" value=name}}
 				{{> afQuickField name="type" id="type" value=type}}
 				<div class="type" id="restaurant">Restaurant</div>
@@ -45,6 +46,9 @@
 				<div class="type" id="decouverte">Découverte</div>
 				<div class="type" id="repos">Repos</div>
 				<div class="type" id="divers">Divers</div>
+				<!--
+				{{> afQuickField name="subtype" id="subtype" value=subtype}}
+				-->
 				{{> afQuickField name="address" id="address" value=address}}
 				{{> afQuickField name="district" id="district" value=district}}
 				<div id="metrostation">
@@ -90,7 +94,7 @@
 						</form>
 					</div>
 				</div>
-				{{> afQuickField name="monday"}}
+				{{> afArrayField name="monday"}}
 				{{> afQuickField name="tuesday"}}
 				{{> afQuickField name="wednesday"}}
 				{{> afQuickField name="thursday"}}
@@ -100,7 +104,7 @@
 				<div id="temporary">
 					<input type="checkbox" name="" value="" id="temporary-checkbox"/> TEMPORAIRE
 				</div>
-				<div class="hidden" id="temporary-options">
+				<div class="{{temporaryHelper}}" id="temporary-options">
 					<div id="start-and-end-days">
 					<strong>Premier jour:</strong><br/>
 					Jour: <input type="text" name="start-day" value="" class="time-input" id="start-day"/>

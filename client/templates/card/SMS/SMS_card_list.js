@@ -41,7 +41,7 @@ Template.SMScardList.helpers({
 			if(p.minPrice !== p.maxPrice)
 				priceInterval =  p.minPrice + '€' + ' - ' + p.maxPrice + '€';
 			else
-				priceInterval = minPrice + '€ environ';
+				priceInterval = p.minPrice + '€ environ';
 
 			return priceInterval;
 		}
@@ -49,7 +49,7 @@ Template.SMScardList.helpers({
 
 	stars: function(){
 		if(Session.get('rouletteResults')){ //So that helpers is reactive
-			var stars = Meteor.call('createStar','✪');
+			var stars = Meteor.call('createStars','✪');
 			return stars;
 		}
 	}

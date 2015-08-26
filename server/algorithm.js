@@ -204,6 +204,8 @@ Meteor.methods({
 		var check3 = false;
 		var check4 = false;
 
+		var doc;
+
 		//RESULTS KEPT: In order to have the right order of the results kept
 		//Current code will NOT WORK server side. See if mrt:client-call package can help...
 /*		if (resultsKeptSessionVar){

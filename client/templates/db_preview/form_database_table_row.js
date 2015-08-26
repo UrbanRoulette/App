@@ -1,6 +1,13 @@
 Template.formDatabaseTableRow.events({
 	'click .fa-times': function(e){
 		if (confirm("Etes-vous sûr de vouloir supprimer cette activité ?")) {
+			var number = parseInt((this.index).toString().slice(0,(this.index).toString().length - 4));
+			Meteor.call('update_other_Indexes',this.district,this.type,number,function(error,result){
+				if(error)
+					console.log(error);
+				else
+					console.log('Other indexes updated succesfully');
+			});
 			Activities.remove({_id: this._id});
 		}
 	},

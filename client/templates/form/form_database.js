@@ -3,13 +3,15 @@ AutoForm.hooks({
       before: {
         method: function(doc) {
 //         	this.event.preventDefault();
-/*        	if(typeof form !== 'undefined'){
+
+        	if(typeof form !== 'undefined')//{
         		Activitieswaiting.remove({_id: form._id});
-        		if (typeof form.metrostation !== 'undefined')
+/*        		if (typeof form.metrostation !== 'undefined')
         			doc.metrostation = form.metrostation;
         	}
-*/
+*/			
 			doc.requiresun = $('#sun-checkbox').prop('checked');
+			doc.requirebooking = $('#booking-checkbox').prop('checked');
 
 			var last = ($("#last").val()).split('h');
         	doc.last = parseInt(last[0])*60 + parseInt(last[1]);
@@ -27,6 +29,7 @@ AutoForm.hooks({
 				doc.enddate = new Date(endYear, endMonth, endDay,23,59,59,999);	
 				doc.yearperiodic = $('#year-periodic-radio').prop('checked');
 			}
+			tempCheckbox.set(false);
 
 			doc.submitted = new Date();
 			doc.draws = 0;
@@ -36,6 +39,10 @@ AutoForm.hooks({
       } 
     }     
   });
+
+Template.formDatabase.onCreated(function(){
+	tempCheckbox = new ReactiveVar(false);
+});
 
 Template.formDatabase.onRendered(function(){
 	$('#summernote').summernote();
@@ -58,6 +65,16 @@ Template.formDatabase.onRendered(function(){
 	$("#start-year").val(year);
 	$("#end-year").val(year);
 	// $(".autoform-add-item").trigger('click');
+	
+});
+
+Template.formDatabase.helpers({
+	temporaryHelper: function(){
+		if(tempCheckbox.get())
+			return 'visible';
+		else
+			return 'hidden';
+	}
 });
 
 Template.formDatabase.events({
@@ -67,6 +84,7 @@ Template.formDatabase.events({
 		$("[name='name']").val(form.name);
 		$("[name='type']").val(form.type);
 		$("[name='address']").val(form.address);
+		$("[name='district']").val(form.district);
 		if(typeof form.metrostration !== 'undefined')
 			$("[name='metrostation.0']").val((form.metrostation)[0]);
 		$("[name='description']").code(form.description);
@@ -74,7 +92,7 @@ Template.formDatabase.events({
 		$("[name='last']").val(form.last);
 		$("#hours").removeClass('hidden');
 		$("#hours").val(form.hours);
-		$("[name='link']").val(form.link);	
+		$("[name='longUrl']").val(form.longUrl);	
 		$("[name='contact']").val(form.contact);
 		$("[name='image']").val(form.image);
 		$("[name='source']").val(form.source);
@@ -85,6 +103,7 @@ Template.formDatabase.events({
 
 	'click #remove-activity-waiting': function(e){
 		if (confirm("Etes-vous sûr de vouloir supprimer l'activité \"" + form.name + "\" ? (si pas de nom, l'attribut \"name\" n'existe pas)")) {
+			Activitiesdiscarded.insert({longUrl: form.longUrl});
 			Activitieswaiting.remove({_id: form._id});
 			$("[name='specific']").val(null);
 			$("[name='name']").val(null);
@@ -120,7 +139,7 @@ Template.formDatabase.events({
 	},
 
 	'change #temporary-checkbox': function(e) {
-		$("#temporary-options").toggleClass("hidden");
+		tempCheckbox.set($('#temporary-checkbox').prop('checked'));
 	},
 
 	'blur #defaultValue0': function(e) {
