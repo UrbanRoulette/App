@@ -131,6 +131,28 @@ Template.formDatabaseTableRow.events({
 		});
 	},
 
+	'dblclick .profile-cell': function(e){
+		$('.table-input').addClass('hidden');
+		$('.cell-text').removeClass('hidden');
+		var docId = this._id;
+		var text = this.profile;
+		var height = $('#' + docId + 'profile-cell-text').height();
+		$('#' + docId + 'profile-cell-text').toggleClass('hidden');
+		$('#' + docId + 'profile-cell-input').height(height);
+		$('#' + docId + 'profile-cell-input').toggleClass('hidden');
+		$('#' + docId + 'profile-cell-input').val(text);
+		$('#' + docId + 'profile-cell-input').focus();
+	},
+
+	'blur .profile-input': function(e){
+		var docId = this._id;
+		var text = $('#' + docId + 'profile-cell-input').val();
+		Activities.update({_id: this._id}, {$set: {profile: text}});
+		$('.table-input').addClass('hidden');
+		$('.cell-text').removeClass('hidden');
+	},
+
+
 	'dblclick .address-cell': function(e){
 		$('.table-input').addClass('hidden');
 		$('.cell-text').removeClass('hidden');
