@@ -144,14 +144,18 @@ Template.formDatabaseTableRow.events({
 		$('#' + docId + 'profile-cell-input').focus();
 	},
 
-	'blur .profile-input': function(e){
+	'blur .monday-input': function(e){
 		var docId = this._id;
 		var text = $('#' + docId + 'profile-cell-input').val();
-		Activities.update({_id: this._id}, {$set: {profile: text}});
+		var values = text.split(",");
+		var result = [];
+		for(i=0; i < values.length; i++){
+			result.push(values[i].replace(/ /g,''));
+		}
+		Activities.update({_id: this._id}, {$set: {profile: result}});
 		$('.table-input').addClass('hidden');
 		$('.cell-text').removeClass('hidden');
 	},
-
 
 	'dblclick .address-cell': function(e){
 		$('.table-input').addClass('hidden');
