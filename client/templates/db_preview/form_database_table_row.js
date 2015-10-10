@@ -144,7 +144,7 @@ Template.formDatabaseTableRow.events({
 		$('#' + docId + 'profile-cell-input').focus();
 	},
 
-	'blur .monday-input': function(e){
+	'blur .profile-input': function(e){
 		var docId = this._id;
 		var text = $('#' + docId + 'profile-cell-input').val();
 		var values = text.split(",");
