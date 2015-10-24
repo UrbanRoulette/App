@@ -1,13 +1,15 @@
 .landing-page {
   height: 100%;
   width: 100%;
+  background-image: url("images/backgrounds/landingpage--paris.jpg");
+  background-size: cover;
 
   &__content {
     text-align: center;
     width: 100%;
     max-width: 400px;
     position: absolute;
-    top: 45%;
+    top: 20%;
     left: 50%;
 
     @include transform(translateY(-50%) translateX(-50%));
