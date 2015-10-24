@@ -9,9 +9,12 @@
 @import "mixins/media";
 @import "mixins/round-pixel";
 
+@import "global";
+
 @import "modules/type";
 @import "modules/input";
 @import "modules/button";
 @import "modules/grid";
 
+@import "partials/landing-page";
 @import "partials/search-form";

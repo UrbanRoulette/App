@@ -1,5 +1,5 @@
 Template.searchForm.onRendered(function() {
-  this.autorun(function () {
+  this.autorun(function() {
     if (GoogleMaps.loaded()) {
       $("input").geocomplete();
     }
@@ -21,6 +21,5 @@ Template.searchForm.events({
       keyword: location
     });
 
-    console.log(location);
   }
 });

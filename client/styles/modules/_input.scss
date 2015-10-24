@@ -16,9 +16,7 @@ $input-radius: $base-radius;
 
   &:focus {
     border-color: $focus-color;
-
-    // outline: tint($focus-color, 70) auto 3px;
- 
+    outline: tint($focus-color, 70) auto 3px;
   }
 }
 
