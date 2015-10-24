@@ -1,3 +1,11 @@
+Template.searchForm.onRendered(function() {
+  this.autorun(function () {
+    if (GoogleMaps.loaded()) {
+      $("input").geocomplete();
+    }
+  });
+});
+
 Template.searchForm.events({
 
   // When submitting the form
