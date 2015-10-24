@@ -1,6 +1,8 @@
 <template name="navigation">
 	<div class="navigation">	
-		<a href="{{pathFor route='home'}}"><h5>UrbanRoulette</h5></a>
-		{{> searchForm}}
+		<a class="navigation__logo" href="{{pathFor route='home'}}"><h5>UrbanRoulette</h5></a>
+		<div class="navigation__search-wrapper">
+			{{> searchForm}}
+		</div>
 	</div>
 </template>

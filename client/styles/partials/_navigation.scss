@@ -1,0 +1,15 @@
+.navigation {
+  background: #eee;
+
+  @include rem(padding, 1, 1.5);
+
+  &__logo, &__search-wrapper {
+    @include block-align(middle);
+
+    @include rem(margin-right, 1);
+  }
+
+  &__search-wrapper {
+    width: calc(100% - 150px);
+  }
+}
