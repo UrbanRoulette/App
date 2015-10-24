@@ -1,0 +1,44 @@
+.search-page {
+  height: 100%;
+  width: 100%;
+
+  @include display(flex);
+
+  @include flex-direction(column);
+
+  .navigation {
+    @include flex(none);
+  }
+
+  &__content {
+    @include flex(1 0 auto);
+
+    @include display(flex);
+
+    @include flex-direction(row);
+  }
+
+  &__content {
+    &__map, &__result {
+      @include flex(1 0 auto);
+
+      @include align-items(stretch);
+
+      @include display(flex);
+    }
+
+    &__map {
+      position: relative;
+
+      .map-container {
+        @include flex(1);
+
+        position: absolute;
+        left: 0;
+        right: 0;
+        top: 0;
+        bottom: 0;
+      }
+    }
+  }
+}

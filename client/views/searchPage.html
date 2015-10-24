@@ -1,7 +1,17 @@
 <template name="searchView">
 	<div class="search-page">
+		
 		{{>navigation}}
 
-		result for: {{.keyword}}
+		<div class="search-page__content">
+			<div class="search-page__content__result">
+				<!-- {{result}} -->
+			</div>
+
+			<div class="search-page__content__map">
+				{{> map}}
+			</div>
+		</div>
+
 	</div>
 </template>
