@@ -23,3 +23,5 @@ momentjs:moment
 ecwyne:nexmo-sms
 http
 reactive-var
+dburles:google-maps
+jeremy:geocomplete
