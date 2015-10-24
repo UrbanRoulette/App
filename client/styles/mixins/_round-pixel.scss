@@ -1,0 +1,16 @@
+@mixin round-px($property, $values...) {
+  $max: length($values);
+  $pxValues: "";
+
+  @for $i from 1 through $max {
+    $value: nth($values, $i);
+    $length: $value * $base-unit;
+    $pxValues: #{$pxValues + round($length) + "px"};
+
+    @if $i < $max {
+      $pxValues: #{$pxValues + " "};
+    }
+  }
+
+  #{$property}: $pxValues;
+}

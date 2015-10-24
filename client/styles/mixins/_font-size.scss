@@ -1,0 +1,7 @@
+@mixin font-size($font-size: 1, $line-height: false) {
+  @include rem(font-size, $font-size);
+
+  @if $line-height != false {
+    line-height: $line-height;
+  }
+}

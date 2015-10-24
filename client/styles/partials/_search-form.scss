@@ -1,0 +1,21 @@
+.search-form {}
+
+/*------------------------------------*\
+  SINGLE INPUT DISPLAY
+\*------------------------------------*/
+.single-input {
+  @include display(flex);
+
+  input, .input {
+    border-top-right-radius: 0;
+    border-bottom-right-radius: 0;
+    border-right-width: 0;
+  }
+
+  button, .button {
+    border-top-left-radius: 0;
+    border-bottom-left-radius: 0;
+
+    @include flex(none);
+  }
+}

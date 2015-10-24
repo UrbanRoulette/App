@@ -1,0 +1,26 @@
+/*------------------------------------*\
+  BOX SHADOW
+\*------------------------------------*/
+@mixin box-shadow($shadow1: 0 0 20px rgba(0, 0, 0, 0.3), $shadow2: false, $shadow3: false, $shadow4: false, $shadow5: false) {
+  $params: $shadow1;
+
+  @if $shadow2 != false {
+    $params: $shadow1, $shadow2;
+  }
+
+  @if $shadow3 != false {
+    $params: $shadow1, $shadow2, $shadow3;
+  }
+
+  @if $shadow4 != false {
+    $params: $shadow1, $shadow2, $shadow3, $shadow4;
+  }
+
+  @if $shadow5 != false {
+    $params: $shadow1, $shadow2, $shadow3, $shadow4, $shadow5;
+  }
+
+  -webkit-box-shadow: $params;
+  -moz-box-shadow: $params;
+  box-shadow: $params;
+}

@@ -1,0 +1,82 @@
+/*------------------------------------*\
+  GRID - mixin
+\*------------------------------------*/
+@function gc($columns) {
+  @return 100% / $columns-number * $columns;
+}
+
+@mixin grid-class-builder($class-name, $property: "width") {
+  @for $i from 1 through $columns-number {
+    .#{$class-name}--#{$i} {
+      #{$property}: gc($i);
+    }
+  }
+}
+
+/*------------------------------------*\
+  GRID - style
+\*------------------------------------*/
+.row {
+  width: 100%;
+  position: relative;
+  max-width: $grid-width;
+  margin: 0 auto;
+  padding: 0 ($gutter-width / 2) 0 ($gutter-width / 2);
+
+  @include clearfix;
+
+  .row {
+    padding: 0;
+  }
+
+  &--no-padding {
+    padding: 0;
+  }
+
+  &--block-padding {
+    width: auto;
+    margin-left: -7px;
+    margin-right: -7px;
+  }
+}
+
+/*------------------------------------*\
+  BLOCK
+\*------------------------------------*/
+.block {
+  float: left;
+  display: block;
+  padding: 0 ($gutter-width / 2) 0 ($gutter-width / 2);
+  position: relative;
+
+  &--centered {
+    float: none;
+    margin: 0 auto;
+  }
+
+  &--no-gutter {
+    padding: 0;
+  }
+
+  &--center {
+    float: none;
+    margin: 0 auto;
+  }
+}
+
+/*------------------------------------*\
+  COLUMNS - size
+\*------------------------------------*/
+$default-blocks: "";
+
+@for $i from 1 through $columns-number {
+  $default-blocks: $default-blocks + ".#{$block-name}--#{$i}, ";
+}
+
+@include grid-class-builder(#{$block-name});
+
+@include respond-to(handhelds) {
+  #{$default-blocks} {
+    width: 100%;
+  }
+}

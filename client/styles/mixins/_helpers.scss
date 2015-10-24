@@ -1,0 +1,31 @@
+/*------------------------------------*\
+  BLOCK ALIGN
+\*------------------------------------*/
+@mixin block-align($align) {
+  display: inline-block;
+  vertical-align: $align;
+}
+
+/*------------------------------------*\
+  MARGIN HELPER
+\*------------------------------------*/
+@mixin vertical-margin-helper($margin) {
+  @include rem(margin-bottom, $margin);
+
+  &:last-child {
+    margin-bottom: 0;
+  }
+}
+
+/*------------------------------------*\
+  OPACITY
+\*------------------------------------*/
+@mixin opacity($opacity) {
+  opacity: $opacity;
+
+  $opacity-ie: $opacity * 100;
+
+  filter: alpha(opacity = $opacity-ie);
+
+  //IE8
+}
