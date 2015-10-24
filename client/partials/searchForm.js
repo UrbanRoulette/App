@@ -6,6 +6,12 @@ Template.searchForm.onRendered(function() {
   });
 });
 
+Template.searchForm.helpers({
+  searchValue: function() {
+    return Session.get('currentSearch') ? Session.get('currentSearch') : "";
+  }
+})
+
 Template.searchForm.events({
 
   // When submitting the form
@@ -15,6 +21,8 @@ Template.searchForm.events({
     event.preventDefault();
 
     var location = event.target.location.value;
+
+    Session.set('currentSearch', location);
 
     // IF valid
     Router.go('search', {
