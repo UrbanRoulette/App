@@ -1,7 +1,8 @@
 Template.searchForm.onRendered(function() {
+  var self = this;
   this.autorun(function() {
     if (GoogleMaps.loaded()) {
-      $("input").geocomplete();
+      self.$('input[name="location"]').geocomplete();
     }
   });
 });
@@ -29,5 +30,10 @@ Template.searchForm.events({
       keyword: location
     });
 
+  },
+
+  // When submitting the form
+  'keydown input': function(event, template) {
+    if (event.which == 13 && $('.pac-container:visible').length == 0) return template.$('form').submit();
   }
 });
