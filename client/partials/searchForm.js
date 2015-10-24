@@ -2,7 +2,10 @@ Template.searchForm.onRendered(function() {
   var self = this;
   this.autorun(function() {
     if (GoogleMaps.loaded()) {
-      self.$('input[name="location"]').geocomplete();
+      self.$('input[name="location"]').geocomplete({
+        country: "US",
+        types: ["geocode"]
+      });
     }
   });
 });
@@ -23,6 +26,10 @@ Template.searchForm.events({
 
     var location = event.target.location.value;
 
+    // If empty return false
+    if (!location.length) return false;
+
+
     Session.set('currentSearch', location);
 
     // IF valid
@@ -34,6 +41,7 @@ Template.searchForm.events({
 
   // When submitting the form
   'keydown input': function(event, template) {
+
     if (event.which == 13 && $('.pac-container:visible').length == 0) return template.$('form').submit();
   }
 });
