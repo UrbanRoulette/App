@@ -9,7 +9,6 @@ aldeed:simple-schema
 aldeed:collection2
 aldeed:autoform
 msavin:mongol
-summernote:summernote
 mpowaga:autoform-summernote
 insecure
 sacha:spin
@@ -38,3 +37,4 @@ spacebars
 check
 dburles:google-maps
 jeremy:geocomplete
+reactive-dict

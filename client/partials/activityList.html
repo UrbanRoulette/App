@@ -1,0 +1,8 @@
+<template name="activityList">
+	<ul class="activity-list">
+		<li class="activity-list__retry"><button class="button--full-width">Retry</button></li>
+		{{#each activities}}
+			<li class="activity-list__activity">{{> activityItem}}</li>
+    {{/each}}
+	</ul>	
+</template>

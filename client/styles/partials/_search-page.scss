@@ -21,17 +21,32 @@
   &__content {
     &__map, &__result {
       @include flex(1 0 auto);
+    }
 
-      @include align-items(stretch);
+    &__result {
+      position: relative;
+      width: 60%;
 
-      @include display(flex);
+      .activity-list {
+        overflow: scroll;
+        position: absolute;
+        left: 0;
+        right: 0;
+        top: 0;
+        bottom: 0;
+      }
     }
 
     &__map {
       position: relative;
+      width: 40%;
+
+      @include align-items(stretch);
+
+      @include display(flex);
 
       .map-container {
-        @include flex(1);
+        // @include flex(1);
 
         position: absolute;
         left: 0;

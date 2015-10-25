@@ -15,7 +15,7 @@ caching-compiler@1.0.0
 caching-html-compiler@1.0.2
 callback-hook@1.0.4
 check@1.0.6
-dburles:google-maps@1.1.4
+dburles:google-maps@1.1.5
 dburles:mongo-collection-instances@0.3.4
 ddp@1.2.2
 ddp-client@1.2.1
@@ -28,7 +28,6 @@ ecmascript-collections@0.1.6
 ecwyne:nexmo-sms@1.0.2
 ejson@1.0.7
 fastclick@1.0.7
-fortawesome:fontawesome@4.4.0
 fourseven:scss@3.4.0-beta1
 geojson-utils@1.0.4
 harrison:babyparse@1.0.1
@@ -47,7 +46,7 @@ iron:location@1.0.11
 iron:middleware-stack@1.0.11
 iron:router@1.0.12
 iron:url@1.0.11
-jeremy:geocomplete@1.6.5_7
+jeremy:geocomplete@1.6.5_8
 jquery@1.11.4
 lai:collection-extensions@0.1.4
 launch-screen@1.0.4
@@ -81,11 +80,9 @@ spacebars@1.0.7
 spacebars-compiler@1.0.7
 standard-minifiers@1.0.1
 summernote:standalone@0.6.16
-summernote:summernote@0.6.16
 templating@1.1.4
 templating-tools@1.0.0
 tracker@1.0.9
-twbs:bootstrap@3.3.5
 ui@1.0.8
 underscore@1.0.4
 url@1.0.5

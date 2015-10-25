@@ -1,13 +1,27 @@
 <template name="activityItem">
-	<img src="{{image}}" title="{{specific}} - {{name}}" alt="">
-	<h2>{{specific}} - {{name}}</h2>
-	<a href="http://maps.google.com/?q={{address}}" target="_blank">{{address}}</a>
-	<p>{{description}}</p>
-	{{price}}
-	{{mark}}
+	<div class="activity-item">
 
-	{{time_start}}
-	{{time_end}}
+		<div class="activity-item__content" >
+			<div class="activity-item__picture" style="background-image: url({{image}});" data-price="{{price}}"></div>
+			<h2 class="activity-item__title">{{specific}}<span class="activity-item__title__name"> - {{name}}</span></h2>
+			<a class="activity-item__address" href="http://maps.google.com/?q={{address}}" target="_blank">
+				<address>{{address}}</address>
+			</a>
+			<p class="activity-item__description">
+				{{description}}
+				{{#if canBeTruncated}}
+					<a href="#" class="activity-item__description__expand">
+						{{#if isTruncated}}Show more{{else}}Show Less{{/if}}
+					</a>
+				{{/if}}
+			</p>
+		</div>
 
+		<div class="activity-item__timeline">
+			<time>{{time_start}}</time>
+			<hr>
+			<time>{{time_end}}</time>
+		</div>
+	</div>
 	
 </template>
