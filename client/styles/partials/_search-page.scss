@@ -25,7 +25,7 @@
 
     &__result {
       position: relative;
-      width: 60%;
+      width: 600px;
 
       .activity-list {
         overflow: scroll;
@@ -39,7 +39,7 @@
 
     &__map {
       position: relative;
-      width: 40%;
+      width: calc(100% - 600px);
 
       @include align-items(stretch);
 
