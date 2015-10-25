@@ -1,0 +1,96 @@
+.activity-list__retry {
+  @include rem(padding, 1);
+}
+
+.activity-list {
+  &__activity {
+    margin: 10px;
+
+    &:hover {
+      background: $c-lightgrey;
+      border-radius: $base-radius;
+    }
+  }
+}
+
+.activity-item {
+  @include rem(padding, 1);
+
+  &__picture {
+    background-size: cover;
+    background-position: center;
+    width: 100%;
+    border-radius: $base-radius;
+    height: 120px;
+    position: relative;
+
+    &[data-price] {
+      &:after {
+        content: attr(data-price);
+        position: absolute;
+        background: $c-green;
+        color: $c-white;
+        border-radius: $base-radius;
+
+        @include rem(top, 1);
+
+        @include rem(padding, 0.3, 0.6);
+
+        @include rem(right, -0.5);
+      }
+    }
+
+    @include vertical-margin-helper(0.5);
+  }
+
+  &__title {
+    @include font-size(1.4);
+
+    &__name {
+      color: $c-grey;
+    }
+  }
+
+  &__address {
+    color: $c-grey;
+    font-style: italic;
+    text-decoration: none;
+    display: inline-block;
+
+    @include vertical-margin-helper(0.5);
+  }
+
+  @include display(flex);
+
+  @include flex-direction(row-reverse);
+
+  &__content {
+    width: 100%;
+  }
+
+  &__timeline {
+    text-align: center;
+
+    @include rem(margin-right, 1);
+
+    @include display(flex);
+
+    @include align-items(stretch);
+
+    @include flex-direction(column);
+
+    time {
+      @include flex(none);
+    }
+
+    hr {
+      width: 2px;
+      height: 100%;
+      background: $c-lightgrey;
+      border: none;
+      margin: 0 auto;
+
+      @include flex(1 0 auto);
+    }
+  }
+}

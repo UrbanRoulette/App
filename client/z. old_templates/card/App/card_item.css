@@ -1,4 +1,4 @@
-.card {
+/*/*.card {
   width: auto;
   height: auto;
   margin-bottom: 15px;
@@ -16,7 +16,7 @@
 
 /* Without materialize */
 
-img {
+/*img {
 	height: auto;
 	width: 100%;
 }
@@ -91,4 +91,4 @@ img {
 	height:100%;
 	display: inline-block;
 	margin-top: 5px;
-}
+}*/

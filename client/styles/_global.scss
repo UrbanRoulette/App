@@ -1,4 +1,33 @@
-body, html {
+/*------------------------------------*\
+  BASE
+\*------------------------------------*/
+*, *:before, *:after {
+  box-sizing: border-box;
+  font-smooth: always;
+  -webkit-font-smoothing: antialiased;
+  margin: 0;
+  padding: 0;
+}
+
+html, body {
   height: 100%;
   width: 100%;
+}
+
+html {
+  background-color: $c-white;
+}
+
+@include respond-to(handhelds) {
+  body {
+    overflow-x: hidden;
+  }
+}
+
+
+button, input, optgroup, select, textarea {
+  margin: 0;
+  font: inherit;
+  color: inherit;
+  line-height: $base-line-height;
 }

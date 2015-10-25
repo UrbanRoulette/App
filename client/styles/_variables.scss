@@ -3,7 +3,8 @@
 \*------------------------------------*/
 $c-black: #010101;
 $c-white: #fefefe;
-$c-grey: #aaa;
+$c-grey: #888;
+$c-lightgrey: #efefef;
 
 $c-blue: #2196F3;
 $c-red: #F44336;
@@ -24,8 +25,8 @@ $base-unit: 14;
 $base-font-size: 14px;
 $base-line-height: $golden;
 
-$base-font-family: $helvetica;
-$title-font-family: $helvetica;
+$base-font-family: "Lato", sans-serif;
+$title-font-family: "Merriweather", serif;
 
 $monospace-font-family: Menlo, Consolas, Monaco, "Lucida Console", monospace;
 

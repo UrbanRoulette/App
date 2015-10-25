@@ -9,8 +9,6 @@ aldeed:simple-schema
 aldeed:collection2
 aldeed:autoform
 msavin:mongol
-twbs:bootstrap
-fortawesome:fontawesome
 mpowaga:autoform-summernote
 insecure
 sacha:spin
@@ -40,3 +38,4 @@ check
 dburles:google-maps
 jeremy:geocomplete
 houston:admin
+reactive-dict
