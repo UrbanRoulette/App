@@ -9,9 +9,7 @@ aldeed:simple-schema
 aldeed:collection2
 aldeed:autoform
 msavin:mongol
-twbs:bootstrap
 summernote:summernote
-fortawesome:fontawesome
 mpowaga:autoform-summernote
 insecure
 sacha:spin
