@@ -10,7 +10,6 @@ aldeed:collection2
 aldeed:autoform
 msavin:mongol
 twbs:bootstrap
-summernote:summernote
 fortawesome:fontawesome
 mpowaga:autoform-summernote
 insecure
@@ -40,3 +39,4 @@ spacebars
 check
 dburles:google-maps
 jeremy:geocomplete
+houston:admin

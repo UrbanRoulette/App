@@ -14,7 +14,7 @@ Template.searchForm.helpers({
   searchValue: function() {
     return Session.get('currentSearch') ? Session.get('currentSearch') : "";
   }
-})
+});
 
 Template.searchForm.events({
 
@@ -41,7 +41,6 @@ Template.searchForm.events({
 
   // When submitting the form
   'keydown input': function(event, template) {
-
-    if (event.which == 13 && $('.pac-container:visible').length == 0) return template.$('form').submit();
+    if (event.which == 13 && $('.pac-container:visible').length === 0) return template.$('form').submit();
   }
 });

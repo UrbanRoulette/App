@@ -15,14 +15,14 @@ var showMap = function(map, address) {
       alert('Geocode was not successful for the following reason: ' + status);
     }
   });
-}
+};
 
 var centerPin = function(map) {
   var marker = new google.maps.Marker({
     position: map.options.center,
     map: map.instance
   });
-}
+};
 
 Template.map.helpers({
   mapOptions: function() {
