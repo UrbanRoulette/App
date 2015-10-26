@@ -3,7 +3,6 @@ AutoForm.hooks({
       before: {
         method: function(doc) {
 //         	this.event.preventDefault();
-
         	if(typeof form !== 'undefined')//{
         		Activitieswaiting.remove({_id: form._id});
 /*        		if (typeof form.metrostation !== 'undefined')
@@ -11,12 +10,51 @@ AutoForm.hooks({
         	}
 */			
 			doc.requiresun = $('#sun-checkbox').prop('checked');
-			doc.requirebooking = $('#booking-checkbox').prop('checked');
-
+			doc.requirebooking = false;
+			var string_address = $('input[name="location"]').val();
 			var last = ($("#last").val()).split('h');
         	doc.last = parseInt(last[0])*60 + parseInt(last[1]);
         	$("#hours").addClass('hidden');
 
+        	var geocoder = new google.maps.Geocoder();	
+			geocoder.geocode({'address': string_address}, function(results, status) {
+			    if (status === google.maps.GeocoderStatus.OK) {
+			        var place = results[0];
+
+			        //PlaceId
+			        doc.placeId = place.place_id;
+
+			        //Get GeoJSON object
+			        var lat = place.geometry.location.lat();
+			        var lng = place.geometry.location.lng();
+			        var GeoJSON = { "type": "Point", "coordinates": [lng, lat]};
+			        doc.index = GeoJSON;
+			    
+			        // Complete Address
+			        var componentForm = {
+					  street_number: 'short_name',
+					  route: 'long_name',
+					  locality: 'long_name',
+					  administrative_area_level_1: 'short_name',
+					  country: 'long_name',
+					  postal_code: 'short_name'
+					};
+					for (var i = 0; i < place.address_components.length; i++) {
+						var addressType = place.address_components[i].types[0];
+						if (componentForm[addressType]) {
+						  var val = place.address_components[i][componentForm[addressType]];
+						  componentForm[addressType] = val;
+						}
+					}
+					componentForm.formatted_address = place.formatted_address;
+					doc.address = componentForm;
+
+		//			doc.openinghours = ;
+			    }
+			    else {
+			      console.log('Geocode was not successful for the following reason: ' + status);
+			    }
+			});          	
 			doc.temporary = $('#temporary-checkbox').prop('checked');
 			if($('#temporary-checkbox').prop('checked')){
 				var startYear = $("#start-year").val();
@@ -30,10 +68,8 @@ AutoForm.hooks({
 				doc.yearperiodic = $('#year-periodic-radio').prop('checked');
 			}
 			tempCheckbox.set(false);
-
-			doc.submitted = new Date();
 			doc.draws = 0;
-
+			doc.rand = Math.random();
 			return doc;
 		}
       } 
@@ -45,26 +81,12 @@ Template.formDatabase.onCreated(function(){
 });
 
 Template.formDatabase.onRendered(function(){
-	$('#summernote').summernote();
-	/*  toolbar: [
-	    //[groupname, [button list]]
-	     
-	    ['style', ['bold', 'italic', 'underline', 'clear']],
-	    ['font', ['strikethrough', 'superscript', 'subscript']],
-	    ['fontsize', ['fontsize']],
-	    ['color', ['color']],
-	    ['para', ['ul', 'ol', 'paragraph']],
-	    ['height', ['height']],
-	  ]
-		});
-	*/
 	$(".list-group-item").css({'display': 'table-cell', 'padding':'0 0 0 20px', 'border': 'none'});
 	var date = new Date();
 	var year = date.getFullYear();
 	var month = date.getMonth();
 	$("#start-year").val(year);
 	$("#end-year").val(year);
-	// $(".autoform-add-item").trigger('click');
 	
 });
 
@@ -78,66 +100,6 @@ Template.formDatabase.helpers({
 });
 
 Template.formDatabase.events({
-	'click #add-activity-waiting': function(e){
-		form = Activitieswaiting.findOne({}, {sort: {submitted: 1}});
-		$("[name='specific']").val(form.specific);
-		$("[name='name']").val(form.name);
-		$("[name='type']").val(form.type);
-		$("[name='address']").val(form.address);
-		$("[name='district']").val(form.district);
-		if(typeof form.metrostration !== 'undefined')
-			$("[name='metrostation.0']").val((form.metrostation)[0]);
-		$("[name='description']").code(form.description);
-		$("[name='price']").val(form.price);
-		$("[name='last']").val(form.last);
-		$("#hours").removeClass('hidden');
-		$("#hours").val(form.hours);
-		$("[name='longUrl']").val(form.longUrl);	
-		$("[name='contact']").val(form.contact);
-		$("[name='image']").val(form.image);
-		$("[name='source']").val(form.source);
-		//For Happy Hours imported from TimeOut
-/*		if(form.specific === 'Prendre un verre en Happy Hour')
-			$("#metrostation").addClass('hidden');			
-*/	},
-
-	'click #remove-activity-waiting': function(e){
-		if (confirm("Etes-vous sûr de vouloir supprimer l'activité \"" + form.name + "\" ? (si pas de nom, l'attribut \"name\" n'existe pas)")) {
-			Activitiesdiscarded.insert({longUrl: form.longUrl});
-			Activitieswaiting.remove({_id: form._id});
-			$("[name='specific']").val(null);
-			$("[name='name']").val(null);
-			$("[name='type']").val(null);
-			$("[name='address']").val(null);
-			$("[name='description']").val(null);
-			$("[name='price']").val(null);
-			$("[name='last']").val(null);
-			$("#hours").val(null);
-			$("[name='link']").val(null);	
-			$("[name='contact']").val(null);
-			$("[name='image']").val(null);
-			$("[name='source']").val(null);
-			$("#hours").addClass('hidden');
-		}
-	},
-
-	'click #skip-activity-waiting': function(e){	
-		Activitieswaiting.update({_id: form._id}, {$set: {submitted: new Date()}});
-		$("[name='specific']").val(null);
-		$("[name='name']").val(null);
-		$("[name='type']").val(null);
-		$("[name='address']").val(null);
-		$("[name='description']").val(null);
-		$("[name='price']").val(null);
-		$("[name='last']").val(null);
-		$("#hours").val(null);
-		$("[name='link']").val(null);	
-		$("[name='contact']").val(null);
-		$("[name='image']").val(null);
-		$("[name='source']").val(null);
-		$("#hours").addClass('hidden');
-	},
-
 	'change #temporary-checkbox': function(e) {
 		tempCheckbox.set($('#temporary-checkbox').prop('checked'));
 	},

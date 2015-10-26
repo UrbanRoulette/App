@@ -3,6 +3,10 @@
 	margin-left: 80px;
 }
 
+.form-width {
+	width: 100%;
+}
+
 #skip-activity-waiting {
 	background-color: #33CC00;
 	border-color: #33CC00;

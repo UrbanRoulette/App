@@ -2,67 +2,33 @@
 
 <head>
 	<!-- include libraries(jQuery, bootstrap, fontawesome) -->
-<!--	<script type="text/javascript" src="//code.jquery.com/jquery-1.9.1.min.js"></script> -->
-<!--	<link rel="stylesheet" href="//netdna.bootstrapcdn.com/bootstrap/3.1.1/css/bootstrap.min.css"/> -->
-<!--	<script type="text/javascript" src="//netdna.bootstrapcdn.com/bootstrap/3.1.1/js/bootstrap.min.js"></script> -->
-<!--	<link rel="stylesheet" href="//netdna.bootstrapcdn.com/font-awesome/4.0.3/css/font-awesome.min.css"/> -->
+	<script type="text/javascript" src="//code.jquery.com/jquery-1.9.1.min.js"></script>
+	<link rel="stylesheet" href="//netdna.bootstrapcdn.com/bootstrap/3.1.1/css/bootstrap.min.css"/>
+	<script type="text/javascript" src="//netdna.bootstrapcdn.com/bootstrap/3.1.1/js/bootstrap.min.js"></script>
+	<link rel="stylesheet" href="//netdna.bootstrapcdn.com/font-awesome/4.0.3/css/font-awesome.min.css"/>
 </head>
 
 <body>
 	<h1>Add a new activity</h1>
-		{{> searchForm}}
 		{{#autoForm collection="Activities" id="submitActivity" type="method" meteormethod="insertActivity"}}
 			<fieldset>
 				<legend>Rentrez une activité !</legend>
 				{{> afQuickField name="specific" id="specific" value=specific}}
 				<input type="checkbox" name="" value="" id="sun-checkbox"/> Besoin de beau temps<br/>
-				<input type="checkbox" name="" value="" id="booking-checkbox"/> Besoin de réserver absolument
-				{{> afQuickField name="name" id="name" value=name}}
+				{{> afQuickField name="name" id="name" value=name class="form-width"}}
 				{{> afQuickField name="type" id="type" value=type}}
 				{{> afQuickField name="profile" id="profile" value=profile}}
-				{{> afQuickField name="address" id="address" value=address}}
-				{{> afQuickField name="district" id="district" value=district}}
-				<div id="metrostation">
-					{{> afQuickField name="metrostation" id="metrostation" value=metrostation}}	
-				</div>
-				{{> afQuickField name="description" id="summernote" value=description}}
+				<label>Addresse</label>
+				{{> searchForm}}
+				{{> afQuickField name="description" id="description" value=description}}
 				{{> afQuickField name="price" id="price" value=price}}
 				<br/>	
 				<label class="control-label">Durée (format: [heure(s)]h[minute(s)])</label>
 				<input type="text" name="last" value="" id="last" style="width:100%; margin-bottom:10px;"/>
+
 				<p><strong>Sélectionnez les horaires d'ouverture et de fermeture (ex:"1830-2000", ou juste "1900" pour une séance à 19h)<br/>
 				ATTENTION: Si un bar est ouvert de 22h à 2h, écrire 2200-2359 (important de ne pas écrire 0000) et 0000-0200</strong></p>
-				
-				<input type="text" name="hours" value="" class="hidden" id="hours" style="width:100%; margin-bottom:10px;" readonly/>
-				
-				<div id="days">
-					<div id="days0">
-						<form>
-							<input type="text" name="defaultValue.0" value="" id="defaultValue0"/>
-								<input type="checkbox" name="weekdays.0" value="" id="weekdays0" checked/> Semaine
-							<div id="checkbox-weekend0">
-								<input type="checkbox" name="weekend.0" value="" id="weekend0" checked/> Week-end
-							</div>
-						</form>
-					</div>
-					<button type="button" class="btn btn-primary" id="add-all-button"><span class="glyphicon glyphicon-plus"></span></button>
-					<div id="days1">
-						<form>
-							<input type="text" name="defaultValue.0" value="" id="defaultValue1"/>
-								<input type="checkbox" name="weekdays.0" value="" id="weekdays1" checked/> Semaine
-							<div id="checkbox-weekend1">
-								<input type="checkbox" name="weekend.0" value="" id="weekend1" checked/> Week-end
-							</div>
-						</form>
-					</div>
-				</div>
-				{{> afArrayField name="monday"}}
-				{{> afQuickField name="tuesday"}}
-				{{> afQuickField name="wednesday"}}
-				{{> afQuickField name="thursday"}}
-				{{> afQuickField name="friday"}}
-				{{> afQuickField name="saturday"}}
-				{{> afQuickField name="sunday"}}
+				<input type="text" name="hours" value="" class="form-width hidden" id="hours" readonly/>
 				<div id="temporary">
 					<input type="checkbox" name="" value="" id="temporary-checkbox"/> TEMPORAIRE
 				</div>
