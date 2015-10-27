@@ -47,13 +47,15 @@ var fakeActivies = function() {
   }];
 
   return _.shuffle(activityFixtures);
-}
+};
 
 Template.activityList.events({
   'click .activity-list__retry': function() {
     Session.set('fakeActivity', fakeActivies());
-  }
-})
+    Meteor.call('algorithm');
+  },
+
+});
 
 Template.activityList.helpers({
   activities: function() {
