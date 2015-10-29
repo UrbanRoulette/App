@@ -1,5 +1,35 @@
 Meteor.methods({
 
+	get_opening_hours_googleAPI: function(){
+        this.unblock();
+		Activities.find().forEach(function(doc){
+		  var API_KEY = "AIzaSyDfc_LzQZwwLngNGjWFp74np2XpSx7_lBA";
+		  var placeId = doc.placeId;
+		  var URLrequest =  "https://maps.googleapis.com/maps/api/place/details/json?placeid=" + placeId + "&key=" + API_KEY;
+		  HTTP.call("GET", URLrequest,
+		            function (error, response) {
+		              if (error) {
+		                console.log(error);
+		              }
+		              else {
+		              	try {
+						  opening_hours = response.data.result.opening_hours;
+						}
+						catch(e){
+						  opening_hours = 'No result';
+						}
+						finally {
+							if(typeof opening_hours !== "undefined")
+					        	console.log(opening_hours);
+					        else
+					        	console.log("No opening_hours");
+					    }
+		              }
+		            });
+		}); 
+    },
+
+
 	insertActivity: function(doc){
 
 	    check(doc, Object);

@@ -55,6 +55,9 @@ Meteor.methods({
 		var profile = "TestProfile";
 		var requiresun = false;
 		
+		var min_rand = Activities.findOne({},{sort: {rand:1}}).rand;
+		var random = Math.random();
+
 		var types_excluded = [];
 		var types_required = [];
 
@@ -76,19 +79,31 @@ Meteor.methods({
 				types_excluded.push(typeTreated);
 
 			var query = {
-						_id: { $not: { $in: track_results_id.concat(track_unwanted_id) } },
+						_id: { $nin: track_results_id.concat(track_unwanted_id) },
 						index : { $geoWithin: { $centerSphere : [ [ lng, lat ] , radius ] } },
 						type: { $in: types_required },
-						type: { $not: { $in: types_excluded } }, // jshint ignore:line
+						type: { $nin: types_excluded }, // jshint ignore:line
 						profile: { $in: [profile] },
+						opening_hours: { $elemMatch: { days: {$in: [start.getDay()]}, "open.start": {$gte: 1800}, "open.close": {$lte: 2300} } },
+						//see for optional parameters: http://stackoverflow.com/questions/19579791/optional-parameters-for-mongodb-query
 //						startdate: {$lte: start}, //startdate is not always defined...
 //						enddate: {$gt: start}, //enddate is not always defined...
 						requiresun: requiresun,
-						rand: { $gte: Math.random() },
+						rand: { $gte: random },
 					};
 
 			var activity = Activities.findOne({$query: query, $orderby: { rand: 1 } } );
-
+			
+			if(typeof activity === "undefined"){
+				if(random <= min_rand)
+					break;
+				else
+					random = random * Math.random(); 
+				continue;
+			}
+			else {
+				random = Math.random();
+			}
 			//If there are tests
 			if(all_tests_passed){
 				results.push(activity);
@@ -98,7 +113,7 @@ Meteor.methods({
 				track_unwanted_id.push(activity._id);
 			}
 		}
-		console.log(results);
+//		console.log(results);
 		return results;
 	},
 });
