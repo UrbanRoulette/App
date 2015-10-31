@@ -1,4 +1,28 @@
 Meteor.startup(function(){
+	activity_types = ['walk',  
+					'bar', //Gmap
+					'night_club', //Gmap
+					'movie_theater', //Gmap
+					'concert',
+					'cooking', 
+					'discovery',
+					'miscellaneous',
+					'escape',
+					'event',
+					'random',
+					'game',
+					'reading',
+					'museum', //Gmap
+					'music',
+					'breakfast or snack', 
+					'rest',
+					'restaurant', //Gmap
+					'shopping',
+					'sport',
+					'theater',
+					'visit'
+					];
+
 
 	//Variables
 	weekday = new Array(7);
