@@ -58,12 +58,7 @@ Meteor.startup(function(){
 		date = new Date(date.getTime() + unit*60000*time_amount);
 		return convert_date_to_hour_integer(date);	
 	};
-	round_integer_to_pace_superior = function(int){
-		var result = int/pace;
-		var quotient = Math.floor(result);
-		return pace * (quotient + 1); //returns a number of minutes
-	};
-
+	
 	//Related to LAST flexibility
 	get_related_opening_hours_integer_of_activity = function(activity){
 		var opening_hours = activity.opening_hours;
@@ -213,9 +208,8 @@ Meteor.methods({
 
 						var current_activity = results_of_activities[k];
 						var current_activity_last_obj = current_activity.last;
-						var current_activity_last_value = current_activity_last_obj.value;
-						var possible_time_flexibility = current_activity_last_value * current_activity_last_obj.flexibility;
-						minimum_last_value = Math.min(minimum_last_value,current_activity_last_value);
+						var possible_time_flexibility = current_activity_last_obj.time_flexibility;
+						minimum_last_value = Math.min(minimum_last_value,current_activity_last_obj.value);
 
 						var next_activity;
 						var related_opening_hours_of_next_activity;
@@ -280,7 +274,7 @@ Meteor.methods({
 				else
 					last_is_not_good = false;
 			}
-			while(last_is_not_good || total_time_lag > 0);
+			while(last_is_not_good /*|| total_time_lag > 0*/);
 
 			all_checks = (last_is_not_good);
 		}
