@@ -51,13 +51,25 @@ var fakeActivies = function() {
 
 Template.activityList.events({
   'click .activity-list__retry': function() {
-    Session.set('fakeActivity', fakeActivies());
+    var fake = fakeActivies();
+    var locations = [];
+    _.each(fake, function(item) {
+      locations.push(item.address);
+    });
+    Session.set('fakeActivity', fake);
+    Session.set('fakeLocations', locations);
   }
 })
 
 Template.activityList.helpers({
   activities: function() {
-    Session.set('fakeActivity', fakeActivies());
+    var fake = fakeActivies();
+    var locations = [];
+    _.each(fake, function(item) {
+      locations.push(item.address);
+    });
+    Session.set('fakeActivity', fake);
+    Session.set('fakeLocations', locations);
     return Session.get('fakeActivity');
   }
 });
