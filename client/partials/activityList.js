@@ -53,14 +53,14 @@ Template.activityList.events({
   'click .activity-list__retry': function() {
     var center = {lat:48.8581638,lng:2.362247000000025};
     var radius = 3 / 3963.2; //Converts miles into radians
-   Session.set('fakeActivity', Meteor.call('get_activities_results',center,radius));
+    Session.set('activities_results', Meteor.call('get_activities_results',center,radius));
   },
 
 });
 
 Template.activityList.helpers({
   activities: function() {
-    Session.set('fakeActivity', fakeActivies());
-    return Session.get('fakeActivity');
+//    Session.set('fakeActivity', fakeActivies());
+    return Session.get('activities_results');
   }
 });
