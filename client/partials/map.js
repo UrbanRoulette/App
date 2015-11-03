@@ -9,6 +9,15 @@ var googleMapHelper = function(map) {
   this.directionsService = new google.maps.DirectionsService();
   this.directionsDisplay.setMap(map.instance);
 
+  var resizeTimer;
+  $(window).resize(function() {
+
+    clearTimeout(resizeTimer);
+    resizeTimer = setTimeout(function() {
+      self.adjustMap();
+    }, 250);
+  });
+
   this.geocode = function(address, success, error) {
     var geocoder = new google.maps.Geocoder();
     geocoder.geocode({

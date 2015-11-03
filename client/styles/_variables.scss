@@ -1,63 +1,58 @@
 /*------------------------------------*\
   COLORS
 \*------------------------------------*/
-$c-black: #010101;
-$c-white: #fefefe;
-$c-grey: #888;
-$c-lightgrey: #efefef;
-
-$c-blue: #2196F3;
-$c-red: #F44336;
-$c-green: #4CAF50;
-$c-orange: #FF9800;
-
-$c-primary: $c-blue;
+$c-black              : #010101;
+$c-white              : #fefefe;
+$c-grey               : #888;
+$c-lightgrey          : #efefef;
+$c-blue               : #2196f3;
+$c-red                : #f44336;
+$c-green              : #4caf50;
+$c-orange             : #ff9800;
+$c-primary            : $c-blue;
 
 /*------------------------------------*\
   UI
 \*------------------------------------*/
-$base-radius: 3px;
+$base-radius          : 3px;
 
 /*------------------------------------*\
   FONTS
 \*------------------------------------*/
-$base-unit: 14;
-$base-font-size: 14px;
-$base-line-height: $golden;
-
-$base-font-family: "Lato", sans-serif;
-$title-font-family: "Merriweather", serif;
-
+$base-unit            : 14;
+$base-font-size       : 14px;
+$base-line-height     : $golden;
+$base-font-family     : "Lato", sans-serif;
+$title-font-family    : "Merriweather", serif;
 $monospace-font-family: Menlo, Consolas, Monaco, "Lucida Console", monospace;
 
 /*------------------------------------*\
   SELECTORS
 \*------------------------------------*/
-$input-selector: ".input, " + $all-text-inputs;
-$button-selector: "button, .button";
-$heading-tag: "h1, h2, h3, h4, h5, h6";
+$input-selector       : ".input, " + $all-text-inputs;
+$button-selector      : "button, .button";
+$heading-tag          : "h1, h2, h3, h4, h5, h6";
 
 /*------------------------------------*\
   ANIMATION
 \*------------------------------------*/
-$transition-time: 250;
-$transition-easing: linear;
+$transition-time      : 250;
+$transition-easing    : linear;
 
 /*------------------------------------*\
   ANIMATION
 \*------------------------------------*/
-
 /*------------------------------------*\
   GRID
 \*------------------------------------*/
-$grid-width: 1024px;
-$gutter-width: $base-font-size;
-$columns-number: 12;
-$row-name: "row";
-$block-name: "block";
+$grid-width           : 1024px;
+$gutter-width         : $base-font-size;
+$columns-number       : 12;
+$row-name             : "row";
+$block-name           : "block";
 
 /*------------------------------------*\
   MEDIA QUERY
 \*------------------------------------*/
-$break-small: 760px;
-$break-large: $grid-width;
+$break-small          : 760px;
+$break-large          : $grid-width;
