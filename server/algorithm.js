@@ -6,7 +6,7 @@ Meteor.startup(function(){
 */	
 	//Parameters
 	pace = 5; // Pace (in number of minutes) (must divide 60)
-	unit = 1; //Unit for the last of each activity in database (in number of minutes)
+//	unit = 1; //Unit for the last of each activity in database (in number of minutes)
 	roulette_time_amount = 6*60;//6*60; //Length of day (in number of unit). Ex: If unit=30 (ie half-hour), then dayLength = 2 means 1 hour
 	activities_length = 4; //Max number of activities in the roulette
 	gap = roulette_time_amount; //Gap between two activities (in number of unit). During this gap, activity of the same category will not be offered, unless it has been randomly chosen more than var 'luck' times 
@@ -37,7 +37,7 @@ Meteor.startup(function(){
 		return hour_string;
 	};
 	convert_hour_string_to_date = function(hour_string){
-		var date = new Date();
+		var date = new Date(date_cursor);
 		var h = parseInt(hour_string.substr(0,2));
 		var m = parseInt(hour_string.substr(2,2));
 		date.setHours(h,m,0,0);
@@ -61,7 +61,7 @@ Meteor.startup(function(){
 	add_time_amount_to_hour_integer = function(hour_integer,time_amount){
 		//time_amount must be minutes
 		var date = convert_hour_integer_to_date(hour_integer);
-		date = new Date(date.getTime() + unit*60000*time_amount);	
+		date = new Date(date.getTime() + 60000*time_amount);	
 		var result = ((hour_integer + time_amount) >= 2400) ? convert_date_to_hour_integer(date) + 2400 : convert_date_to_hour_integer(date);
 		return result;	
 	};
@@ -94,8 +94,8 @@ Meteor.startup(function(){
 					if(opening_hours_in_day[j].start < start_hour && opening_hours_in_day[j].end > start_hour){
 
 						related_opening_hours_integer_of_activity = {
-							start: opening_hours_in_day[j].start,
-							end: opening_hours_in_day[j].end	
+							open: opening_hours_in_day[j].start,
+							close: opening_hours_in_day[j].end	
 						};
 
 						break;
@@ -157,18 +157,23 @@ Meteor.methods({
 
 		var all_checks = false;
 		var all_tests_passed = true;
+		var roulette_not_OK = true;
 
 		var total_time_amount = 0;
 		var remaining_time = roulette_time_amount;
 		var minimum_last_value = 0;
 
 		var results_of_activities = [];
+		var results_length = results_of_activities.length;
 
-		do {
+		var global_flex_time_up = 0;
+		var global_flex_time_down = 0;
+
+		do {			
 
 			if(typeof index_to_split_results_of_activities !== "undefined"){
 				var ind = index_to_split_results_of_activities;
-				results_of_activities.splice(ind,results_of_activities.length - ind);
+				results_of_activities.splice(ind,results_length - ind);
 			}
 			//Loop selecting activities
 			do {
@@ -180,6 +185,9 @@ Meteor.methods({
 				console.log(hour_integer_cursor);
 				hour_integer_cursor = (previous_day !== day) ? hour_integer_cursor + 2400 : hour_integer_cursor;
 				
+				var adjusted_start_hour_cursor = add_time_amount_to_hour_integer(hour_integer_cursor, global_flex_time_up);
+				var adjusted_end_hour_cursor = add_time_amount_to_hour_integer(hour_integer_cursor, - global_flex_time_down);
+				var adjusted_remaining_time = remaining_time + global_flex_time_down;
 /*				//FOR RESTAURANTS
 				var types_considered = ['restaurant'];
 				if (eatingHours.indexOf(hour) > -1)
@@ -193,8 +201,8 @@ Meteor.methods({
 							rand: { $gte: random },
 	//						type: { $in: types_required },
 	//						profile: { $in: [profile] },	
-							opening_hours: { $elemMatch: { days: {$in: [day]}, "open.start": {$lte: hour_integer_cursor}, "open.end_minus_last": {$gte: hour_integer_cursor} } },	
-							"last.value": {$gt: minimum_last_value, $lte: remaining_time},
+							opening_hours: { $elemMatch: { days: {$in: [day]}, open: {$elemMatch: {start: {$lte: adjusted_start_hour_cursor}, end_minus_last: {$gte: adjusted_end_hour_cursor} } } } },	
+							"last.min": {$lte: adjusted_remaining_time},
 							//see for optional parameters: http://stackoverflow.com/questions/19579791/optional-parameters-for-mongodb-query
 	//						startdate: {$lte: date_cursor}, //startdate is not always defined...
 	//						enddate: {$gt: date_cursor}, //enddate is not always defined...
@@ -205,7 +213,6 @@ Meteor.methods({
 		
 				//Deal with activity defined or not
 				if(typeof activity === "undefined"){
-
 					if(random <= min_rand)
 						break;
 					else
@@ -213,34 +220,112 @@ Meteor.methods({
 					continue;
 				}
 
-				else {
+				else 
+					track_unwanted_id.push(activity._id);
 
-					console.log(activity);
-					activity.start_date = date_cursor;
-					
-					activity_last_value = activity.last.value;
-					activity.final_last_value = activity_last_value;
-					previous_day = day;	
-					date_cursor = new Date(date_cursor.getTime() + unit*60000*activity_last_value); //We update the date_cursor with the new time stamp
-					activity.end_date = date_cursor;
-
-					var related_opening_hours_integer_of_activity = get_related_opening_hours_integer_of_activity(activity);
-
-					if(typeof related_opening_hours_integer_of_activity === "undefined"){ //Make sure the activity selected is open
-						track_unwanted_id.push(activity._id);
-						continue;
-					}
-					else
-						activity.related_opening_hours_integer_of_activity = related_opening_hours_integer_of_activity;
-
-					random = Math.random();
-				}
+				random = Math.random();
 				
 
 				//If there are tests
 				if(all_tests_passed){
 
-					console.log(activity.name);
+					var related_opening_hours_integer_of_activity = get_related_opening_hours_integer_of_activity(activity);
+					var activity_open_hour = related_opening_hours_integer_of_activity.open;
+					var activity_open_date = convert_hour_integer_to_date(activity_open_hour);
+					var activity_close_hour = related_opening_hours_integer_of_activity.close;
+					var activity_close_date = convert_hour_integer_to_date(activity_close_hour);
+					
+					//To determine beginning of activity
+					var diff_beg = (activity_open_date - date_cursor)/60000;
+					var c = 0;
+					var previous_act;
+					var fill;
+					var j;
+					var act;
+
+					if(diff_beg > 0){
+
+						activity.start_date = new Date(date_cursor.getTime() + Math.max(0,diff_beg));
+						
+						while(diff_beg > 0){
+							previous_act = results_of_activities[results_length - 1 - c];
+							fill = Math.min(diff_beg,previous_act.last.local_flex_time_up);
+							//Update all fields related to flex_up
+							previous_act.last.flex_time_up -= fill;
+							previous_act.last.time_before_end -= fill; 
+							previous_act.last.local_flex_time_up = Math.min(previous_act.last.flex_time_up, previous_act.last.time_before_end);
+							//Update all fields related to flex_down
+							previous_act.last.flex_time_down += fill;
+							previous_act.last.local_flex_time_down = previous_act.last.flex_time_down;
+							if(c > 0){
+								for(j=results_length - c; j < results_length; j++){
+									act = results_of_activities[j];
+									act.last.time_after_start += fill;
+									if(j === results_length - c)
+										previous_act.last.local_flex_time_down = Math.min(previous_act.last.flex_time_down, act.last.time_after_start);					
+								}
+							}
+							//Update last value of activity
+							previous_act.last.value += fill;
+							//To make the while loop work
+							diff_beg -= fill;
+							c+= 1;
+						}
+						//In this case, activity last cannot be lower than activity.last.value, so no need to do anything on last
+						
+					}
+					else {
+
+						//To determine beginning and end of activity
+						var diff_end = (activity_end_date - date_cursor)/60000 - activity.last.min;
+						activity.start_date = new Date(date_cursor.getTime() - Math.max(0, - diff_end));
+
+						while (diff_end < 0){
+							previous_act = results_of_activities[results_length - 1 - c];
+							fill = Math.min(diff_end,previous_act.last.local_flex_time_down);
+							//Update all fields related to flex_up
+							previous_act.last.flex_time_up += fill;
+							previous_act.last.time_before_end += fill;
+							previous_act.last.local_flex_time_up = Math.min(previous_act.last.flex_time_up, previous_act.last.time_before_end);
+							//Update all fields related to flex_down
+							previous_act.last.flex_time_down -= fill;
+							previous_act.last.local_flex_time_down = previous_act.last.flex_time_down;
+							if(c > 0){
+								for(j=results_length - c; j < results_length; j++){
+									act = results_of_activities[j];
+									act.last.time_after_start -= fill;
+									if(j === results_length - c)
+										previous_act.last.local_flex_time_down = Math.min(previous_act.last.flex_time_down, act.last.time_after_start);					
+								}
+							}
+							//Update last value of activity
+							previous_act.last.value -= fill;
+							//To make the while loop work
+							diff_end -= fill;
+							c+= 1;							
+						}
+						activity.last.value = Math.min(activity.last.value,(activity_close_hour - activity.start_date)/60000);						
+					}
+					activity.end_date = new Date(activity.start_date.getTime() + activity.last.value*60000);
+					var activity_end_date = activity.end_date;
+					
+					//Define local flexibilities of new activity
+					//Define all fields related to flex_up
+					var time_before_end = (activity_close_date - activity_end_date)/60000;
+					activity.last.time_before_end = time_before_end;
+					activity.last.local_flex_time_up = Math.min(activity.last.flex_time_up, time_before_end);
+					
+					//Define all fields related to flex_down
+					activity.last.local_flex_time_down = activity.last.flex_time_down;
+					var time_after_start = (activity.start_date - activity_open_date)/60000;
+					activity.last.time_after_start = time_after_start;
+					//Updqte local_flex_down of last activity
+					previous_act = results_of_activities[results_length - 1];
+					previous_act.last.local_flex_time_down = Math.min(previous_act.last.local_flex_time_down,time_after_start);
+					
+					var activity_last_value = activity.last.value;
+					previous_day = day;	
+					date_cursor = new Date(activity_end_date); //We update the date_cursor with the new time stamp
 
 					remaining_time -= activity_last_value;
 					total_time_amount += activity_last_value;
@@ -249,118 +334,20 @@ Meteor.methods({
 					track_results_id.push(activity._id);	
 				}
 
-				track_unwanted_id.push(activity._id);		
-			}
-			while (results_of_activities.length < activities_length && total_time_amount < roulette_time_amount);
-			
-			//LOOP FOR FLEXIBILITY ON LAST => TO MAKE SURE THAT THE ROULETTE IS EQUAL TO roulette_time_amount
-			var total_time_lag;
-			var last_is_not_good = true;
-
-			total_time_lag = total_time_amount - roulette_time_amount;
-			var total_time_flexibility = roulette_time_amount;
-
-			do {
-		
-				console.log("total_time_lag : ", total_time_lag);
-
-				if(total_time_lag !== 0){
-
-					minimum_last_value = roulette_time_amount;
-
-					for(var k = results_of_activities.length - 1; k >= 0; k--){
-
-						var current_activity = results_of_activities[k];
-						console.log("current_activity : " + current_activity.name);
-						var current_activity_last_obj = current_activity.last;
-						var possible_time_flexibility = current_activity_last_obj.time_flexibility;
-						minimum_last_value = Math.min(minimum_last_value,current_activity_last_obj.value);
-
-						var next_activity;
-						var related_opening_hours_integer_of_next_activity;
-
-						console.log("Reach 1");
-
-						if(k < results_of_activities.length - 1){
-							next_activity = results_of_activities[k+1];
-							related_opening_hours_integer_of_next_activity = next_activity.related_opening_hours_integer_of_activity;
-						}
-						
-						//time_change is the amount of time we're going to substract / add to the last of the current_activity			
-						var time_change;
-
-/*						if(total_time_lag > 0){ //Meaning that the roulette is more than roulette_time_amount
-
-							var number_of_minutes_after_opening_next_activity;
-							//
-							time_change = Math.min(possible_time_flexibility,total_time_lag,total_time_flexibility);
-
-							if(next_activity){
-								number_of_minutes_after_opening_next_activity = (next_activity.start_date - convert_hour_integer_to_date(related_opening_hours_integer_of_next_activity.start)) / 60000;
-								possible_time_flexibility = Math.min(possible_time_flexibility, number_of_minutes_after_opening_next_activity);
-								time_change = Math.min(time_change, possible_time_flexibility);
-								total_time_flexibility = Math.min(total_time_flexibility - time_change, number_of_minutes_after_opening_next_activity - time_change);
-							}
-							total_time_lag -= time_change;						
-						}
-						else if (total_time_lag < 0){ //Meaning that the roulette is less than roulette_time_amount, but stopped because there are already activities_length activities
-*/
-							var number_of_minutes_before_closing_next_activity;
-							
-							//When increasing the amount of time of an activity, we have to make sure we don't go later than its closing hour
-							console.log(current_activity);
-//							var related_opening_hours_integer_of_current_activity = get_related_opening_hours_integer_of_activity(current_activity);
-//							console.log(related_opening_hours_integer_of_current_activity);
-							var number_of_minutes_before_closing_current_activity = (convert_hour_integer_to_date(current_activity.related_opening_hours_integer_of_activity.end) - current_activity.end_date) / 60000;
-							total_time_flexibility = number_of_minutes_before_closing_current_activity;
-
-							//
-							time_change = Math.min(possible_time_flexibility, Math.abs(total_time_lag),total_time_flexibility,number_of_minutes_before_closing_current_activity);
-
-							if(next_activity){
-								number_of_minutes_before_closing_next_activity = (convert_hour_integer_to_date(related_opening_hours_integer_of_next_activity.end) - next_activity.end_date) / 60000;
-								possible_time_flexibility = Math.min(possible_time_flexibility, number_of_minutes_before_closing_next_activity);
-								time_change = Math.min(time_change,possible_time_flexibility);
-								total_time_flexibility = Math.min(total_time_flexibility - time_change, number_of_minutes_before_closing_next_activity - time_change);	
-							}					
-							total_time_lag += time_change;	
-//						}
-						//To update subsequent activities' date
-						update_last_and_date_of_subsequent_activities(k,time_change,total_time_lag,results_of_activities);
-
-						if(total_time_lag === 0){
-							last_is_not_good = false;
-							break;
-						}
-						if(total_time_flexibility === 0){
-							index_to_split_results_of_activities = k;
-							break;			
-						}
-					}
-/*					if(total_time_lag > 0 && !check_last_of_roulette){
-						var last_activity_last_value = results_of_activities[results_of_activities.length - 1].last.value;
-						total_time_lag -= last_activity_last_value;
-						total_time_amount -= last_activity_last_value;
-						results_of_activities.pop();
-					}
-*/				}
-				else {
-					last_is_not_good = false;
+				//Update global_flexibility
+				results_length = results_of_activities.length;
+				for(var k=0;k<results_length;k++){
+					
 				}
-				console.log("total_time_lag A LA FIN : " + total_time_lag);
-				console.log("last_is_not_good : " + last_is_not_good);
-				console.log("total_time_flexibility : " + total_time_flexibility);
-//				break;
+
+//				track_unwanted_id.push(activity._id);
+				roulette_not_OK = (total_time_amount < roulette_time_amount);		
 			}
-			while(last_is_not_good && total_time_flexibility !== 0/*|| total_time_lag > 0*/);
-
-			console.log("GOT OUT OF LOOP");
-			console.log("Results of acitvities length : " + results_of_activities.length);
-			all_checks = (last_is_not_good);
-//			break;
-
+			while (roulette_not_OK);
+			
+			
 		}
-		while(all_checks);	
+		while(roulette_not_OK);	
 
 		console.log("Results of acitvities : " + results_of_activities);
 		return results_of_activities;
