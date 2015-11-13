@@ -78,8 +78,9 @@ Meteor.startup(function(){
 			result = convert_date_to_hour_integer(date) + 2400;
 		else if(previous_day !== day && time_amount < 0)
 			result = convert_date_to_hour_integer(date) - 2400;
-		else
+		else if (previous_day === day)
 			result = convert_date_to_hour_integer(date);
+		
 		if(hour_integer - 2400 > result){
 			result += 2400;
 		}
@@ -185,10 +186,10 @@ Meteor.methods({
 	get_activities_results: function(center,radius){
 
 		var date_now = new Date();
-		date_now.setHours(19,30,0,0);
+		date_now.setHours(21,30,0,0);
 		
-		date_cursor = round_date_to_pace_date(date_now,pace); //Has to be defined globally
-		var start_date_cursor = new Date(date_cursor);
+		date_cursor = round_date_to_pace_date(date_now,pace); //Must be defined globally
+		start_date_cursor = new Date(date_cursor); //Must be defined globally
 		var day = start_date_cursor.getDay();
 		
 		var lat = center.lat;
@@ -226,6 +227,11 @@ Meteor.methods({
 		console.log(end_points);
 
 		results_of_activities = []; //Must be defined globally
+
+		var best_results_so_far = { //Will be used in case roulette cannot be completed
+			total_time_amount: 0, 
+			results_of_activities: []
+			}; 
 		var results_length = results_of_activities.length;
 
 		//These one have to be defined globally to be modified within a function
@@ -253,9 +259,11 @@ Meteor.methods({
 				console.log("date_cursor : " + date_cursor);
 				day = convert_day_number_to_foursquare_day_number(date_cursor.getDay());
 				var hour = date_cursor.getHours();
-				var hour_integer_cursor = convert_date_to_hour_integer(date_cursor);
-				console.log(hour_integer_cursor);
+
+				var hour_integer_cursor = convert_date_to_hour_integer(date_cursor);			
 				hour_integer_cursor = (previous_day !== day) ? hour_integer_cursor + 2400 : hour_integer_cursor;
+
+				console.log("hour_integer_cursor : " + hour_integer_cursor);
 				
 				var adjusted_start_hour_cursor = add_time_amount_to_hour_integer(hour_integer_cursor, global_flex_time_up);
 				console.log("adjusted_start_hour_cursor : " + adjusted_start_hour_cursor);
@@ -463,6 +471,12 @@ Meteor.methods({
 
 				result_level = results_of_activities.length;
 
+				if(total_time_amount > best_results_so_far.total_time_amount){
+					best_results_so_far.total_time_amount = total_time_amount;
+					best_results_so_far.results_of_activities = [];
+					for(k=0;k<results_of_activities.length;k++)
+						best_results_so_far.results_of_activities.push(results_of_activities[k]);
+				}
 			}
 			while (roulette_not_OK);
 			
@@ -475,7 +489,7 @@ Meteor.methods({
 
 			}
 			else {
-//				results_of_activities = [];
+				results_of_activities = best_results_so_far.results_of_activities;
 				break;
 			}
 			

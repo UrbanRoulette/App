@@ -52,7 +52,7 @@ var fakeActivies = function() {
 Template.activityList.events({
   'click .activity-list__retry': function() {
     var center = {lat:48.8581638,lng:2.362247000000025};
-    var radius = 3 / 3963.2; //Converts miles into radians
+    var radius = 10 / 3963.2; //Converts miles into radians
 //    var results = Meteor.call('get_activities_results',center,radius);
     Meteor.apply('get_activities_results',[center,radius],true,function(error, result) {
         if (error)
