@@ -23,7 +23,6 @@ Meteor.startup(function(){
 					'visit'
 					];
 
-
 	//Variables
 	weekday = new Array(7);
 	weekday[0]=  "sunday";
