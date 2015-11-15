@@ -1,4 +1,4 @@
-Meteor.startup(function(){
+	Meteor.startup(function(){
 	//Vocabulary
 /*	Any variable with "date" is a Date Object
 	Any variable with "hour" is looking like 1830 (hour_integer) or "1830" (hour_string)
@@ -186,7 +186,7 @@ Meteor.methods({
 	get_activities_results: function(center,radius){
 
 		var date_now = new Date();
-		date_now.setHours(21,30,0,0);
+		date_now.setHours(12,30,0,0);
 		
 		date_cursor = round_date_to_pace_date(date_now,pace); //Must be defined globally
 		start_date_cursor = new Date(date_cursor); //Must be defined globally
@@ -302,9 +302,22 @@ Meteor.methods({
 							opening_hours: { $elemMatch: { days: {$in: [day]}, open: {$elemMatch: {start: {$lte: adjusted_start_hour_cursor}, end_minus_last_min: {$gte: adjusted_end_hour_cursor} } } } },	
 							"last.min": {$lte: adjusted_remaining_time},
 							//see for optional parameters: http://stackoverflow.com/questions/19579791/optional-parameters-for-mongodb-query
-	//						startdate: {$lte: date_cursor}, //startdate is not always defined...
-	//						enddate: {$gt: date_cursor}, //enddate is not always defined...
-	//						requiresun: requiresun,
+							startdate: {$lte: date_cursor}, //startdate is not always defined...
+							enddate: {$gt: date_cursor}, //enddate is not always defined...
+/*							{$or: [
+								{$and: [
+									{startdate: {$lte: date_cursor}}, 
+									{enddate: {$gte: date_cursor}}
+									]
+								},
+								{$and: [
+									{startdate: {$exists: false}},
+									{enddate: {$exists: false}}
+									]
+								} 
+								] 
+							},
+*/	//						requiresun: requiresun,
 						};
 
 				activity = Activities.findOne({$query: query, $orderby: { rand: 1 } } );			
