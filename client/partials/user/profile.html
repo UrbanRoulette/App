@@ -1,0 +1,21 @@
+<template name="profile">
+	<h2>User profile</h2>
+	<p class="alert"></p>
+  <form class="form form--user-profile">
+		<div class="form__field">
+			<label class="form__field__label">Name</label>
+  		<input type="text" name="profileName" placeholder="Name" value="{{currentUser.profile.name}}">
+		</div>
+		<div class="form__field">
+			<label class="form__field__label">Old password</label>
+			<input type="password" name="profileOldPassword" placeholder="Old password">
+		</div>
+		<div class="form__field">
+			<label class="form__field__label">New password</label>
+			<input type="password" name="profileNewPassword" placeholder="New password">
+		</div>
+		<div class="form__field">
+      <input type="submit" value="Update">
+		</div>
+  </form>
+</template>

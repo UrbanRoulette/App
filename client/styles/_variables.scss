@@ -30,7 +30,7 @@ $monospace-font-family: Menlo, Consolas, Monaco, "Lucida Console", monospace;
   SELECTORS
 \*------------------------------------*/
 $input-selector       : ".input, " + $all-text-inputs;
-$button-selector      : "button, .button";
+$button-selector      : "button, .button, input[type='submit']";
 $heading-tag          : "h1, h2, h3, h4, h5, h6";
 
 /*------------------------------------*\

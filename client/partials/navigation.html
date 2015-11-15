@@ -1,8 +1,16 @@
 <template name="navigation">
-	<div class="navigation">	
+	<div class="navigation">
 		<a class="navigation__logo" href="{{pathFor route='home'}}"><h5>UrbanRoulette</h5></a>
 		<div class="navigation__search-wrapper">
 			{{> searchForm}}
 		</div>
+
+		{{#if currentUser}}
+     <li><a href="{{pathFor route='profile'}}">Profile</a></li>
+     <li><a href="#" class="logout">Logout</a></li>
+     {{else}}
+     <li><a href="{{pathFor route='login'}}">login</a></li>
+     <li><a href="{{pathFor route='signup'}}">signup</a></li>
+     {{/if}}
 	</div>
 </template>

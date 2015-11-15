@@ -1,0 +1,26 @@
+<template name="signup">
+
+	<h2 class="text-center">Signup</h2>
+	<p class="alert"></p>
+  <form class="form form--signup">
+			<div class="form__field">
+				<label class="form__field__label">Name</label>
+  			<input required type="text" name="registerName" placeholder="Name">
+			</div>
+			<div class="form__field">
+				<label class="form__field__label">Email</label>
+      	<input required type="email" name="registerEmail" placeholder="Email">
+			</div>
+			<div class="form__field">
+				<label class="form__field__label">Password</label>
+      	<input required type="password" name="registerPassword" placeholder="Password">
+			</div>
+			<div class="form__field">
+	      <input type="submit" value="Register">
+			</div>
+			<div class="form__field">
+				<a href="{{pathFor route='login'}}">Or login</a>
+			</div>
+  </form>
+
+</template>

@@ -1,21 +1,34 @@
+/* Fonts */
 @import url(https://fonts.googleapis.com/css?family=Lato:400,700,900,300);
 @import url(https://fonts.googleapis.com/css?family=Merriweather:400,300italic,300,400italic,700,700italic,900,900italic);
+
+/* Vendor */
 @import "{wolves:bourbon}/bourbon";
+
+/* Variables */
 @import "variables";
+
+/* Mixins */
 @import "mixins/helpers";
 @import "mixins/rem";
 @import "mixins/box-shadow";
 @import "mixins/font-size";
 @import "mixins/media";
 @import "mixins/round-pixel";
+
+/* Modules */
 @import "global";
 @import "modules/type";
 @import "modules/input";
+@import "modules/form";
 @import "modules/button";
 @import "modules/grid";
+
+/* Partials */
 @import "partials/landing-page";
 @import "partials/search-page";
 @import "partials/navigation";
 @import "partials/search-form";
 @import "partials/map";
 @import "partials/activity-item";
+@import "partials/layout";

@@ -12,7 +12,7 @@
 @mixin vertical-margin-helper($margin) {
   @include rem(margin-bottom, $margin);
 
-  &:last-child {
+  &:last-of-type {
     margin-bottom: 0;
   }
 }

@@ -1,0 +1,22 @@
+<template name="login">
+	<h2 class="text-center">Login</h2>
+	<p class="alert"></p>
+  <form class="form form--login">
+		<div class="form__field">
+			<label class="form__field__label">Email</label>
+			<input type="email" name="loginEmail" placeholder="Email" required>
+		</div>
+		<div class="form__field">
+			<label class="form__field__label">Password</label>
+      <input type="password" name="loginPassword" placeholder="Password" required>
+		</div>
+		<div class="form__field">
+      <input type="submit" value="Login">
+		</div>
+		<div class="form__field">
+			<a class="login__forgot" href="{{pathFor route='forgot'}}">Forgot your password?</a>
+			<br>
+			<a href="{{pathFor route='signup'}}">Or signup</a>
+		</div>
+  </form>
+</template>
