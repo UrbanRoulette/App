@@ -1,7 +1,6 @@
 var activitiesList = Activities.find().count();
 // if we already have entries in the db, don't insert again.
-if (activitiesList > 0)
-  return;
+if (activitiesList > 0) return;
 
 // code to run on server at startup
 Assets.getText('activities.txt', function(err, data) {

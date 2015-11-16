@@ -22,8 +22,17 @@ var callServer = function() {
 };
 
 Template.activityList.onCreated(function() {
-  callServer();
-})
+
+  var self = this;
+  if (!Session.get('activities_results')) return callServer();
+
+  self.autorun(function() {
+    if (Session.get('currentSearch')) {
+      callServer();
+    }
+  });
+
+});
 
 Template.activityList.events({
   'click .activity-list__retry': function() {

@@ -29,10 +29,10 @@ Template.searchForm.events({
     // If empty return false
     if (!location.length) return false;
 
-
+    // Save search in session
     Session.set('currentSearch', location);
 
-    // IF valid
+    // Go to search page
     Router.go('search', {
       keyword: location
     });
