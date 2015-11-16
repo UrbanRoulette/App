@@ -81,34 +81,8 @@ var googleMapHelper = function(map) {
       if (status == google.maps.DirectionsStatus.OK) self.directionsDisplay.setDirections(result);
     });
   }
-}
+};
 
-// setupMapHelper
-var setupMap = function(map, addresses) {
-
-  var helper = new googleMapHelper(map);
-
-  // Each address given
-  _.each(addresses, function(address) {
-
-    // Geocode address
-    helper.geocode(address, function(results) {
-
-      helper.addLocation(results[0].geometry.location);
-
-      // If last address
-      if (address == _.last(addresses)) {
-
-        // Adjust map and calculate itinary
-        helper.adjustMap();
-        helper.calcRoute();
-      }
-    }, function(error) {
-      console.log(error);
-    });
-  });
-
-}
 
 Template.map.helpers({
   mapOptions: function() {
@@ -124,9 +98,32 @@ Template.map.helpers({
 Template.map.onCreated(function() {
   var self = this;
   GoogleMaps.ready('map', function(map) {
+    var helper = new googleMapHelper(map);
+
     self.autorun(function() {
-      if (Session.get('fakeLocations')) {
-        setupMap(map, Session.get('fakeLocations'));
+      if (Session.get('activities_results')) {
+
+        var locations = [];
+        helper.locations = [];
+
+        _.each(Session.get('activities_results'), function(activity) {
+          locations.push([activity.index.coordinates[1], activity.index.coordinates[0]]);
+        });
+
+        // Each address given
+        _.each(locations, function(address) {
+
+          var location = new google.maps.LatLng(address[0], address[1]);
+          helper.addLocation(location);
+
+          // If last address
+          if (address == _.last(locations)) {
+
+            // Adjust map and calculate itinary
+            helper.adjustMap();
+            helper.calcRoute();
+          }
+        });
       }
     });
   });

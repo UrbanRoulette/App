@@ -39,3 +39,6 @@ dburles:google-maps
 jeremy:geocomplete
 reactive-dict
 accounts-password
+yogiben:autoform-file
+cfs:standard-packages
+cfs:filesystem
