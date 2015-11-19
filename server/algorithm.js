@@ -183,18 +183,18 @@
 
 Meteor.methods({
 
-	get_activities_results: function(center,radius){
+	get_activities_results: function(center,radius,date,timezoneOffset){
 
-		var date_now = new Date();
-		date_now.setHours(12,30,0,0);
-		
-		date_cursor = round_date_to_pace_date(date_now,pace); //Must be defined globally
+		date = new Date(date.getTime() - timezoneOffset*60000);
+		date = new Date(date.setHours(12,30,0,0));
+
+		date_cursor = round_date_to_pace_date(date,pace); //Must be defined globally
 		start_date_cursor = new Date(date_cursor); //Must be defined globally
 		var day = start_date_cursor.getDay();
 		
 		var lat = center.lat;
 		var lng = center.lng;
-		var profile = "Cheap";
+		var profile = ["gratuit", "cheap", "exterieur", "curieux", "couple", "solo", "potes", "prestige"];
 		var requiresun = false;
 		
 		var min_rand = Activities.findOne({},{sort: {rand:1}}).rand;
@@ -202,6 +202,7 @@ Meteor.methods({
 		
 		var previous_day = convert_day_number_to_foursquare_day_number(date_cursor.getDay());
 
+		var type_considered;
 		//These must be defined globally
 		types_required = activity_types;
 		types_excluded = [];
@@ -281,13 +282,17 @@ Meteor.methods({
 				types_required = activity_types;
 
 				//FOR RESTAURANTS
-				var type_considered = 'restaurant';
+				type_considered = 'restaurant';
 				var ind;
 				if (eatingHours.indexOf(hour) > -1 && types_excluded.indexOf(type_considered) === -1)
 					require_type(type_considered);
 				else 
 					exclude_type(type_considered);
 				
+				//FOR SPORTS
+				type_considered = "sport";
+				if(results_of_activities.length > 0)
+					exclude_type(type_considered);
 
 				console.log(types_excluded);
 				console.log(types_required);				
@@ -295,10 +300,11 @@ Meteor.methods({
 
 				var query = {
 							_id: { $nin: track_unwanted_id[result_level].concat(track_results_id) },
-							index : { $geoWithin: { $centerSphere : [ [ lng, lat ] , radius ] } },
+							index : { $geoWithin: { $centerSphere : [ [ lng, lat ] , radius ] } }, //Initial point
+//							index : { $geoWithin: { $centerSphere : [ [ lng, lat ] , radius ] } }, //Previous activity point
 							rand: { $gte: random },
 							type: { $in: types_required, $nin: types_excluded },
-							profile: { $in: [profile] },	
+							profile: { $in: profile },	
 							opening_hours: { $elemMatch: { days: {$in: [day]}, open: {$elemMatch: {start: {$lte: adjusted_start_hour_cursor}, end_minus_last_min: {$gte: adjusted_end_hour_cursor} } } } },	
 							"last.min": {$lte: adjusted_remaining_time},
 							//see for optional parameters: http://stackoverflow.com/questions/19579791/optional-parameters-for-mongodb-query
@@ -399,8 +405,6 @@ Meteor.methods({
 						diff_beg -= fill;
 						c+= 1;
 					}
-					//In this case, activity last cannot be lower than activity.last.value, so no need to do anything on last
-					
 				}
 				else {
 

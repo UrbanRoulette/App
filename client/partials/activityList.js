@@ -1,7 +1,6 @@
 Template.activityList.events({
+
   'click .activity-list__retry': function() {
-
-
 
     var geocoder = new google.maps.Geocoder();
 
@@ -13,8 +12,13 @@ Template.activityList.events({
           lat: results[0].geometry.location.lat(),
           lng: results[0].geometry.location.lng()
         };
-        var radius = 1 / 3963.2; //Converts miles into radians
-        Meteor.apply('get_activities_results', [center, radius], true, function(error, result) {
+        var date = new Date();
+        console.log(date);
+        //var timezoneOffset = date.getTimezoneOffset();
+        var timezoneOffset = 0;
+        //console.log(timezoneOffset);
+        var radius = 1 / 3963.192; //Converts miles into radians. Should be divided by 6378.137 for kilometers
+        Meteor.apply('get_activities_results', [center,radius,date,timezoneOffset], true, function(error, result) {
           if (error)
             console.log(error);
           else {
@@ -22,13 +26,9 @@ Template.activityList.events({
             console.log(result);
           }
         });
-      };
+      }
       // return error(status);
     });
-
-
-
-
 
   },
 

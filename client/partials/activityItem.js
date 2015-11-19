@@ -3,15 +3,15 @@ Template.activityItem.onCreated(function() {
   this.state = new ReactiveDict();
   this.state.set('canBeTruncated', canBeTruncated);
   this.state.set('truncated', true);
-  
   convert_date_to_readable_string = function(date){
-      var h = date.getHours();
-      var m = date.getMinutes();
-      var hh = (h>=10) ? '' : '0';
-      var mm = (m>=10) ? ':' : ':0';
-      var readable_string = hh + h.toString() + mm + m.toString();    
-      return readable_string;
-    };
+    date = new Date(date);
+    var h = date.getHours();
+    var m = date.getMinutes();
+    var hh = (h>=10) ? '' : '0';
+    var mm = (m>=10) ? 'h' : 'h0';
+    var readable_string = hh + h.toString() + mm + m.toString();    
+    return readable_string;
+  };
 });
 
 Template.activityItem.helpers({
@@ -30,10 +30,13 @@ Template.activityItem.helpers({
     return Template.instance().state.get('canBeTruncated');
   },
   time_start: function(){
-    return convert_date_to_readable_string(this.start_date);
+    var start_string = convert_date_to_readable_string(this.start_date);
+    console.log(start_string);
+    return start_string;
   },
   time_end: function(){
-    return convert_date_to_readable_string(this.end_date);
+    var end_string = convert_date_to_readable_string(this.end_date);
+    return end_string;
   },
 });
 

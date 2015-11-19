@@ -37,7 +37,10 @@ Meteor.startup(function(){
 	dinnerHours = [19,20];
 	eatingHours = lunchHours.concat(dinnerHours);
 
+	districts = [0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20];
+	profiles = ["gratuit", "cheap", "exterieur", "curieux", "couple", "solo", "potes", "prestige"];
 	district_coordinates = {
+		0: {"lat":48.8640493,"lng":2.331052600000021},
 		1: {"lat":48.8640493,"lng":2.331052600000021},
 		2: {"lat":48.8675641,"lng":2.3439899999999625},
 		3: {"lat":48.8634799,"lng":2.3591145000000324},
@@ -58,7 +61,5 @@ Meteor.startup(function(){
 		18: {"lat":48.891305,"lng":2.352986699999974},
 		19: {"lat":48.88237609999999,"lng":2.382291699999996},
 		20: {"lat":48.8599825,"lng":2.4066411999999673}
-	};	
-
+	};
 });
-

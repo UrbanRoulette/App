@@ -66,7 +66,7 @@ var googleMapHelper = function(map) {
       }
     });
     return waypoints;
-  }
+  };
 
   this.calcRoute = function() {
     var request = {
@@ -76,11 +76,45 @@ var googleMapHelper = function(map) {
       optimizeWaypoints: true,
       travelMode: google.maps.TravelMode.DRIVING
     };
-
     self.directionsService.route(request, function(result, status) {
-      if (status == google.maps.DirectionsStatus.OK) self.directionsDisplay.setDirections(result);
+      if (status == google.maps.DirectionsStatus.OK){ 
+        self.directionsDisplay.setDirections(result);
+        console.log(result);
+        //Find discoveries on the way
+        var legs = result.routes[0].legs;
+        var discoveries = {};
+        
+        for(i=0;i<legs.length;i++){
+          discoveries[i] = [];
+          var steps = legs[i].steps;
+
+          for(j=0;j<steps.length;j++){
+            var lat_lngs = steps[j].lat_lngs;
+            var discovery = null;
+
+            for(l=0;l<lat_lngs.length;l++){
+              var lat_lng = formatData(lat_lngs[l]);
+              discovery = Activities.findOne(
+                { type: {$in: ["discovery"]},
+                  index: {
+                    $near: {
+                     $geometry: {type: "Point" , coordinates: [lat_lng.lng,lat_lng.lat]},
+                     $maxDistance: 200 //Distance is in meters
+                  }
+                }
+              });
+              if(discovery) break;            
+            }
+            if(discovery){
+              discoveries[i].push(discovery);
+              break;
+            }    
+          }
+        }
+        console.log(discoveries);
+      }
     });
-  }
+  };
 };
 
 
@@ -97,6 +131,13 @@ Template.map.helpers({
 
 Template.map.onCreated(function() {
   var self = this;
+  formatData = function(data) {
+      //data is a LatLng Object
+      var obj = {};
+          obj.lat = data.lat();
+          obj.lng = data.lng();
+      return obj;     
+  };
   GoogleMaps.ready('map', function(map) {
     var helper = new googleMapHelper(map);
 
