@@ -4,9 +4,6 @@ Template.signup.events({
     // Prevent the form to go to another page
     event.preventDefault();
 
-    // Emptying that error message in case of previous failture
-    template.$(".alert").text("").removeClass("error");
-
     // Get name / email / password
     var nameVar = event.target.registerName.value;
     var emailVar = event.target.registerEmail.value;
@@ -25,7 +22,7 @@ Template.signup.events({
       if (error) {
 
         // We set the text of that error with the error.message
-        return template.$(".alert").addClass("error").text(error.message);
+        Alert(error.message, 'error');
       }
     });
   }

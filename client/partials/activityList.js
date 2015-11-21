@@ -10,11 +10,10 @@ var callServer = function() {
       };
       var radius = 1 / 3963.2; //Converts miles into radians
       Meteor.apply('get_activities_results', [center, radius], true, function(error, result) {
-        if (error)
-          console.log(error);
-        else {
+        if (error) {
+          Alert(error, 'error');
+        } else {
           Session.set('activities_results', result);
-          console.log(result);
         }
       });
     };

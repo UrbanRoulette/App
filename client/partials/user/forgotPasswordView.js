@@ -4,9 +4,6 @@ Template.forgotPassword.events({
     // Prevent the form to go to another page
     event.preventDefault();
 
-    // Emptying that error message in case of previous failture
-    template.$(".alert").text("").removeClass("error");
-
     // Get email
     var emailVar = event.target.forgotEmail.value;
 
@@ -17,12 +14,12 @@ Template.forgotPassword.events({
 
       // If there's an error form the BE
       if (err) {
-        template.$(".alert").addClass("error").text(error.message);
+        Alert(error.message, 'error');
       }
 
       // Else show success state
       else {
-        template.$(".alert").addClass("success").text('Email Sent. Check your mailbox.');
+        Alert('Email Sent. Check your mailbox.', 'success');
       }
     });
   }

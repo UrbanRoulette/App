@@ -1,0 +1,14 @@
+.alert {
+  position: absolute;
+  top: 0;
+  background: $c-primary;
+  color: $c-white;
+  left: 50%;
+  @include transform(translateX(-50%));
+  @include rem(padding, 1, 1.5);
+
+  &--error {
+    background: $c-red;
+    border-radius: 0 0 $base-radius $base-radius;
+  }
+}

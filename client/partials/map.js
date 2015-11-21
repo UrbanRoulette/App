@@ -33,13 +33,13 @@ Template.map.onCreated(function() {
 
         // Loop trough each result
         _.each(Session.get('activities_results'), function(activity) {
-          console.log(activity);
+
           // Create location object
           var location = new google.maps.LatLng(activity.index.coordinates[1], activity.index.coordinates[0]);
           helper.addLocation(location);
 
           // If last address
-          if (activity == _.last(Session.get('activities_results'))) {
+          if (activity._id == _.last(Session.get('activities_results'))._id) {
 
             // Reset style to normal
             helper.mapActive();

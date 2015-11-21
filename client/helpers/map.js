@@ -198,18 +198,16 @@ googleMapHelper = function(map) {
       destination: self.locations[self.locations.length - 1],
       waypoints: self.getWaypoints(),
       optimizeWaypoints: true,
-      travelMode: google.maps.TravelMode.DRIVING
+      travelMode: google.maps.TravelMode.WALKING
     };
 
     self.directionsService.route(request, function(result, status) {
+      console.log(result);
       if (status == google.maps.DirectionsStatus.OK) self.directionsDisplay.setDirections(result);
     });
   }
 
   this.hideItinary = function() {
-    // self.directionsDisplay.setDirections([]);
-    // self.directionsDisplay.setMap(null);
-    // self.directionsDisplay = null;
     self.directionsDisplay.setDirections({
       routes: []
     });
