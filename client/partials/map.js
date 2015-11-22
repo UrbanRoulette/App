@@ -74,7 +74,7 @@ var googleMapHelper = function(map) {
       destination: self.locations[self.locations.length - 1],
       waypoints: self.getWaypoints(),
       optimizeWaypoints: true,
-      travelMode: google.maps.TravelMode.DRIVING
+      travelMode: google.maps.TravelMode.WALKING
     };
     self.directionsService.route(request, function(result, status) {
       if (status == google.maps.DirectionsStatus.OK){ 
@@ -111,7 +111,7 @@ var googleMapHelper = function(map) {
             }    
           }
         }
-        console.log(discoveries);
+        console.log("DISCOVERIES : " + discoveries);
       }
     });
   };

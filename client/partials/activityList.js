@@ -15,10 +15,11 @@ Template.activityList.events({
         var date = new Date();
         console.log(date);
         //var timezoneOffset = date.getTimezoneOffset();
+        var profile = ["gratuit", "cheap", "exterieur", "curieux", "couple", "solo", "potes", "prestige"];
         var timezoneOffset = 0;
         //console.log(timezoneOffset);
         var radius = 1 / 3963.192; //Converts miles into radians. Should be divided by 6378.137 for kilometers
-        Meteor.apply('get_activities_results', [center,radius,date,timezoneOffset], true, function(error, result) {
+        Meteor.apply('get_activities_results', [center,radius,date,profile,timezoneOffset], true, function(error, result) {
           if (error)
             console.log(error);
           else {
@@ -29,9 +30,7 @@ Template.activityList.events({
       }
       // return error(status);
     });
-
   },
-
 });
 
 Template.activityList.helpers({

@@ -1,5 +1,29 @@
 Meteor.methods({
 
+  	convert_date_to_readable_string: function(date){
+  	  date = new Date(date);
+      var h = date.getHours();
+      var m = date.getMinutes();
+      var hh = (h>=10) ? '' : '0';
+      var mm = (m>=10) ? 'h' : 'h0';
+      var readable_string = hh + h.toString() + mm + m.toString();    
+      return readable_string;
+    },
+	
+	createString: function(obj){
+        var carditem = '\n';
+        var start_string = Meteor.call('convert_date_to_readable_string',obj.start_date);
+        var end_string = Meteor.call('convert_date_to_readable_string',obj.end_date);
+
+        carditem += start_string + "-" + end_string + " : " + obj.specific + " - " + obj.price + '€\n';
+        carditem += obj.name + ' - ' + obj.district +'e';
+        carditem += '\n';
+        carditem += (obj.metrostation !== null) ? ('Métro : ' + obj.metrostation + '\n') : '';
+        carditem += '+ d\'infos : ' + obj.link;
+        carditem += '\n';
+
+     	return carditem;
+	},
 
 	insertActivity: function(doc){
 
