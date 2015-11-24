@@ -20,7 +20,7 @@ Template.activityList.events({
         var activities_locked = Session.get('activities_locked');
         if(activities_locked){} else activities_locked = []; 
         //console.log(timezoneOffset);
-        var radius = 1 / 3963.192; //Converts miles into radians. Should be divided by 6378.137 for kilometers
+        var radius = 10 / 3963.192; //Converts miles into radians. Should be divided by 6378.137 for kilometers
         Meteor.apply('get_activities_results', [center,radius,date,profile,timezoneOffset,activities_locked], true, function(error, result) {
           if (error)
             console.log(error);

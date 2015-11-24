@@ -163,10 +163,10 @@
 	};
 	remove_last_activity_from_results = function(){
 		var last_activity = results[results.length - 1];
-		results.pop();
 		if(last_activity.locked) lock_index -= 1;
 		result_level -= 1;
 		track_unwanted_id[result_level].push(results[result_level]._id);
+		results.pop();
 		track_results_id.pop();
 		update_local_and_global_flex(results);
 		total_time_amount -= last_activity.last.value;
@@ -229,7 +229,7 @@ Meteor.methods({
 		nb_slots_to_fill = 1; //Must be defined globally
 		lock_index = 0; //Must be defined globally
 		var new_passage = [];
-		var test_cursor = new Date(date_cursor);
+		var test_cursor = new Date(date_cursor_start);
 		if(activities_locked.length > 0){
 
 			activities_locked = activities_locked.sort(function(a,b){return ((a.start_date).getTime() - (b.start_date).getTime());});
@@ -249,14 +249,14 @@ Meteor.methods({
 			nb_slots_to_fill = 0; //Necessary
 			for (k=0;k<activities_locked.length;k++){
 
-				var ac = activities_locked[k];
-				ac.locked = true;
-				exclude_type(ac.type);
+				var act_locked = activities_locked[k];
+				act_locked.locked = true;
+				exclude_type(act_locked.type);
 				
-				if(test_cursor.getTime() !== ac.start_date.getTime()) nb_slots_to_fill += 1;
-				test_cursor = new Date(ac.end_date);
+				if(test_cursor.getTime() !== act_locked.start_date.getTime()) nb_slots_to_fill += 1;
+				test_cursor = new Date(act_locked.end_date);
 				new_passage.push(true);
-				end_points.push(ac.start_date);
+				end_points.push(act_locked.start_date);
 			}
 			if(test_cursor < date_cursor_end) nb_slots_to_fill += 1;
 			console.log("NEW PASSAGE : ");
@@ -271,16 +271,19 @@ Meteor.methods({
 		results = []; //Must be defined globally
 		var best_results_so_far = { total_time_amount: 0, results: []}; //Will be used in case roulette cannot be completed
 		result_level = 0; //Must be defined globally //Is the level at which the algorithm is currently looking for an activity: If level = 0, it is looking for the 1st activity, if level = 1, for the 2nd, etc...
-	
+		var roulette_not_OK = true;
 
 		//BEGINNING OF ALGORITHM
+		Algorithm:
 		do {
+			
 			
 			console.log("*********** NEW LOOP ***********");
 			console.log("date_cursor : " + date_cursor);
 			var random = Math.random();
 
 			console.log("RESULT LEVEL just avant locked activities: " + result_level);
+
 			//FOR LOCKED ACTIVITIES
 			var change_of_slot = 0;
 			while(activities_locked.length - 1 >= lock_index){
@@ -290,8 +293,8 @@ Meteor.methods({
 
 				var activity_locked = activities_locked[lock_index];	
 
-				//Deals with locked activities in general
 				if(activity_locked.start_date.getTime() === date_cursor.getTime()){
+
 					console.log('new_passage[lock_index] : ' + new_passage[lock_index]);
 					if(new_passage[lock_index]){
 						console.log('activity locked added');
@@ -302,13 +305,16 @@ Meteor.methods({
 					else { //Enables to go up one level in the result to look for different activities
 						console.log('activity locked removed');
 						new_passage[lock_index] = true;
-						remove_last_activity_from_results();
+						if(results.length === 0){results = best_results_so_far.results; break Algorithm;}
+						else remove_last_activity_from_results();						
 						change_of_slot = -1;
 					}
 				}
 				else
 					break;					
 			}
+			if(date_cursor.getTime() === date_cursor_end.getTime()) break Algorithm;
+
 			slot_index += change_of_slot;
 			var nb_of_new_activities_to_find = activities_length - results.length - (activities_locked.length - lock_index);
 			var nb_of_remaining_slots_to_fill = nb_slots_to_fill - slot_index;
@@ -316,8 +322,8 @@ Meteor.methods({
 			console.log('max_nb_of_activities_for_this_slot : ' + max_nb_of_activities_for_this_slot);
 			console.log('slot_index : ' + slot_index);
 
-			if(date_cursor.getTime() === end_points[end_points.length - 1].getTime()) break;
 			
+			console.log("date_cursor : " + date_cursor);
 
 			console.log("RESULT LEVEL : " + result_level);
 
@@ -395,12 +401,11 @@ Meteor.methods({
 				track_unwanted_id[result_level] = [];
 				if(result_level > 0){
 					remove_last_activity_from_results();
-					continue;
+					continue Algorithm;
 				}
 				else { 
-					total_time_amount = best_results_so_far.total_time_amount;
 					results = best_results_so_far.results; 
-					break; 
+					break Algorithm; 
 				}
 			}
 
@@ -412,6 +417,8 @@ Meteor.methods({
 			var activity_open_date = convert_hour_integer_to_date(activity_open_hour);
 			var activity_close_hour = related_opening_hours_integer_of_activity.close;
 			var activity_close_date = convert_hour_integer_to_date(activity_close_hour);
+			console.log('activity_open_date : ' + activity_open_date);
+			console.log('activity_close_date : ' + activity_close_date);
 			//
 			
 			var beg_of_activity = new Date(Math.min(activity_open_date, end_point));
@@ -437,7 +444,7 @@ Meteor.methods({
 
 			if(max_nb_of_activities_for_this_slot === 1 && (max_activity_value < time_before_next_end_point)){ 
 				track_unwanted_id[result_level].push(activity._id);
-				continue;
+				continue Algorithm; //Don't know why but this "continue" statement sometimes plainly breaks the Algorithm loop...
 			}
 
 			//Initializing values
@@ -467,7 +474,7 @@ Meteor.methods({
 				c+= 1;							
 			}						
 			
-			activity.last.value = Math.min(activity.last.max,time_before_end_of_activity);
+			activity.last.value = max_activity_value;
 			activity.end_date = new Date(activity.start_date.getTime() + activity.last.value*ms_in_min);
 			console.log("activity_end_date : " + activity.end_date);
 			
@@ -494,9 +501,10 @@ Meteor.methods({
 			}
 			//
 			roulette_not_OK = (total_time_amount < roulette_time_amount);
+			console.log('roulette_not_OK : ' + roulette_not_OK);
 		}
-		while (roulette_not_OK);
-
+		while(roulette_not_OK);
+		console.log('roulette_not_OK : ' + roulette_not_OK);
 		console.log("Results of activities : " + JSON.stringify(results));
 		console.log("Date cursor : " + date_cursor);
 		console.log("Total time amount : " + total_time_amount);
