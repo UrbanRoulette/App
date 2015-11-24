@@ -1,0 +1,15 @@
+.empty-view {
+  text-align: center;
+  @include rem(padding, 1, 2);
+  &__title {
+    @include font-size(2);
+  }
+
+  &__text {
+    color: $c-grey;
+    margin: 0 auto;
+    @include rem(max-width, 20);
+    @include rem(margin-top, 1);
+    @include font-size(1.1);
+  }
+}

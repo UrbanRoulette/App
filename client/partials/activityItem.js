@@ -3,15 +3,6 @@ Template.activityItem.onCreated(function() {
   this.state = new ReactiveDict();
   this.state.set('canBeTruncated', canBeTruncated);
   this.state.set('truncated', true);
-  
-  convert_date_to_readable_string = function(date){
-      var h = date.getHours();
-      var m = date.getMinutes();
-      var hh = (h>=10) ? '' : '0';
-      var mm = (m>=10) ? ':' : ':0';
-      var readable_string = hh + h.toString() + mm + m.toString();    
-      return readable_string;
-    };
 });
 
 Template.activityItem.helpers({
@@ -29,11 +20,11 @@ Template.activityItem.helpers({
   canBeTruncated: function()  {
     return Template.instance().state.get('canBeTruncated');
   },
-  time_start: function(){
-    return convert_date_to_readable_string(this.start_date);
+  time_start: function() {
+    return moment(this.start_date).format('HH:mm');
   },
-  time_end: function(){
-    return convert_date_to_readable_string(this.end_date);
+  time_end: function() {
+    return moment(this.end_date).format('HH:mm');
   },
 });
 
@@ -41,6 +32,6 @@ Template.activityItem.events({
   'click .activity-item__description__expand': function(event, template) {
     event.preventDefault();
     template.state.set('truncated', !Template.instance().state.get('truncated'));
-    this.event.target.text(Template.instance().state.get('truncated') ? "Show less" : "Show more");
+    event.target.text(Template.instance().state.get('truncated') ? "Show less" : "Show more");
   }
 });

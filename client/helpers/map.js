@@ -111,7 +111,10 @@ googleMapHelper = function(map) {
   this.locations = [];
   this.map = map;
   this.bounds = new google.maps.LatLngBounds();
-  this.directionsDisplay = new google.maps.DirectionsRenderer();
+
+  this.directionsDisplay = new google.maps.DirectionsRenderer({
+    suppressMarkers: true
+  });
   this.directionsService = new google.maps.DirectionsService();
   this.directionsDisplay.setMap(map.instance);
 
@@ -125,9 +128,10 @@ googleMapHelper = function(map) {
   });
 
   this.reset = function() {
-    this.markers = [];
-    this.locations = [];
-    this.hideItinary();
+    self.clearMarkers();
+    self.markers = [];
+    self.locations = [];
+    self.hideItinary();
   }
 
   this.mapInactive = function() {
@@ -152,17 +156,32 @@ googleMapHelper = function(map) {
     });
   };
 
-  this.addMarker = function(position) {
+  this.addMarker = function(position, icon, metadata) {
+    icon = typeof(icon) == 'undefined' ? 'pin.svg' : icon;
+
     var marker = new google.maps.Marker({
       map: self.map.instance,
-      position: position
+      position: position,
+      icon: '/images/pin/' + icon
     });
+
+    marker.setValues(metadata);
     self.markers.push(marker);
+
+    marker.addListener('mouseover', function() {
+      Session.set('pin_hovered_id', this.id);
+      this.setAnimation(google.maps.Animation.BOUNCE)
+    });
+
+    marker.addListener('mouseout', function() {
+      Session.set('pin_hovered_id', false);
+      this.setAnimation(null)
+    });
   };
 
-  this.setMapOnAll = function() {
+  this.setMapOnAll = function(map) {
     for (var i = 0; i < self.markers.length; i++) {
-      self.markers[i].setMap(self.map);
+      self.markers[i].setMap(map);
     }
   };
 
@@ -179,6 +198,7 @@ googleMapHelper = function(map) {
     self.map.instance.fitBounds(self.bounds);
   };
 
+
   this.getWaypoints = function() {
     var waypoints = [];
     _.each(self.locations, function(location) {
@@ -190,9 +210,11 @@ googleMapHelper = function(map) {
       }
     });
     return waypoints;
-  }
+  };
 
   this.calcRoute = function() {
+    var self = this;
+
     var request = {
       origin: self.locations[0],
       destination: self.locations[self.locations.length - 1],
@@ -202,8 +224,63 @@ googleMapHelper = function(map) {
     };
 
     self.directionsService.route(request, function(result, status) {
-      console.log(result);
       if (status == google.maps.DirectionsStatus.OK) self.directionsDisplay.setDirections(result);
+
+      var legs = result.routes[0].legs;
+
+      _.each(legs, function(leg, index) {
+        var id = Session.get('activities_results')[index]._id;
+        self.addMarker(leg.start_location, 'pin.svg', {
+          id: id
+        });
+
+        if (leg == _.last(legs)) {
+          var id = Session.get('activities_results')[index + 1]._id;
+          self.addMarker(leg.end_location, 'pin.svg', {
+            id: id
+          });
+        }
+      });
+
+      // var discoveries = [];
+      //
+      // for (i = 0; i < legs.length; i++) {
+      //   var steps = legs[i].steps;
+      //
+      //   for (j = 0; j < steps.length; j++) {
+      //     var lat_lngs = steps[j].lat_lngs;
+      //     var discovery = null;
+      //
+      //     for (l = 0; l < lat_lngs.length; l++) {
+      //       discovery = Activities.findOne({
+      //         type: {
+      //           $in: ["discovery"]
+      //         },
+      //         index: {
+      //           $near: {
+      //             $geometry: {
+      //               type: "Point",
+      //               coordinates: [lat_lngs[l].lng(), lat_lngs[l].lat()]
+      //             },
+      //             $maxDistance: 200 //Distance is in meters
+      //           }
+      //         }
+      //       });
+      //       if (discovery) break;
+      //     }
+      //     if (discovery) {
+      //       discoveries.push(Object(discovery));
+      //       break;
+      //     }
+      //   }
+      // }
+      //
+      // _.each(discoveries, function(discovery) {
+      //   var location = new google.maps.LatLng(discovery.index.coordinates[1], discovery.index.coordinates[0]);
+      //   self.addMarker(location, 'pin--star.svg');
+      // })
+
+
     });
   }
 

@@ -27,7 +27,6 @@ Template.map.onCreated(function() {
 
         // If no activity, return;
         if (Session.get('activities_results').length === 0) {
-          console.log('empty');
           return;
         }
 

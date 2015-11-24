@@ -1,15 +1,17 @@
 .navigation {
-  background: #eee;
+  background: $c-white;
+  border: 1px solid #ddd;
+  @include rem(padding, 0.5, 0);
+  @include display(flex);
+  @include align-items(center);
+  @include justify-content(center);
+  @include flex-direction(row);
 
-  @include rem(padding, 1, 1.5);
-
-  &__logo, &__search-wrapper {
-    @include block-align(middle);
-
-    @include rem(margin-right, 1);
+  .search-form {
+    flex: 1 auto;
   }
 
-  &__search-wrapper {
-    width: calc(100% - 160px);
+  a {
+    @include rem(padding, 0.5, 1);
   }
 }
