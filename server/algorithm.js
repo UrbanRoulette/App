@@ -83,7 +83,7 @@
 	};
 	
 	//Related to LAST flexibility
-	get_related_opening_hours_integer_of_activity = function(activity, day_number,start_cursor,end_cursor){
+	get_related_opening_hours_integer_of_activity = function(activity,day_number,start_cursor,end_cursor){
 
 		var opening_hours = activity.opening_hours;
 //		var start_date = activity.start_date;
@@ -112,7 +112,6 @@
 		}
 		return related_opening_hours_integer_of_activity; //returns hour_integers
 	};
-
 	update_local_and_global_flex = function(results){
 
 		global_flex_time_up = 0;
@@ -152,28 +151,27 @@
 			act.end_date = new Date(act.end_date.getTime() + sign*fill*ms_in_min);
 		}
 	};
-	update_times = function(){
-		total_time_amount = 0;
-		for(k=0;k<results.length;k++) total_time_amount += results[k].last.value;
-		remaining_time = roulette_time_amount - total_time_amount;	
-	};
 	add_activity_to_results = function(activity){
 		results.push(activity);
+		if(activity.locked) lock_index += 1;
+		result_level += 1;
 		track_results_id.push(activity._id);
 		update_local_and_global_flex(results);
-		update_times();
-		types_excluded.push(activity.type);
+		total_time_amount += activity.last.value;
+		if(!activity.locked) types_excluded.push(activity.type); //We already excluded the type of locked activities at the beginning of the algorithm
 		date_cursor = new Date(activity.end_date); //We update the date_cursor with the new time stamp
 	};
 	remove_last_activity_from_results = function(){
-		var last_a = results[results.length - 1];
-		if(activities_locked_ids.indexOf(last_a._id) > -1) lock_index -= 1;
+		var last_activity = results[results.length - 1];
 		results.pop();
+		if(last_activity.locked) lock_index -= 1;
+		result_level -= 1;
+		track_unwanted_id[result_level].push(results[result_level]._id);
 		track_results_id.pop();
 		update_local_and_global_flex(results);
-		update_times();
-		types_excluded.pop();
-		date_cursor = new Date(date_cursor.getTime() - last_a.last.value*ms_in_min);
+		total_time_amount -= last_activity.last.value;
+		types_excluded.splice(types_excluded.indexOf(last_activity.type),1);
+		date_cursor = new Date(date_cursor.getTime() - last_activity.last.value*ms_in_min);
 	};
 	require_type = function(type){
 		types_required = [];
@@ -191,59 +189,88 @@
 
 Meteor.methods({
 
-	get_activities_results: function(center,radius,date,profile,timezoneOffset){
+	get_activities_results: function(center,radius,date,profile,timezoneOffset,activities_locked){
 
 		//INITIALIZATION
-		var activities_locked = [];		
+//		var activities_locked = [];		
 		var lat = center.lat;
 		var lng = center.lng;
 //		var profile = ["gratuit", "cheap", "exterieur", "curieux", "couple", "solo", "potes", "prestige"];
 		var requiresun = false;
+
+		//DATE CURSOR
 		date = new Date(date.getTime() - timezoneOffset*ms_in_min);
 		date.setHours(12,29,0,0);
 		date_cursor = round_date_to_pace_date(date,pace); //Must be defined globally
+		var date_cursor_start = new Date(date_cursor);
+		var date_cursor_end = new Date(date_cursor.getTime() + roulette_time_amount*ms_in_min);
 		var day = convert_day_number_to_foursquare_day_number(date_cursor.getDay());
 		var previous_day = day;
-
-		//FOR LOCKED ACTIVITIES
-		activities_locked = activities_locked.sort(function(a,b){return ((a.start_date).getTime() - (b.start_date).getTime());});
-		activities_locked_ids = []; //Must be defined globally
-		lock_index = 0; //Must be defined globally
-		var end_points = [];
-		var new_passage = [];
-		for (var a in activity_locked){
-			new_passage.push(true);
-			activity_locked_ids.push(a._id);
-			end_points.push(a.start_date);
-		}
-		end_points.push(new Date(date_cursor.getTime() + roulette_time_amount*ms_in_min));
-		console.log(end_points);
-		
-		//FOR TYPES
-		var type_considered;
-		types_required = activity_types; //Must be defined globally
-		types_excluded = []; //Must be defined globally
+		//
+		var min_rand = Activities.findOne({},{sort: {rand:1}}).rand;
 
 		//TRACKING
 		//RESULTS TRACKING
 		track_results_id = []; //Must be defined globally
-		var track_unwanted_id = {};
+		track_unwanted_id = {}; //Must be defined globally
 		for(j=0;j < activities_length;j++) track_unwanted_id[j] = [];
 		//TIME TRACKING
 		total_time_amount = 0; //Must be defined globally
-		remaining_time = roulette_time_amount - total_time_amount; //Must be defined globally
 		global_flex_time_up = 0; //Must be defined globally
 		global_flex_time_down = 0; //Must be defined globally
 
-		//OTHERS
-		var min_rand = Activities.findOne({},{sort: {rand:1}}).rand;
-		var random = Math.random();
+		//TYPES
+		var type_considered;
+		types_required = activity_types; //Must be defined globally
+		types_excluded = []; //Must be defined globally
+
+		//LOCKED ACTIVITIES
+		var end_points = [];
+		nb_slots_to_fill = 1; //Must be defined globally
+		lock_index = 0; //Must be defined globally
+		var new_passage = [];
+		var test_cursor = new Date(date_cursor);
+		if(activities_locked.length > 0){
+
+			activities_locked = activities_locked.sort(function(a,b){return ((a.start_date).getTime() - (b.start_date).getTime());});
+
+			var first_locked = activities_locked[0];
+			var diff_time = date_cursor.getTime() - first_locked.start_date.getTime();
+			//Code below deals with one edge case: If user gets a roulette starting a 13h30 for instance, lock activities and relaunch a roulette which starts at 13h35 because some time passed inbetween 
+			if(diff_time > 0){						
+				//Modifies start_date
+				first_locked.start_date = new Date(date_cursor);
+				//Check if necessary to modify the last end_date, and modifies it if it is
+				var last_locked = activities_locked[activities_locked.length - 1];
+				var theoretical_end = new Date(last_locked.end_date.getTime() + diff_time);
+				if(theoretical_end.getTime() === date_cursor_end.getTime()) last_locked.end_date = new Date(date_cursor_end);	
+			}
+
+			nb_slots_to_fill = 0; //Necessary
+			for (k=0;k<activities_locked.length;k++){
+
+				var ac = activities_locked[k];
+				ac.locked = true;
+				exclude_type(ac.type);
+				
+				if(test_cursor.getTime() !== ac.start_date.getTime()) nb_slots_to_fill += 1;
+				test_cursor = new Date(ac.end_date);
+				new_passage.push(true);
+				end_points.push(ac.start_date);
+			}
+			if(test_cursor < date_cursor_end) nb_slots_to_fill += 1;
+			console.log("NEW PASSAGE : ");
+			console.log(new_passage);
+		}
+		end_points.push(date_cursor_end);
+		console.log(end_points);
+		var slot_index = (end_points[0].getTime() === date_cursor.getTime()) ? -1 : 0; 
 
 		//RESULTS
 		var activity;
 		results = []; //Must be defined globally
 		var best_results_so_far = { total_time_amount: 0, results: []}; //Will be used in case roulette cannot be completed
-		var result_level = results.length; //Is the level at which the algorithm is currently looking for an activity: If level = 0, it is looking for the 1st activity, if level = 1, for the 2nd, etc...
+		result_level = 0; //Must be defined globally //Is the level at which the algorithm is currently looking for an activity: If level = 0, it is looking for the 1st activity, if level = 1, for the 2nd, etc...
 	
 
 		//BEGINNING OF ALGORITHM
@@ -251,62 +278,60 @@ Meteor.methods({
 			
 			console.log("*********** NEW LOOP ***********");
 			console.log("date_cursor : " + date_cursor);
+			var random = Math.random();
 
-			//In case we reached the maximum number of activities in the roulette but not the required roulette_time_amount
-			if(result_level === activities_length){
-				result_level -= 1;
-				track_unwanted_id[result_level].push(results[result_level]._id);
-				remove_last_activity_from_results();
-			}
-
+			console.log("RESULT LEVEL just avant locked activities: " + result_level);
 			//FOR LOCKED ACTIVITIES
+			var change_of_slot = 0;
 			while(activities_locked.length - 1 >= lock_index){
 
-				var activity_locked = activities_locked[lock_index];
+				console.log('lock_index : ' + lock_index);
+				console.log(new_passage);
 
-				//Code below deals with one edge case: If user gets a roulette starting a 13h30 for instance, lock activities and relaunch a roulette which starts at 13h35 because some time passed inbetween 
-				if(activity_locked.start_date.getTime() < date_cursor.getTime()){						
-					//Modifies start_date
-					activity_locked.start_date = new Date(date_cursor);
-					//Check if necessary to modify end_date, and modifies it
-					var new_last = (activity_locked.end_date - activity_locked.start_date)/ms_in_min;
-					var diff_last = new_last - activity_locked.last.min;
-					if(diff_last < 0) activity_locked.end_date = new Date(activity_locked.end_date.getTime() - diff_last*ms_in_min);
-				}	
+				var activity_locked = activities_locked[lock_index];	
 
 				//Deals with locked activities in general
 				if(activity_locked.start_date.getTime() === date_cursor.getTime()){
-					
+					console.log('new_passage[lock_index] : ' + new_passage[lock_index]);
 					if(new_passage[lock_index]){
-						add_activity_to_results(activity_locked);
-						result_level += 1;
-						lock_index += 1;
+						console.log('activity locked added');
 						new_passage[lock_index] = false;
+						add_activity_to_results(activity_locked);
+						change_of_slot = 1;
 					}
 					else { //Enables to go up one level in the result to look for different activities
-						remove_last_activity_from_results();
-						result_level -= 1;
-						lock_index -= 1;
+						console.log('activity locked removed');
 						new_passage[lock_index] = true;
+						remove_last_activity_from_results();
+						change_of_slot = -1;
 					}
 				}
 				else
 					break;					
 			}
-			if(date_cursor === end_points[end_points.length - 1]) break;
+			slot_index += change_of_slot;
+			var nb_of_new_activities_to_find = activities_length - results.length - (activities_locked.length - lock_index);
+			var nb_of_remaining_slots_to_fill = nb_slots_to_fill - slot_index;
+			var max_nb_of_activities_for_this_slot = nb_of_new_activities_to_find - nb_of_remaining_slots_to_fill + 1;
+			console.log('max_nb_of_activities_for_this_slot : ' + max_nb_of_activities_for_this_slot);
+			console.log('slot_index : ' + slot_index);
 
+			if(date_cursor.getTime() === end_points[end_points.length - 1].getTime()) break;
+			
+
+			console.log("RESULT LEVEL : " + result_level);
+
+			console.log('lock_index : ' + lock_index);
+			var end_point = end_points[lock_index];
+			console.log("end_point");
+			console.log(end_point);
 			//
 			day = convert_day_number_to_foursquare_day_number(date_cursor.getDay());		
 			var hour_integer_cursor = (previous_day !== day) ? convert_date_to_hour_integer(date_cursor) + 2400 : convert_date_to_hour_integer(date_cursor);
 			var adjusted_start_hour_cursor = add_time_amount_to_hour_integer(hour_integer_cursor, global_flex_time_up);
 			var adjusted_end_hour_cursor = add_time_amount_to_hour_integer(hour_integer_cursor, - global_flex_time_down);
-			var adjusted_remaining_time = remaining_time + global_flex_time_down;
+			var adjusted_remaining_time_before_next_end_point = (end_point.getTime() - date_cursor.getTime())/ms_in_min + global_flex_time_down;
 
-			//Not necessary but will avoid an activity too short to be picked if this is the last activity
-//				var last_doc_query = {};
-//				if(results.length === activities_length - 1)
-//					last_doc_query = {$where: function(){return ((End - this.opening_hours.end_minus_last_min) <= this.last.last_min)}};
-			
 			//FOR TYPES
 			//Initialize required types with all existing types
 			types_required = activity_types;
@@ -321,56 +346,63 @@ Meteor.methods({
 
 			console.log(types_excluded);
 			console.log(types_required);				
-			console.log(result_level);
-			//QUERY
-			var query = {
-						_id: { $nin: track_unwanted_id[result_level].concat(track_results_id) },
-						index : { $geoWithin: { $centerSphere : [ [ lng, lat ] , radius ] } }, //Initial point
-//							index : { $geoWithin: { $centerSphere : [ [ lng, lat ] , radius ] } }, //Previous activity point
-						rand: { $gte: random },
-						type: { $in: types_required, $nin: types_excluded },
-						profile: { $in: profile },	
-						opening_hours: { $elemMatch: { days: {$in: [day]}, open: {$elemMatch: {start: {$lte: adjusted_start_hour_cursor}, end_minus_last_min: {$gte: adjusted_end_hour_cursor} } } } },	
-						"last.min": {$lte: adjusted_remaining_time},
-						//see for optional parameters: http://stackoverflow.com/questions/19579791/optional-parameters-for-mongodb-query
-						startdate: {$lte: date_cursor}, //startdate is not always defined...
-						enddate: {$gt: date_cursor}, //enddate is not always defined...
-/*							{$or: [
-							{$and: [
-								{startdate: {$lte: date_cursor}}, 
-								{enddate: {$gte: date_cursor}}
-								]
-							},
-							{$and: [
-								{startdate: {$exists: false}},
-								{enddate: {$exists: false}}
-								]
-							} 
-							] 
-						},
-*/	//						requiresun: requiresun,
-					};
+			console.log("RESULT LEVEL just avant QUERY: " + result_level);
 
-			activity = Activities.findOne({$query: query, $orderby: { rand: 1 } } );
+
+			do {
+				//Not necessary but will avoid an activity too short to be picked if this is the last activity
+	//				var last_doc_query = {};
+	//				if(results.length === activities_length - 1)
+	//					last_doc_query = {$where: function(){return ((end_point.getTime() - this.opening_hours.end_minus_last_min*ms_in_min) <= this.last.last_min*ms_in_min)}};
+				
+				//QUERY
+				var query = {
+							_id: { $nin: track_unwanted_id[result_level].concat(track_results_id) },
+							index : { $geoWithin: { $centerSphere : [ [ lng, lat ] , radius ] } }, //Initial point
+	//							index : { $geoWithin: { $centerSphere : [ [ lng, lat ] , radius ] } }, //Previous activity point
+							rand: { $gte: random },
+							type: { $in: types_required, $nin: types_excluded },
+							profile: { $in: profile },	
+							opening_hours: { $elemMatch: { days: {$in: [day]}, open: {$elemMatch: {start: {$lte: adjusted_start_hour_cursor}, end_minus_last_min: {$gte: adjusted_end_hour_cursor} } } } },	
+							"last.min": {$lte: adjusted_remaining_time_before_next_end_point}, //Avoid too long activities
+							//see for optional parameters: http://stackoverflow.com/questions/19579791/optional-parameters-for-mongodb-query
+							startdate: {$lte: date_cursor}, //startdate is not always defined...
+							enddate: {$gt: date_cursor}, //enddate is not always defined...
+	/*							{$or: [
+								{$and: [
+									{startdate: {$lte: date_cursor}}, 
+									{enddate: {$gte: date_cursor}}
+									]
+								},
+								{$and: [
+									{startdate: {$exists: false}},
+									{enddate: {$exists: false}}
+									]
+								} 
+								] 
+							},
+	*/	//						requiresun: requiresun,
+						};
+
+				activity = Activities.findOne({$query: query, $orderby: { rand: 1 } } );
+
+				if(random > min_rand) random = random * Math.random(); 
+				else break;
+			}
+			while(typeof activity === "undefined");
 
 			if(typeof activity === "undefined"){
-				if(random <= min_rand){
-					track_unwanted_id[result_level] = [];
-					result_level -= 1;
-					if(result_level > -1){
-						track_unwanted_id[result_level].push(results[result_level]._id);
-						remove_last_activity_from_results();
-					}
-					else {
-						results = best_results_so_far.results;
-						break;
-					}
+				track_unwanted_id[result_level] = [];
+				if(result_level > 0){
+					remove_last_activity_from_results();
+					continue;
 				}
-				else random = random * Math.random(); 
-				continue;
+				else { 
+					total_time_amount = best_results_so_far.total_time_amount;
+					results = best_results_so_far.results; 
+					break; 
+				}
 			}
-			else random = Math.random();
-
 
 			console.log("ACTIVTY NAME: " + activity.name);
 			//
@@ -381,53 +413,61 @@ Meteor.methods({
 			var activity_close_hour = related_opening_hours_integer_of_activity.close;
 			var activity_close_date = convert_hour_integer_to_date(activity_close_hour);
 			//
-			var end_point = end_points[lock_index];
+			
 			var beg_of_activity = new Date(Math.min(activity_open_date, end_point));
 			var end_of_activity = new Date(Math.min(activity_close_date, end_point));
 			console.log("end_of_activity : " + end_of_activity);
 			//To determine beginning of activity
 			var diff_beg = (beg_of_activity - date_cursor)/ms_in_min;
+			var diff_end = (end_of_activity - date_cursor)/ms_in_min - activity.last.min;
 			console.log("diff_beg : " + diff_beg);
+			console.log("diff_end : " + diff_end);
+
+			if(diff_beg > 0) activity.start_date = new Date(date_cursor.getTime() + Math.max(0,diff_beg)*ms_in_min);
+			else activity.start_date = new Date(date_cursor.getTime() - Math.max(0, - diff_end)*ms_in_min);
+
+			var time_before_end_of_activity = (end_of_activity - activity.start_date)/ms_in_min;
+			console.log('time_before_end_of_activity : ' + time_before_end_of_activity);
+			var max_activity_value = Math.min(activity.last.max,time_before_end_of_activity);
+			console.log('max_activity_value : ' + max_activity_value);
+			var time_before_next_end_point = (end_point.getTime() - activity.start_date.getTime())/ms_in_min;
+			console.log('time_before_next_end_point : ' + time_before_next_end_point);
+			console.log('result : ' + (max_activity_value < time_before_next_end_point));
+			console.log('total_time_amount : ' + total_time_amount);
+
+			if(max_nb_of_activities_for_this_slot === 1 && (max_activity_value < time_before_next_end_point)){ 
+				track_unwanted_id[result_level].push(activity._id);
+				continue;
+			}
+
 			//Initializing values
 			var c = 0;
 			var previous_act;
 			var fill;
+	
+			while (diff_beg > 0){ //Need to flex up in this case (because activity opens after date_cursor)
+				previous_act = results[results.length - 1 - c];
+				fill = Math.min(diff_beg, previous_act.last.local_flex_time_up);
+				if(fill === 0){ c+= 1; continue; }
+				update_activity_time_flexibilities(previous_act,fill,1);
+				if(c > 0) update_subsequent_activities_dates(c,fill,1);					
+				//To make the while loop work
+				diff_beg -= fill;
+				c+= 1;
+			}	
 
-			if(diff_beg > 0){
-				
-				activity.start_date = new Date(date_cursor.getTime() + Math.max(0,diff_beg)*ms_in_min);
-				
-				while (diff_beg > 0){ //Need to flex up in this case (because activity opens after date_cursor)
-					previous_act = results[results.length - 1 - c];
-					fill = Math.min(diff_beg, previous_act.last.local_flex_time_up);
-					update_activity_time_flexibilities(previous_act,fill,1);
-					if(c > 0) update_subsequent_activities_dates(c,fill,1);					
-					//To make the while loop work
-					diff_beg -= fill;
-					c+= 1;
-				}
-			}
-			else {
-
-				var diff_end = (end_of_activity - date_cursor)/ms_in_min - activity.last.min;
-				console.log("diff_end : " + diff_end);
-				activity.start_date = new Date(date_cursor.getTime() - Math.max(0, - diff_end)*ms_in_min);
-				console.log("start_date avec diff_end: " + activity.start_date);
-
-				while (diff_end < 0){ //Need to flex down in this case (because date_cursor + last.min finishes after close_hour => activity is too long)
-					previous_act = results[results.length - 1 - c];
-					fill = Math.min( - diff_end, previous_act.last.local_flex_time_down);
-					if(fill === 0){ c+= 1; continue; }
-					update_activity_time_flexibilities(previous_act,fill,-1);
-					if(c > 0) update_subsequent_activities_dates(c,fill,-1);
-					//To make the while loop work
-					diff_end += fill;
-					c+= 1;							
-				}						
-			}
-			//
-			var time_before_end_of_activity = (end_of_activity - activity.start_date)/ms_in_min;
-			activity.last.value = (time_before_end_of_activity > activity.last.value) ? Math.min(activity.last.max,time_before_end_of_activity) : time_before_end_of_activity;
+			while (diff_end < 0){ //Need to flex down in this case (because date_cursor + last.min finishes after close_hour => activity is too long)
+				previous_act = results[results.length - 1 - c];
+				fill = Math.min( - diff_end, previous_act.last.local_flex_time_down);
+				if(fill === 0){ c+= 1; continue; }
+				update_activity_time_flexibilities(previous_act,fill,-1);
+				if(c > 0) update_subsequent_activities_dates(c,fill,-1);
+				//To make the while loop work
+				diff_end += fill;
+				c+= 1;							
+			}						
+			
+			activity.last.value = Math.min(activity.last.max,time_before_end_of_activity);
 			activity.end_date = new Date(activity.start_date.getTime() + activity.last.value*ms_in_min);
 			console.log("activity_end_date : " + activity.end_date);
 			
@@ -438,8 +478,10 @@ Meteor.methods({
 			activity.last.flex_time_down = Math.min(activity.last.flex_time_down,activity.last.value - activity.last.min);
 			
 			//
+			activity.locked = false;
 			previous_day = day;	
 			add_activity_to_results(activity);
+			console.log('global_flex_time_down : ' + global_flex_time_down);
 
 			console.log("total_time_amount : " + total_time_amount);
 			console.log("RESULTS LENGTH : " + results.length);
@@ -448,11 +490,9 @@ Meteor.methods({
 			if(total_time_amount > best_results_so_far.total_time_amount){
 				best_results_so_far.total_time_amount = total_time_amount;
 				best_results_so_far.results = [];
-				for(var act in results)
-					best_results_so_far.results.push(act);
+				for(k=0;k<results.length;k++) best_results_so_far.results.push(new Object(results[k]));
 			}
 			//
-			result_level = results.length;
 			roulette_not_OK = (total_time_amount < roulette_time_amount);
 		}
 		while (roulette_not_OK);

@@ -45,5 +45,23 @@ Template.activityItem.events({
     event.preventDefault();
     template.state.set('truncated', !Template.instance().state.get('truncated'));
     this.event.target.text(Template.instance().state.get('truncated') ? "Show less" : "Show more");
+  },
+  'click .activity-item__timeline': function(){
+    var activities_locked = Session.get('activities_locked');
+    var is_already_locked = false;
+    var index;
+    for(k=0;k<activities_locked.length;k++){
+      if(activities_locked[k]._id === this._id){ 
+          is_already_locked = true;
+          index = k;
+      }    
+    }
+    if(is_already_locked) activities_locked.splice(index,1);
+    else {
+      var activity = this;
+      activity.locked = true;
+      activities_locked.push(activity);
+    }
+    Session.set('activities_locked', activities_locked);
   }
 });

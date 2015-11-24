@@ -17,13 +17,21 @@ Template.activityList.events({
         //var timezoneOffset = date.getTimezoneOffset();
         var profile = ["gratuit", "cheap", "exterieur", "curieux", "couple", "solo", "potes", "prestige"];
         var timezoneOffset = 0;
+        var activities_locked = Session.get('activities_locked');
+        if(activities_locked){} else activities_locked = []; 
         //console.log(timezoneOffset);
         var radius = 1 / 3963.192; //Converts miles into radians. Should be divided by 6378.137 for kilometers
-        Meteor.apply('get_activities_results', [center,radius,date,profile,timezoneOffset], true, function(error, result) {
+        Meteor.apply('get_activities_results', [center,radius,date,profile,timezoneOffset,activities_locked], true, function(error, result) {
           if (error)
             console.log(error);
           else {
-            Session.set('activities_results', result);
+            var activities_locked = [];
+            for(k=0;k<result.length;k++){
+              console.log(result[k].locked);
+              if(result[k].locked) activities_locked.push(result[k]);
+            }
+            Session.set('activities_locked', activities_locked);
+            Session.set('activities_results',result);
             console.log(result);
           }
         });
