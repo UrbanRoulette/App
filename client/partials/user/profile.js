@@ -4,10 +4,6 @@ Template.profile.events({
     // Prevent the form to go to another page
     event.preventDefault();
 
-    // Emptying that error message in case of previous failture
-    template.$(".alert").text("").removeClass("error");
-    $(".error").text("");
-
     // Get name / password / new password
     var nameVar = event.target.profileName.value;
     var oldPasswordVar = event.target.profileOldPassword.value;
@@ -23,11 +19,12 @@ Template.profile.events({
         if (error) {
 
           // We set the text of that error with the error.message
-          template.$(".alert").addClass("error").text(error.message);
+          Alert(error.message, 'error');
+
         } else {
 
-          // We set the text of that error with the error.message
-          template.$(".alert").addClass("success").text("password updated!");
+          // We set the text of that error with the erro  r.message
+          Alert('password updated', 'success');
         }
       });
     }
@@ -46,12 +43,12 @@ Template.profile.events({
         if (error) {
 
           // We set the text of that error with the error.message
-          template.$(".alert").addClass("error").text(error.message);
+          Alert(error.message, 'error');
 
         } else {
 
           // We set the text of that error with the error.message
-          template.$(".alert").addClass("success").text(template.$(".alert").text() + "Profile updated!");
+          Alert('Profile updated!', 'success');
         }
       });
 

@@ -6,10 +6,18 @@
   &__activity {
     margin: 10px;
 
-    &:hover {
+    &:hover, &[data-hovered='true'] {
       background: $c-lightgrey;
       border-radius: $base-radius;
     }
+  }
+
+  &__empty {
+    height: 100%;
+    @include display(flex);
+    @include align-items(center);
+    @include justify-content(center);
+    @include flex-direction(column);
   }
 }
 

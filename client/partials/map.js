@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 var googleMapHelper = function(map) {
   var self = this;
 
@@ -118,12 +119,16 @@ var googleMapHelper = function(map) {
 };
 
 
+=======
+>>>>>>> f46e2f02b3be772231a6eba62471307e5bfc7265
 Template.map.helpers({
   mapOptions: function() {
     if (GoogleMaps.loaded()) {
       return {
         center: new google.maps.LatLng(-37.8136, 144.9631),
-        zoom: 9
+        zoom: 9,
+        styles: mapGrey,
+        disableDefaultUI: true
       };
     }
   },
@@ -131,6 +136,7 @@ Template.map.helpers({
 
 Template.map.onCreated(function() {
   var self = this;
+<<<<<<< HEAD
   formatData = function(data) {
       //data is a LatLng Object
       var obj = {};
@@ -138,32 +144,43 @@ Template.map.onCreated(function() {
           obj.lng = data.lng();
       return obj;     
   };
+=======
+
+>>>>>>> f46e2f02b3be772231a6eba62471307e5bfc7265
   GoogleMaps.ready('map', function(map) {
+
     var helper = new googleMapHelper(map);
 
     self.autorun(function() {
       if (Session.get('activities_results')) {
 
-        var locations = [];
-        helper.locations = [];
+        // Reset helper, remove locations & hide itinary
+        helper.reset();
+        helper.mapInactive();
 
+        // If no activity, return;
+        if (Session.get('activities_results').length === 0) {
+          return;
+        }
+
+        // Loop trough each result
         _.each(Session.get('activities_results'), function(activity) {
-          locations.push([activity.index.coordinates[1], activity.index.coordinates[0]]);
-        });
 
-        // Each address given
-        _.each(locations, function(address) {
-
-          var location = new google.maps.LatLng(address[0], address[1]);
+          // Create location object
+          var location = new google.maps.LatLng(activity.index.coordinates[1], activity.index.coordinates[0]);
           helper.addLocation(location);
 
           // If last address
-          if (address == _.last(locations)) {
+          if (activity._id == _.last(Session.get('activities_results'))._id) {
+
+            // Reset style to normal
+            helper.mapActive();
 
             // Adjust map and calculate itinary
             helper.adjustMap();
             helper.calcRoute();
           }
+
         });
       }
     });
