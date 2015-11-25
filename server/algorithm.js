@@ -276,8 +276,7 @@ Meteor.methods({
 		//BEGINNING OF ALGORITHM
 		Algorithm:
 		do {
-			
-			
+				
 			console.log("*********** NEW LOOP ***********");
 			console.log("date_cursor : " + date_cursor);
 			var random = Math.random();
@@ -322,7 +321,6 @@ Meteor.methods({
 			console.log('max_nb_of_activities_for_this_slot : ' + max_nb_of_activities_for_this_slot);
 			console.log('slot_index : ' + slot_index);
 
-			
 			console.log("date_cursor : " + date_cursor);
 
 			console.log("RESULT LEVEL : " + result_level);
