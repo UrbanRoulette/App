@@ -11,7 +11,7 @@ Template.map.helpers({
   },
 });
 
-Template.map.onCreated(function() {
+Template.map.onRendered(function() {
   var self = this;
 
   GoogleMaps.ready('map', function(map) {
@@ -49,6 +49,17 @@ Template.map.onCreated(function() {
           }
 
         });
+      }
+    });
+
+    self.autorun(function() {
+      if (helper.markers.length != 0) {
+        _.each(helper.markers, function(marker) {
+          marker.setAnimation(null);
+        });
+      }
+      if (_.isNumber(Session.get('activity_hovered_index')) && helper.markers.length != 0) {
+        helper.markers[Session.get('activity_hovered_index')].setAnimation(google.maps.Animation.BOUNCE);
       }
     });
   });

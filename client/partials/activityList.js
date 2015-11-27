@@ -25,7 +25,6 @@ var callServer = function() {
 };
 
 Template.activityList.onCreated(function() {
-
   var self = this;
   if (!Session.get('activities_results')) return callServer();
 
@@ -34,27 +33,33 @@ Template.activityList.onCreated(function() {
       callServer();
     }
   });
-
 });
+
+Template.activityList.onRendered(function() {
+  var self = this;
+  self.autorun(function() {
+    self.$('.activity-list__activity').removeClass('activity-list__activity--hovered');
+    if (_.isNumber(Session.get('pin_hovered_id'))) {
+      self.$('.activity-list__activity:eq(' + Session.get('pin_hovered_id') + ')').addClass('activity-list__activity--hovered');
+    }
+  })
+})
 
 Template.activityList.events({
   'click .activity-list__retry': function() {
     callServer();
   },
-  'mouseenter .activity-list__activity': function() {
-    Session.set('activity_hovered_id', this._id);
+  'mouseenter .activity-list__activity': function(event) {
+    Session.set('activity_hovered_index', parseInt(event.target.dataset.index));
   },
   'mouseleave .activity-list__activity': function() {
-    Session.set('activity_hovered_id', false);
+    Session.set('activity_hovered_index', false);
   }
 });
 
 Template.activityList.helpers({
   activities: function() {
     return Session.get('activities_results');
-  },
-  hovered: function() {
-    return this._id == Session.get('pin_hovered_id');
   },
   isNotEmpty: function() {
     if (typeof(Session.get('activities_results')) === 'undefined') return false;

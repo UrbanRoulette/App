@@ -3,7 +3,7 @@
 		{{#if isNotEmpty}}
 			<li class="activity-list__retry"><button class="button--full-width">Retry</button></li>
 			{{#each activities}}
-				<li class="activity-list__activity" data-index="{{@index}}" data-hovered="{{hovered}}">{{> activityItem}}</li>
+				<li class="activity-list__activity" data-index="{{@index}}">{{> activityItem}}</li>
 	    {{/each}}
 		{{else}}
 		<li class="activity-list__empty" >

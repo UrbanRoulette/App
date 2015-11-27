@@ -6,7 +6,7 @@
   &__activity {
     margin: 10px;
 
-    &:hover, &[data-hovered='true'] {
+    &:hover, &--hovered {
       background: $c-lightgrey;
       border-radius: $base-radius;
     }

@@ -102,7 +102,7 @@ mapGrey = [{
   }, {
     "weight": 1.2
   }]
-}]
+}];
 
 googleMapHelper = function(map) {
   var self = this;
@@ -115,8 +115,10 @@ googleMapHelper = function(map) {
   this.directionsDisplay = new google.maps.DirectionsRenderer({
     suppressMarkers: true
   });
+
   this.directionsService = new google.maps.DirectionsService();
   this.directionsDisplay.setMap(map.instance);
+
 
   var resizeTimer;
   $(window).resize(function() {
@@ -159,23 +161,23 @@ googleMapHelper = function(map) {
   this.addMarker = function(position, icon, metadata) {
     icon = typeof(icon) == 'undefined' ? 'pin.svg' : icon;
 
+
     var marker = new google.maps.Marker({
       map: self.map.instance,
       position: position,
       icon: '/images/pin/' + icon
     });
 
-    marker.setValues(metadata);
     self.markers.push(marker);
 
+    marker.index = self.markers.length - 1;
+
     marker.addListener('mouseover', function() {
-      Session.set('pin_hovered_id', this.id);
-      this.setAnimation(google.maps.Animation.BOUNCE)
+      Session.set('pin_hovered_id', marker.index);
     });
 
     marker.addListener('mouseout', function() {
       Session.set('pin_hovered_id', false);
-      this.setAnimation(null)
     });
   };
 
@@ -225,62 +227,17 @@ googleMapHelper = function(map) {
 
     self.directionsService.route(request, function(result, status) {
       if (status == google.maps.DirectionsStatus.OK) self.directionsDisplay.setDirections(result);
-
       var legs = result.routes[0].legs;
-
       _.each(legs, function(leg, index) {
-        var id = Session.get('activities_results')[index]._id;
-        self.addMarker(leg.start_location, 'pin.svg', {
-          id: id
-        });
-
+        if (leg == _.first(legs)) {
+          self.addMarker(leg.start_location, 'pin--start.svg');
+        } else {
+          self.addMarker(leg.start_location, 'pin.svg');
+        }
         if (leg == _.last(legs)) {
-          var id = Session.get('activities_results')[index + 1]._id;
-          self.addMarker(leg.end_location, 'pin.svg', {
-            id: id
-          });
+          self.addMarker(leg.end_location, 'pin--end.svg');
         }
       });
-
-      // var discoveries = [];
-      //
-      // for (i = 0; i < legs.length; i++) {
-      //   var steps = legs[i].steps;
-      //
-      //   for (j = 0; j < steps.length; j++) {
-      //     var lat_lngs = steps[j].lat_lngs;
-      //     var discovery = null;
-      //
-      //     for (l = 0; l < lat_lngs.length; l++) {
-      //       discovery = Activities.findOne({
-      //         type: {
-      //           $in: ["discovery"]
-      //         },
-      //         index: {
-      //           $near: {
-      //             $geometry: {
-      //               type: "Point",
-      //               coordinates: [lat_lngs[l].lng(), lat_lngs[l].lat()]
-      //             },
-      //             $maxDistance: 200 //Distance is in meters
-      //           }
-      //         }
-      //       });
-      //       if (discovery) break;
-      //     }
-      //     if (discovery) {
-      //       discoveries.push(Object(discovery));
-      //       break;
-      //     }
-      //   }
-      // }
-      //
-      // _.each(discoveries, function(discovery) {
-      //   var location = new google.maps.LatLng(discovery.index.coordinates[1], discovery.index.coordinates[0]);
-      //   self.addMarker(location, 'pin--star.svg');
-      // })
-
-
     });
   }
 

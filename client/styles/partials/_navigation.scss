@@ -7,6 +7,11 @@
   @include justify-content(center);
   @include flex-direction(row);
 
+  &__logo {
+    color: $c-primary;
+    text-decoration: none;
+  }
+
   .search-form {
     flex: 1 auto;
   }
