@@ -174,7 +174,7 @@
 		track_results_id.push(activity._id);
 		update_local_and_global_flex(results);
 		update_total_time_amount();
-		if(!activity.locked) types_excluded.push(activity.type); //We already excluded the type of locked activities at the beginning of the algorithm
+		if(!activity.locked) types_excluded.push(activity.classification.type); //We already excluded the type of locked activities at the beginning of the algorithm
 		date_cursor = new Date(activity.end_date); //We update the date_cursor with the new time stamp
 	};
 	remove_last_activity_from_results = function(){
@@ -186,7 +186,7 @@
 		track_results_id.pop();
 		update_local_and_global_flex(results);
 		update_total_time_amount();
-		types_excluded.splice(types_excluded.indexOf(last_activity.type),1);
+		types_excluded.splice(types_excluded.indexOf(last_activity.classification.type),1);
 		date_cursor = new Date(date_cursor.getTime() - last_activity.last.value*ms_in_min);
 	};
 	require_type = function(type){
@@ -369,16 +369,8 @@ Meteor.methods({
 			console.log('track_unwanted_id[result_level] : '); console.log(track_unwanted_id[result_level]);
 
 			do {
-				var last_doc_query = (max_nb_of_activities_for_this_slot === 1) ? 
-				{"last.max": {$gte: time_before_next_end_point}, opening_hours: { $elemMatch: { days: {$in: [day]}, 
-																	hours: {$elemMatch: 
-																		{
-																		open: {$lte: adjusted_start_hour_cursor}, //Make sure activity is open
-																		close: {$gte: end_point_hour_integer}, //Make sure activity won't end too early
-																		} 
-																	} } } } : 
-				{};
-				
+				var last_max_query = (max_nb_of_activities_for_this_slot === 1) ? {"last.max": {$gte: time_before_next_end_point}} : {};
+				var last_doc_query = (max_nb_of_activities_for_this_slot === 1) ? {close: {$gte: end_point_hour_integer}} : {};
 				var query = {
 							$and: 
 								[
@@ -397,18 +389,21 @@ Meteor.methods({
 																		"week": {$elemMatch: {
 																			days: day, 
 																			hours: {$elemMatch: {
-																				open: {$lte: adjusted_start_hour_cursor}, //Make sure activity is open
-																				open_plus_last_min: {$lte: end_point_hour_integer}, //Make sure activity is not starting too late
-																				close_minus_last_min: {$gte: adjusted_end_hour_cursor}, //Make sure activity won't close too early (ie it will still be open if we had last.min do date_cursor)
-																				} 
-																			} } }
+																				$and: [
+																					{open: {$lte: adjusted_start_hour_cursor} }, //Make sure activity is open
+																					{open_plus_last_min: {$lte: end_point_hour_integer} }, //Make sure activity is not starting too late
+																					{close_minus_last_min: {$gte: adjusted_end_hour_cursor} }, //Make sure activity won't close too early (ie it will still be open if we had last.min do date_cursor)
+																					last_doc_query
+																				]
+																				} }
+																			} }
 																		
 																		} 
 																	 },	
 									"last.min": {$lte: time_before_next_end_point + global_flex_time_down} //Avoid too long activities
 	//								requiresun: requiresun
 									}, 
-									last_doc_query
+									last_max_query
 								]	
 							};
 
@@ -425,7 +420,7 @@ Meteor.methods({
 			}
 			while(typeof activity === "undefined");
 
-			console.log("ACTIVTY NAME: " + activity.name);
+			console.log("ACTIVTY NAME: " + activity.main.name);
 			
 			//Determine open and close date of activity
 			var related_opening_hours_integer_of_activity = get_related_opening_hours_integer_of_activity(activity, previous_day, adjusted_start_hour_cursor, adjusted_end_hour_cursor);
