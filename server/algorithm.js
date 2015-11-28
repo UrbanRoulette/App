@@ -85,29 +85,41 @@
 	//Related to LAST flexibility
 	get_related_opening_hours_integer_of_activity = function(activity,day_number,start_cursor,end_cursor){
 
-		var opening_hours = activity.opening_hours;
-//		var start_date = activity.start_date;
-//		var start_hour = convert_date_to_hour_integer(start_date);
+		var hours_array = activity.opening_hours;
 		var related_opening_hours_integer_of_activity;
 
-		for(i=0; i < opening_hours.length; i++){
+		for(k=0;k<hours_array.length;k++){
 
-			if(opening_hours[i].days.indexOf(day_number) > -1){
+			var dates = hours_array[k].dates;
 
-				var opening_hours_in_day = opening_hours[i].open;
+			if(typeof dates.beg === "undefined" && typeof dates.end === "undefined"){}
+			else {
+				if(dates.beg.getTime() <= date_cursor.getTime() && dates.end.getTime() >= date_cursor.getTime()){}
+				else continue;
+			}
 
-				for(j=0;j < opening_hours_in_day.length;j++){
+			var opening_hours = hours_array[k].week;
+			
+			for(i=0; i < opening_hours.length; i++){
 
-					if(opening_hours_in_day[j].start <= start_cursor && opening_hours_in_day[j].end_minus_last_min >= end_cursor){
+				if(opening_hours[i].days.indexOf(day_number) > -1){
 
-						related_opening_hours_integer_of_activity = {
-							open: opening_hours_in_day[j].start,
-							close: opening_hours_in_day[j].end	
-						};
-						break;
+					var opening_hours_in_day = opening_hours[i].hours;
+
+					for(j=0;j < opening_hours_in_day.length;j++){
+
+						if(opening_hours_in_day[j].open <= start_cursor && opening_hours_in_day[j].close_minus_last_min >= end_cursor){
+
+							related_opening_hours_integer_of_activity = {
+								open: opening_hours_in_day[j].open,
+								close: opening_hours_in_day[j].close	
+							};
+
+							break;
+						}
 					}
+					break;
 				}
-				break;
 			}
 		}
 		return related_opening_hours_integer_of_activity; //returns hour_integers
@@ -121,11 +133,11 @@
 
 			var a = results[k];
 
-			a.last.local_flex_time_up = Math.min(a.last.flex_time_up, a.last.time_before_end);
-			a.last.local_flex_time_down = (k < results.length - 1) ? Math.min(a.last.flex_time_down, results[k+1].last.time_after_start) : a.last.flex_time_down;
+			a.last.local_flex_time_up = Math.min(a.last.flex_time_up, a.last.time_before_close);
+			a.last.local_flex_time_down = (k < results.length - 1) ? Math.min(a.last.flex_time_down, results[k+1].last.time_after_open) : a.last.flex_time_down;
 
-			global_flex_time_up = Math.min(global_flex_time_up + a.last.flex_time_up, a.last.time_before_end);
-			global_flex_time_down = (k === 0) ? a.last.flex_time_down : a.last.flex_time_down + Math.min(global_flex_time_down, a.last.time_after_start);
+			global_flex_time_up = Math.min(global_flex_time_up + a.last.flex_time_up, a.last.time_before_close);
+			global_flex_time_down = (k === 0) ? a.last.flex_time_down : a.last.flex_time_down + Math.min(global_flex_time_down, a.last.time_after_open);
 
 		}
 	};
@@ -138,16 +150,16 @@
 		//Update last value
 		previous_act.last.value += sign*fill;
 		//Update time before end
-		previous_act.last.time_before_end -= sign*fill;
+		previous_act.last.time_before_close -= sign*fill;
 	};
 	update_subsequent_activities_dates = function(c,fill,sign){
 		for(j=results.length - c; j < results.length; j++){
 			var act = results[j];
 			//
-			act.last.time_after_start += sign*fill;
+			act.last.time_after_open += sign*fill;
 			act.start_date = new Date(act.start_date.getTime() + sign*fill*ms_in_min);
 			//
-			act.last.time_before_end -= sign*fill;
+			act.last.time_before_close -= sign*fill;
 			act.end_date = new Date(act.end_date.getTime() + sign*fill*ms_in_min);
 		}
 	};
@@ -234,6 +246,7 @@ Meteor.methods({
 		lock_index = 0; //Must be defined globally
 		var new_passage = [];
 		var test_cursor = new Date(date_cursor_start);
+
 		if(activities_locked.length > 0){
 
 			activities_locked = activities_locked.sort(function(a,b){return ((a.start_date).getTime() - (b.start_date).getTime());});
@@ -353,16 +366,19 @@ Meteor.methods({
 			console.log(types_excluded);
 			console.log(types_required);				
 			console.log("RESULT LEVEL just avant QUERY: " + result_level);
-
+			console.log('track_unwanted_id[result_level] : '); console.log(track_unwanted_id[result_level]);
 
 			do {
-				//Not necessary but will avoid an activity too short to be picked if this is the last activity
-	//				var last_doc_query = {};
-	//				if(results.length === activities_length - 1)
-	//					last_doc_query = {$where: function(){return ((end_point.getTime() - this.opening_hours.end_minus_last_min*ms_in_min) <= this.last.last_min*ms_in_min)}};
+				var last_doc_query = (max_nb_of_activities_for_this_slot === 1) ? 
+				{"last.max": {$gte: time_before_next_end_point}, opening_hours: { $elemMatch: { days: {$in: [day]}, 
+																	hours: {$elemMatch: 
+																		{
+																		open: {$lte: adjusted_start_hour_cursor}, //Make sure activity is open
+																		close: {$gte: end_point_hour_integer}, //Make sure activity won't end too early
+																		} 
+																	} } } } : 
+				{};
 				
-				//QUERY
-				var last_doc_query = (max_nb_of_activities_for_this_slot === 1) ? {"last.max": {$gte: time_before_next_end_point}, end: {$gte: end_point_hour_integer}} : {};
 				var query = {
 							$and: 
 								[
@@ -371,25 +387,27 @@ Meteor.methods({
 										index : { $geoWithin: { $centerSphere : [ [ lng, lat ] , radius ] } }, //Initial point
 			//							index : { $geoWithin: { $centerSphere : [ [ lng, lat ] , radius ] } }, //Previous activity point
 										rand: { $gte: random },
-										type: { $in: types_required, $nin: types_excluded },
-										profile: { $in: profile },	
-										opening_hours: { $elemMatch: { days: {$in: [day]}, 
-																	open: {$elemMatch: 
-																		{
-																		start: {$lte: adjusted_start_hour_cursor}, //Make sure activity is open
-																		start_plus_last_min: {$lte: end_point_hour_integer}, //Make sure activity is not starting too late
-																		end_minus_last_min: {$gte: adjusted_end_hour_cursor}, //Make sure activity won't close too early (ie it will still be open if we had last.min do date_cursor)
-																	//	end_minus_last_min: {$lte: end_point_hour_integer - adjusted_end_hour_cursor}
+										"classification.class": "Activity",
+										"classification.type": { $in: types_required, $nin: types_excluded },
+										tags: { $in: profile },	
+										opening_hours: { $elemMatch: { 	"$or": [
+																				{"dates.beg": {$lte: date_cursor}, "dates.end": {$gte: date_cursor} },
+																				{"dates.beg": {$exists: false}, "dates.end": {$exists: false} }
+																		],
+																		"week": {$elemMatch: {
+																			days: day, 
+																			hours: {$elemMatch: {
+																				open: {$lte: adjusted_start_hour_cursor}, //Make sure activity is open
+																				open_plus_last_min: {$lte: end_point_hour_integer}, //Make sure activity is not starting too late
+																				close_minus_last_min: {$gte: adjusted_end_hour_cursor}, //Make sure activity won't close too early (ie it will still be open if we had last.min do date_cursor)
+																				} 
+																			} } }
+																		
 																		} 
-																	} } },	
+																	 },	
 									"last.min": {$lte: time_before_next_end_point + global_flex_time_down} //Avoid too long activities
 	//								requiresun: requiresun
 									}, 
-									{$or: [
-											{ startdate: {$lte: date_cursor}, enddate: {$gte: date_cursor} },
-											{ startdate: {$exists: false}, enddate: {$exists: false} }
-										]
-									},
 									last_doc_query
 								]	
 							};
@@ -440,8 +458,8 @@ Meteor.methods({
 			console.log("activity_end_date : " + activity.end_date);
 
 			//Define fields related to flexibility
-			activity.last.time_before_end = (activity_close_date - activity.end_date)/ms_in_min;
-			activity.last.time_after_start = (activity.start_date - activity_open_date)/ms_in_min;
+			activity.last.time_before_close = (activity_close_date - activity.end_date)/ms_in_min;
+			activity.last.time_after_open = (activity.start_date - activity_open_date)/ms_in_min;
 			activity.last.flex_time_up = Math.min(activity.last.flex_time_up, activity.last.max - activity.last.value);
 			activity.last.flex_time_down = Math.min(activity.last.flex_time_down,activity.last.value - activity.last.min);
 
@@ -496,5 +514,41 @@ Meteor.methods({
 		console.log("Results Length : " + results.length);
 		return results;
 	},
+	get_discoveries_and_transportation: function(legs){
+	  var discoveries = [];
+
+	  for (i = 0; i < legs.length; i++) {
+	    var steps = legs[i].steps;
+	  
+	    for (j = 0; j < steps.length; j++) {
+	      var lat_lngs = steps[j].lat_lngs;
+	      var discovery = null;
+	  
+	      for (l = 0; l < lat_lngs.length; l++) {
+	        discovery = Activities.findOne({
+	          "classification.class": {
+	            $in: ["Discovery"]
+	          },
+	          index: {
+	            $near: {
+	              $geometry: {
+	                type: "Point",
+	                coordinates: [lat_lngs[l].lng(), lat_lngs[l].lat()]
+	              },
+	              $maxDistance: 200 //Distance is in meters
+	            }
+	          }
+	        });
+	        if (discovery) break;
+	      }
+	      if (discovery) {
+	        discoveries.push(Object(discovery));
+	        break;
+	      }
+	    }
+	  }
+	  console.log(discoveries);
+	  return discoveries;
+	}
 });
 

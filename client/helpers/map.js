@@ -102,7 +102,7 @@ mapGrey = [{
   }, {
     "weight": 1.2
   }]
-}]
+}];
 
 googleMapHelper = function(map) {
   var self = this;
@@ -132,19 +132,19 @@ googleMapHelper = function(map) {
     self.markers = [];
     self.locations = [];
     self.hideItinary();
-  }
+  };
 
   this.mapInactive = function() {
     map.instance.setOptions({
       styles: mapGrey
     });
-  }
+  };
 
   this.mapActive = function() {
     map.instance.setOptions({
       styles: []
     });
-  }
+  };
 
   this.geocode = function(address, success, error) {
     var geocoder = new google.maps.Geocoder();
@@ -170,12 +170,12 @@ googleMapHelper = function(map) {
 
     marker.addListener('mouseover', function() {
       Session.set('pin_hovered_id', this.id);
-      this.setAnimation(google.maps.Animation.BOUNCE)
+      this.setAnimation(google.maps.Animation.BOUNCE);
     });
 
     marker.addListener('mouseout', function() {
       Session.set('pin_hovered_id', false);
-      this.setAnimation(null)
+      this.setAnimation(null);
     });
   };
 
@@ -241,52 +241,53 @@ googleMapHelper = function(map) {
           });
         }
       });
+      console.log(legs);
+//      var discoveries = Meteor.call('get_discoveries_and_transportation',legs);
+      var discoveries = [];
+      var duration = [];
 
-      // var discoveries = [];
-      //
-      // for (i = 0; i < legs.length; i++) {
-      //   var steps = legs[i].steps;
-      //
-      //   for (j = 0; j < steps.length; j++) {
-      //     var lat_lngs = steps[j].lat_lngs;
-      //     var discovery = null;
-      //
-      //     for (l = 0; l < lat_lngs.length; l++) {
-      //       discovery = Activities.findOne({
-      //         type: {
-      //           $in: ["discovery"]
-      //         },
-      //         index: {
-      //           $near: {
-      //             $geometry: {
-      //               type: "Point",
-      //               coordinates: [lat_lngs[l].lng(), lat_lngs[l].lat()]
-      //             },
-      //             $maxDistance: 200 //Distance is in meters
-      //           }
-      //         }
-      //       });
-      //       if (discovery) break;
-      //     }
-      //     if (discovery) {
-      //       discoveries.push(Object(discovery));
-      //       break;
-      //     }
-      //   }
-      // }
-      //
-      // _.each(discoveries, function(discovery) {
-      //   var location = new google.maps.LatLng(discovery.index.coordinates[1], discovery.index.coordinates[0]);
-      //   self.addMarker(location, 'pin--star.svg');
-      // })
-
+      for (i = 0; i < legs.length; i++) {
+        var leg = legs[i];
+        var steps = leg.steps;
+        duration.push(leg.duration.text);
+        for (j = 0; j < steps.length; j++) {
+          var lat_lngs = steps[j].lat_lngs;
+          var discovery = null;
+          for (l = 0; l < lat_lngs.length; l++) {
+            discovery = Activities.findOne({
+              "classification.class": {
+                $in: ["Discovery"]
+              },
+              index: {
+                $near: {
+                  $geometry: {
+                    type: "Point",
+                    coordinates: [lat_lngs[l].lng(), lat_lngs[l].lat()]
+                  },
+                  $maxDistance: 200 //Distance is in meters
+                }
+              }
+            });
+            if (discovery) break;
+          }
+          if (discovery) {
+            discoveries.push(Object(discovery));
+            break;
+          }
+        }
+      }
+      
+      _.each(discoveries, function(discovery) {
+        var location = new google.maps.LatLng(discovery.index.coordinates[1], discovery.index.coordinates[0]);
+        self.addMarker(location, 'pin--star.svg');
+      });
 
     });
-  }
+  };
 
   this.hideItinary = function() {
     self.directionsDisplay.setDirections({
       routes: []
     });
-  }
+  };
 };
