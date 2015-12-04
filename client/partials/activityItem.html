@@ -8,7 +8,7 @@
 				<address>{{address.formatted_address}}</address>
 			</a>
 			<p class="activity-item__description">
-				{{{main.description}}}
+				{{{description}}}
 				{{#if canBeTruncated}}
 					<a href="#" class="activity-item__description__expand">
 						{{#if isTruncated}}Show more{{else}}Show Less{{/if}}
@@ -19,6 +19,14 @@
 
 		<div class="activity-item__timeline">
 			<time>{{time_start}}</time>
+			<hr>
+			<span class="activity-item__timeline__lock {{#if isLocked}}activity-item__timeline__lock--locked{{else}}{{/if}}">
+				{{#if isLocked}}
+					locked
+				{{else}}
+					lock?
+				{{/if}}
+			</span>
 			<hr>
 			<time>{{time_end}}</time>
 		</div>

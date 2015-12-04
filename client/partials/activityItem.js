@@ -1,8 +1,11 @@
 Template.activityItem.onCreated(function() {
   var canBeTruncated = this.data.main.description.length > 200;
+
+  this.locked = typeof(this.locked) == 'undefined' ? false : this.locked;
   this.state = new ReactiveDict();
   this.state.set('canBeTruncated', canBeTruncated);
   this.state.set('truncated', true);
+  this.state.set('isLocked', this.locked);
 });
 
 Template.activityItem.helpers({
@@ -16,6 +19,9 @@ Template.activityItem.helpers({
   },
   isTruncated: function()  {
     return Template.instance().state.get('truncated');
+  },
+  isLocked: function(){
+    return Template.instance().state.get('isLocked');
   },
   canBeTruncated: function()  {
     return Template.instance().state.get('canBeTruncated');
@@ -32,24 +38,20 @@ Template.activityItem.events({
   'click .activity-item__description__expand': function(event, template) {
     event.preventDefault();
     template.state.set('truncated', !Template.instance().state.get('truncated'));
-    this.event.target.text(Template.instance().state.get('truncated') ? "Show less" : "Show more");
+    template.$('.activity-item__description__expand').text(Template.instance().state.get('truncated') ? "Show less" : "Show more");
   },
-  'click .activity-item__timeline': function(){
+  'click .activity-item__timeline': function(event, template){
+    var self = this;
     var activities_locked = Session.get('activities_locked');
-    var is_already_locked = false;
-    var index;
-    for(k=0;k<activities_locked.length;k++){
-      if(activities_locked[k]._id === this._id){ 
-          is_already_locked = true;
-          index = k;
-      }    
+
+    if(self.locked) {
+      activities_locked = _.without(activities_locked, _.findWhere(activities_locked, {_id: self._id}));
+    } else {
+      activities_locked.push(self);
     }
-    if(is_already_locked) activities_locked.splice(index,1);
-    else {
-      var activity = this;
-      activity.locked = true;
-      activities_locked.push(activity);
-    }
+
+    self.locked = !self.locked;
+    template.state.set('isLocked',  self.locked);
     Session.set('activities_locked', activities_locked);
   }
 });

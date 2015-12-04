@@ -39,11 +39,8 @@
         background: $c-green;
         color: $c-white;
         border-radius: $base-radius;
-
         @include rem(top, 1);
-
         @include rem(padding, 0.3, 0.6);
-
         @include rem(right, -0.5);
       }
     }
@@ -78,13 +75,9 @@
 
   &__timeline {
     text-align: center;
-
     @include rem(margin-right, 1);
-
     @include display(flex);
-
     @include align-items(stretch);
-
     @include flex-direction(column);
 
     time {
@@ -97,8 +90,20 @@
       background: $c-lightgrey;
       border: none;
       margin: 0 auto;
-
       @include flex(1 0 auto);
+    }
+
+    &__lock {
+      display: none;
+      &--locked {
+        display: block;
+      }
+    }
+  }
+
+  &:hover {
+    .activity-item__timeline__lock {
+      display: block;
     }
   }
 }
