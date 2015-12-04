@@ -1,5 +1,5 @@
-/*
 var activitiesList = Activities.find().count();
+// Activities.remove({});
 // if we already have entries in the db, don't insert again.
 if (activitiesList > 0) return;
 
@@ -12,4 +12,3 @@ Assets.getText('activities.txt', function(err, data) {
     Activities.insert(content[activity]);
   }
 });
-*/
