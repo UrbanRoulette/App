@@ -1,4 +1,5 @@
 var activitiesList = Activities.find().count();
+// Activities.remove({});
 // if we already have entries in the db, don't insert again.
 if (activitiesList > 0) return;
 
@@ -7,7 +8,7 @@ Assets.getText('activities.txt', function(err, data) {
 
   var content = EJSON.parse(data);
 
-  for (activity in content) {
+  for (var activity in content) {
     Activities.insert(content[activity]);
   }
 });

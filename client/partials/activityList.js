@@ -10,16 +10,30 @@ var callServer = function() {
           lat: results[0].geometry.location.lat(),
           lng: results[0].geometry.location.lng()
         };
-        var radius = 1 / 3963.2; //Converts miles into radians
-
-        Meteor.apply('get_activities_results', [center, radius], true, function(error, result) {
-          if (error) {
-            Alert(error, 'error');
-          } else {
-            Session.set('activities_results', result);
+        var date = new Date();
+        console.log(date);
+        //var timezoneOffset = date.getTimezoneOffset();
+        var profile = ["gratuit", "cheap", "exterieur", "curieux", "couple", "solo", "potes", "prestige"];
+        var timezoneOffset = 0;
+        var activities_locked = Session.get('activities_locked');
+        if(activities_locked){} else activities_locked = []; 
+        //console.log(timezoneOffset);
+        var radius = 10 / 3963.192; //Converts miles into radians. Should be divided by 6378.137 for kilometers
+        Meteor.apply('get_activities_results', [center,radius,date,profile,timezoneOffset,activities_locked], true, function(error, result) {
+          if (error)
+            console.log(error);
+          else {
+            var activities_locked = [];
+            for(k=0;k<result.length;k++){
+              console.log(result[k].locked);
+              if(result[k].locked) activities_locked.push(result[k]);
+            }
+            Session.set('activities_locked', activities_locked);
+            Session.set('activities_results',result);
+            console.log(result);
           }
         });
-      };
+      }
     });
   }
 };
@@ -63,6 +77,6 @@ Template.activityList.helpers({
   },
   isNotEmpty: function() {
     if (typeof(Session.get('activities_results')) === 'undefined') return false;
-    return Session.get('activities_results').length != 0;
+    return Session.get('activities_results').length !== 0;
   },
 });

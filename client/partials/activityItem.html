@@ -2,13 +2,13 @@
 	<div class="activity-item">
 
 		<div class="activity-item__content" >
-			<div class="activity-item__picture" style="background-image: url({{image}});" data-price="{{price}}€"></div>
-			<h2 class="activity-item__title">{{specific}}<span class="activity-item__title__name"> - {{name}}</span></h2>
+			<div class="activity-item__picture" style="background-image: url({{main.image}});" data-price="{{main.price}}€"></div>
+			<h2 class="activity-item__title">{{main.specific}}<span class="activity-item__title__name"> - {{main.name}}</span></h2>
 			<a class="activity-item__address" href="http://maps.google.com/?q={{address}}" target="_blank">
-				<address>{{address}}</address>
+				<address>{{address.formatted_address}}</address>
 			</a>
 			<p class="activity-item__description">
-				{{{description}}}
+				{{{main.description}}}
 				{{#if canBeTruncated}}
 					<a href="#" class="activity-item__description__expand">
 						{{#if isTruncated}}Show more{{else}}Show Less{{/if}}
@@ -23,5 +23,4 @@
 			<time>{{time_end}}</time>
 		</div>
 	</div>
-
 </template>
