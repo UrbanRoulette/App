@@ -1,15 +1,13 @@
 <?xml version="1.0" encoding="UTF-8" standalone="no"?>
-<svg width="40px" height="40px" viewBox="0 0 40 40" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" xmlns:sketch="http://www.bohemiancoding.com/sketch/ns">
-    <!-- Generator: Sketch 3.4 (15575) - http://www.bohemiancoding.com/sketch -->
+<svg width="30px" height="40px" viewBox="0 0 30 40" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" xmlns:sketch="http://www.bohemiancoding.com/sketch/ns">
+    <!-- Generator: Sketch 3.4.3 (16044) - http://www.bohemiancoding.com/sketch -->
     <title>pin--end</title>
     <desc>Created with Sketch.</desc>
     <defs></defs>
     <g id="Page-1" stroke="none" stroke-width="1" fill="none" fill-rule="evenodd" sketch:type="MSPage">
         <g id="pin--end" sketch:type="MSLayerGroup">
-            <path d="M20,0 L40,20 L20,40 L0,20 L20,0 L20,0 Z" id="Rectangle-1-Copy-2" fill="#73C4F2" sketch:type="MSShapeGroup"></path>
-            <text id="B" sketch:type="MSTextLayer" font-family="Lato" font-size="16" font-weight="bold" fill="#FFFFFF">
-                <tspan x="14" y="24">B</tspan>
-            </text>
+            <path d="M15,40 C15,40 30,23.2842712 30,15 C30,6.71572875 23.2842712,0 15,0 C6.71572875,0 0,6.71572875 0,15 C0,23.2842712 15,40 15,40 Z" id="Oval-1-Copy" fill="#2196F3" sketch:type="MSShapeGroup"></path>
+            <path d="M14.8398438,14.203125 C15.4140654,14.203125 15.8606755,14.1233732 16.1796875,13.9638672 C16.6809921,13.7132149 16.9316406,13.2620475 16.9316406,12.6103516 C16.9316406,11.9540983 16.6650417,11.5120454 16.1318359,11.2841797 C15.8310532,11.1565749 15.3844431,11.0927734 14.7919922,11.0927734 L12.3652344,11.0927734 L12.3652344,14.203125 L14.8398438,14.203125 Z M15.2978516,18.8378906 C16.1318401,18.8378906 16.7265607,18.5963566 17.0820312,18.1132812 C17.3053397,17.8079412 17.4169922,17.4388042 17.4169922,17.0058594 C17.4169922,16.2766891 17.0911491,15.7799492 16.4394531,15.515625 C16.0930972,15.3743483 15.635094,15.3037109 15.0654297,15.3037109 L12.3652344,15.3037109 L12.3652344,18.8378906 L15.2978516,18.8378906 Z M11.0322266,9.95800781 L15.3457031,9.95800781 C16.5214903,9.95800781 17.3577449,10.3089158 17.8544922,11.0107422 C18.1461603,11.4254578 18.2919922,11.9039686 18.2919922,12.4462891 C18.2919922,13.0797558 18.111981,13.5992818 17.7519531,14.0048828 C17.5651032,14.2190766 17.2962257,14.4150382 16.9453125,14.5927734 C17.460289,14.788738 17.8453763,15.0097644 18.1005859,15.2558594 C18.5517601,15.6933616 18.7773438,16.2971967 18.7773438,17.0673828 C18.7773438,17.7145215 18.5745463,18.3001276 18.1689453,18.8242188 C17.5628225,19.6080768 16.5989649,20 15.2773438,20 L11.0322266,20 L11.0322266,9.95800781 Z" id="B" fill="#FFFFFF" sketch:type="MSShapeGroup"></path>
         </g>
     </g>
 </svg>
