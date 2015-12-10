@@ -205,18 +205,24 @@
 
 Meteor.methods({
 
-	get_activities_results: function(center,radius,date,profile,timezoneOffset,activities_locked){
+	get_activities_results: function(center,radius,date,profile,timezoneOffset,weatherId,activities_locked){
 
 		//INITIALIZATION
 //		var activities_locked = [];
 		var lat = center.lat;
 		var lng = center.lng;
+		var coord = [lng,lat];
 //		var profile = ["gratuit", "cheap", "exterieur", "curieux", "couple", "solo", "potes", "prestige"];
-		var requiresun = false;
+
+		//WEATHER
+		var weather;
+		if([600,801].indexOf(weatherId) > -1) weather = "clear";
+		else if([802,803,804].indexOf(weatherId) > -1) weather = "clouds";
+		else weather = "rain";
 
 		//DATE CURSOR
 		date = new Date(date.getTime() - timezoneOffset*ms_in_min);
-		date.setHours(12,29,0,0);
+//		date.setHours(12,29,0,0);
 		date_cursor = round_date_to_pace_date(date,pace); //Must be defined globally
 		var date_cursor_start = new Date(date_cursor);
 		var date_cursor_end = new Date(date_cursor.getTime() + roulette_time_amount*ms_in_min);
@@ -368,16 +374,29 @@ Meteor.methods({
 			console.log("RESULT LEVEL just avant QUERY: " + result_level);
 			console.log('track_unwanted_id[result_level] : '); console.log(track_unwanted_id[result_level]);
 
+			//To know localization of latest_activity
+			coord = results.length > 0 ? results[results.length - 1].index.coordinates : coord;
+//			var rad = results.length > 0 ? 1 : 10;
+			var rad = 2;
+			radius = 3;
+			var last_max_query = (max_nb_of_activities_for_this_slot === 1) ? {"last.max": {$gte: time_before_next_end_point}} : {};
+			var last_doc_query = (max_nb_of_activities_for_this_slot === 1) ? {close: {$gte: end_point_hour_integer}} : {};
+			var weather_query;
+			if(weather === "clear") weather_query = {"requirements.sun": true};
+			else if (weather === "clouds") weather_query = {"requirements.sun": {$in: [true,false]}};
+			else if (weather === "rain") weather_query = {"requirements.sun": false};
+
+
 			do {
-				var last_max_query = (max_nb_of_activities_for_this_slot === 1) ? {"last.max": {$gte: time_before_next_end_point}} : {};
-				var last_doc_query = (max_nb_of_activities_for_this_slot === 1) ? {close: {$gte: end_point_hour_integer}} : {};
 				var query = {
 							$and:
 								[
 									{
 										_id: { $nin: track_unwanted_id[result_level].concat(track_results_id) },
-										index : { $geoWithin: { $centerSphere : [ [ lng, lat ] , radius ] } }, //Initial point
-			//							index : { $geoWithin: { $centerSphere : [ [ lng, lat ] , radius ] } }, //Previous activity point
+										$and: [
+										{index : { $geoWithin: { $centerSphere : [ [ lng, lat ] , radius/3963.2 ] } } }, //Designated location
+										{index : { $geoWithin: { $centerSphere : [ [ coord[0], coord[1] ] , rad/3963.2 ] } } } //Previous activity point
+										],
 										rand: { $gte: random },
 										"classification.class": "Activity",
 										"classification.type": { $in: types_required, $nin: types_excluded },
@@ -400,8 +419,8 @@ Meteor.methods({
 
 																		}
 																	 },
-									"last.min": {$lte: time_before_next_end_point + global_flex_time_down} //Avoid too long activities
-	//								requiresun: requiresun
+									"last.min": {$lte: time_before_next_end_point + global_flex_time_down}, //Avoid too long activities
+//									weather_query
 									},
 									last_max_query
 								]
@@ -412,6 +431,8 @@ Meteor.methods({
 				if(random > min_rand) random = random * Math.random();
 				else {
 					if(typeof activity === "undefined"){
+						if(rad < 10 && rad <= radius){rad = radius*2; continue;}
+						else if (rad < 10 && rad > radius){radius += 1; continue;}
 						track_unwanted_id[result_level] = [];
 						if(result_level > 0){remove_last_activity_from_results(); continue Algorithm;}
 						else { results = best_results_so_far.results; break Algorithm;}

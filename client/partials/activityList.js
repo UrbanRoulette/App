@@ -15,11 +15,24 @@ var callServer = function() {
         //var timezoneOffset = date.getTimezoneOffset();
         var profile = ["gratuit", "cheap", "exterieur", "curieux", "couple", "solo", "potes", "prestige"];
         var timezoneOffset = 0;
-        var activities_locked = Session.get('activities_locked');
-        if(activities_locked){} else activities_locked = [];
+        if(typeof Session.get("weatherId") === "undefined"){
+        var URLrequest =  "http://api.openweathermap.org/data/2.5/weather?lat=" + center.lat + "&lon=" + center.lng + "&APPID=c8c3d5213625cfb230413935cb2ee5e9";
+        HTTP.call("GET", URLrequest,
+                  function (error, result) {
+                    if (error) {
+                      console.log(error);
+                    }
+                    else {
+                        var weatherId = result.data.weather[0].id;
+                        Session.set("weatherId",weatherId);
+                    }
+                  });
+        }
+        var weatherId = Session.get("weatherId");
+        var activities_locked = typeof(Session.get('activities_locked')) == 'undefined' ? [] : Session.get('activities_locked');
         //console.log(timezoneOffset);
         var radius = 10 / 3963.192; //Converts miles into radians. Should be divided by 6378.137 for kilometers
-        Meteor.apply('get_activities_results', [center,radius,date,profile,timezoneOffset,activities_locked], true, function(error, result) {
+        Meteor.apply('get_activities_results', [center,radius,date,profile,timezoneOffset,weatherId,activities_locked], true, function(error, result) {
           if (error)
             console.log(error);
           else {

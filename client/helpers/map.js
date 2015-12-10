@@ -246,44 +246,44 @@ googleMapHelper = function(map) {
       // if (secondRun) return;
 
       // var discoveries = Meteor.call('get_discoveries_and_transportation',legs);
-      var discoveries = [];
-      var duration = [];
+      // var discoveries = [];
+      // var duration = [];
 
-      for (i = 0; i < legs.length; i++) {
-        var leg = legs[i];
-        var steps = leg.steps;
-        duration.push(leg.duration.text);
-        for (j = 0; j < steps.length; j++) {
-          var lat_lngs = steps[j].lat_lngs;
-          var discovery = null;
-          for (l = 0; l < lat_lngs.length; l++) {
-            discovery = Activities.findOne({
-              "classification.class": {
-                $in: ["Discovery"]
-              },
-              index: {
-                $near: {
-                  $geometry: {
-                    type: "Point",
-                    coordinates: [lat_lngs[l].lng(), lat_lngs[l].lat()]
-                  },
-                  $maxDistance: 200 //Distance is in meters
-                }
-              }
-            });
-            if (discovery) break;
-          }
-          if (discovery) {
-            discoveries.push(Object(discovery));
-            break;
-          }
-        }
-      }
+      // for (i = 0; i < legs.length; i++) {
+      //   var leg = legs[i];
+      //   var steps = leg.steps;
+      //   duration.push(leg.duration.text);
+      //   for (j = 0; j < steps.length; j++) {
+      //     var lat_lngs = steps[j].lat_lngs;
+      //     var discovery = null;
+      //     for (l = 0; l < lat_lngs.length; l++) {
+      //       discovery = Activities.findOne({
+      //         "classification.class": {
+      //           $in: ["Discovery"]
+      //         },
+      //         index: {
+      //           $near: {
+      //             $geometry: {
+      //               type: "Point",
+      //               coordinates: [lat_lngs[l].lng(), lat_lngs[l].lat()]
+      //             },
+      //             $maxDistance: 200 //Distance is in meters
+      //           }
+      //         }
+      //       });
+      //       if (discovery) break;
+      //     }
+      //     if (discovery) {
+      //       discoveries.push(Object(discovery));
+      //       break;
+      //     }
+      //   }
+      // }
 
-      _.each(discoveries, function(discovery) {
-        var location = new google.maps.LatLng(discovery.index.coordinates[1], discovery.index.coordinates[0]);
-        self.addMarker(location, 'pin--star.svg');
-      });
+      // _.each(discoveries, function(discovery) {
+      //   var location = new google.maps.LatLng(discovery.index.coordinates[1], discovery.index.coordinates[0]);
+      //   self.addMarker(location, 'pin--star.svg');
+      // });
 
     });
   };
