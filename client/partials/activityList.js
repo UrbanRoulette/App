@@ -12,9 +12,10 @@ var callServer = function() {
         };
         var date = new Date();
 
-        //var timezoneOffset = date.getTimezoneOffset();
+        var timezoneOffset = date.getTimezoneOffset();
+        //console.log(timezoneOffset);
         var profile = ["gratuit", "cheap", "exterieur", "curieux", "couple", "solo", "potes", "prestige"];
-        var timezoneOffset = 0;
+        //var timezoneOffset = 0;
         if(typeof Session.get("weatherId") === "undefined"){
         var URLrequest =  "http://api.openweathermap.org/data/2.5/weather?lat=" + center.lat + "&lon=" + center.lng + "&APPID=c8c3d5213625cfb230413935cb2ee5e9";
         HTTP.call("GET", URLrequest,
@@ -67,8 +68,8 @@ Template.activityList.onRendered(function() {
     if (_.isNumber(Session.get('pin_hovered_id'))) {
       self.$('.activity-list__activity:eq(' + Session.get('pin_hovered_id') + ')').addClass('activity-list__activity--hovered');
     }
-  })
-})
+  });
+});
 
 Template.activityList.events({
   'click .activity-list__retry': function() {

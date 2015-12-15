@@ -10,7 +10,7 @@
 	roulette_time_amount = 6*60;//6*60; //Length of day (in number of unit). Ex: If unit=30 (ie half-hour), then dayLength = 2 means 1 hour
 	activities_length = 4; //Max number of activities in the roulette
 	gap = roulette_time_amount; //Gap between two activities (in number of unit). During this gap, activity of the same category will not be offered, unless it has been randomly chosen more than var 'luck' times
-	transportation = 15; //TIme of transportation between two activities in number of 'units'
+	max_radius = 10; //Maximum radius, in miles
 	luck = 5; //Number of tries from which an activity can appear even if it is redundant
 	ms_in_min = 60000;
 
@@ -193,8 +193,7 @@
 		types_required = [];
 		types_required.push(type);
 		var ind = types_excluded.indexOf(type);
-		if(ind > -1)
-			types_excluded.splice(ind,1);
+		if(ind > -1) types_excluded.splice(ind,1);
 	};
 	exclude_type = function(type){
 		if(types_excluded.indexOf(type) === -1) types_excluded.push(type);
@@ -205,7 +204,7 @@
 
 Meteor.methods({
 
-	get_activities_results: function(center,radius,date,profile,timezoneOffset,weatherId,activities_locked){
+	get_activities_results: function(center,radius_initial,date,profile,timezoneOffset,weatherId,activities_locked){
 
 		//INITIALIZATION
 //		var activities_locked = [];
@@ -221,9 +220,12 @@ Meteor.methods({
 		else weather = "rain";
 
 		//DATE CURSOR
+		console.log("date before timeZoneOffset : " + date);
 		date = new Date(date.getTime() - timezoneOffset*ms_in_min);
+		console.log("date after timeZoneOffset : " + date);
 //		date.setHours(12,29,0,0);
 		date_cursor = round_date_to_pace_date(date,pace); //Must be defined globally
+		console.log("rounded date_cursor : " + date_cursor);
 		var date_cursor_start = new Date(date_cursor);
 		var date_cursor_end = new Date(date_cursor.getTime() + roulette_time_amount*ms_in_min);
 		var day = convert_day_number_to_foursquare_day_number(date_cursor.getDay());
@@ -274,7 +276,7 @@ Meteor.methods({
 
 				var act_locked = activities_locked[k];
 				act_locked.locked = true;
-				exclude_type(act_locked.type);
+				exclude_type(act_locked.classification.type);
 
 				if(test_cursor.getTime() !== act_locked.start_date.getTime()) nb_slots_to_fill += 1;
 				test_cursor = new Date(act_locked.end_date);
@@ -300,7 +302,7 @@ Meteor.methods({
 
 			console.log("*********** NEW LOOP ***********");
 			console.log("date_cursor : " + date_cursor);
-			var random = Math.random();
+			var random = 1;
 
 			console.log("RESULT LEVEL just avant locked activities: " + result_level);
 
@@ -363,7 +365,7 @@ Meteor.methods({
 			//Restaurant
 			type_considered = 'restaurant';
 			var hour = date_cursor.getHours();
-			if (eatingHours.indexOf(hour) > -1 && types_excluded.indexOf(type_considered) === -1 && (profile.indexOf('gratuit') === -1 || profile.length > 1)) require_type(type_considered);
+			if (eatingHours.indexOf(hour) > -1 && (profile.indexOf('gratuit') === -1 || profile.length > 1)) require_type(type_considered);
 			else exclude_type(type_considered);
 			//Sport
 			type_considered = "sport";
@@ -374,74 +376,102 @@ Meteor.methods({
 			console.log("RESULT LEVEL just avant QUERY: " + result_level);
 			console.log('track_unwanted_id[result_level] : '); console.log(track_unwanted_id[result_level]);
 
-			//To know localization of latest_activity
-			coord = results.length > 0 ? results[results.length - 1].index.coordinates : coord;
-//			var rad = results.length > 0 ? 1 : 10;
-			var rad = 2;
-			radius = 3;
+			//If this is the last doc, make sure we pick an activity that is long enough and 
 			var last_max_query = (max_nb_of_activities_for_this_slot === 1) ? {"last.max": {$gte: time_before_next_end_point}} : {};
 			var last_doc_query = (max_nb_of_activities_for_this_slot === 1) ? {close: {$gte: end_point_hour_integer}} : {};
+
+			//To know localization of latest_activity
+			coord = results.length > 0 ? results[results.length - 1].index.coordinates : coord;
+			
 			var weather_query;
 			if(weather === "clear") weather_query = {"requirements.sun": true};
 			else if (weather === "clouds") weather_query = {"requirements.sun": {$in: [true,false]}};
 			else if (weather === "rain") weather_query = {"requirements.sun": false};
-
-
+			//Weather:
 			do {
-				var query = {
-							$and:
-								[
-									{
-										_id: { $nin: track_unwanted_id[result_level].concat(track_results_id) },
-										$and: [
-										{index : { $geoWithin: { $centerSphere : [ [ lng, lat ] , radius/3963.2 ] } } }, //Designated location
-										{index : { $geoWithin: { $centerSphere : [ [ coord[0], coord[1] ] , rad/3963.2 ] } } } //Previous activity point
-										],
-										rand: { $gte: random },
-										"classification.class": "Activity",
-										"classification.type": { $in: types_required, $nin: types_excluded },
-										tags: { $in: profile },
-										opening_hours: { $elemMatch: { 	"$or": [
-																				{"dates.beg": {$lte: date_cursor}, "dates.end": {$gte: date_cursor} },
-																				{"dates.beg": {$exists: false}, "dates.end": {$exists: false} }
-																		],
-																		"week": {$elemMatch: {
-																			days: day,
-																			hours: {$elemMatch: {
-																				$and: [
-																					{open: {$lte: adjusted_start_hour_cursor} }, //Make sure activity is open
-																					{open_plus_last_min: {$lte: end_point_hour_integer} }, //Make sure activity is not starting too late
-																					{close_minus_last_min: {$gte: adjusted_end_hour_cursor} }, //Make sure activity won't close too early (ie it will still be open if we had last.min do date_cursor)
-																					last_doc_query
-																				]
-																				} }
-																			} }
+				var radius_activity = 2;
+				radius_initial = 3;
+				//Radius:
+				do {
 
-																		}
-																	 },
-									"last.min": {$lte: time_before_next_end_point + global_flex_time_down}, //Avoid too long activities
-//									weather_query
-									},
-									last_max_query
-								]
-							};
+					random = Math.random();
+					//Random:
+					do {
+						var query = {
+									$and:
+										[
+											{
+												_id: { $nin: track_unwanted_id[result_level].concat(track_results_id) },
+												$and: [
+												{index : { $geoWithin: { $centerSphere : [ [ lng, lat ] , radius_initial/3963.2 ] } } }, //Designated location
+												{index : { $geoWithin: { $centerSphere : [ [ coord[0], coord[1] ] , radius_activity/3963.2 ] } } } //Previous activity point
+												],
+												rand: { $gte: random },
+												"classification.class": "Activity",
+												"classification.type": { $in: types_required, $nin: types_excluded },
+												tags: { $in: profile },
+												opening_hours: { $elemMatch: { 	"$or": [
+																						{"dates.beg": {$lte: date_cursor}, "dates.end": {$gte: date_cursor} },
+																						{"dates.beg": {$exists: false}, "dates.end": {$exists: false} }
+																				],
+																				"week": {$elemMatch: {
+																					days: day,
+																					hours: {$elemMatch: {
+																						$and: [
+																							{open: {$lte: adjusted_start_hour_cursor} }, //Make sure activity is open
+																							{open_plus_last_min: {$lte: end_point_hour_integer} }, //Make sure activity is not starting too late
+																							{close_minus_last_min: {$gte: adjusted_end_hour_cursor} }, //Make sure activity won't close too early (ie it will still be open if we had last.min do date_cursor)
+																							last_doc_query
+																						]
+																						} }
+																					} }
 
-				activity = Activities.findOne({$query: query, $orderby: { rand: 1 } } );
+																				}
+																			 },
+											"last.min": {$lte: time_before_next_end_point + global_flex_time_down}, //Avoid too long activities
+		//									weather_query
+											},
+											last_max_query
+										]
+									};
+						activity = Activities.findOne({$query: query, $orderby: { rand: 1 } } );
 
-				if(random > min_rand) random = random * Math.random();
-				else {
-					if(typeof activity === "undefined"){
-						if(rad < 10 && rad <= radius){rad = radius*2; continue;}
-						else if (rad < 10 && rad > radius){radius += 1; continue;}
-						track_unwanted_id[result_level] = [];
-						if(result_level > 0){remove_last_activity_from_results(); continue Algorithm;}
-						else { results = best_results_so_far.results; break Algorithm;}
+						//Change random or break loop if it was already as low as possible
+						if(random > min_rand) random = random * Math.random();
+						else break;
 					}
+					while(typeof activity === "undefined");
+
+					//Increase radius or break loop if already too large
+					if(radius_activity < 10 && radius_activity <= radius_initial)
+						radius_activity = radius_initial*2; 
+					else if (radius_initial <= max_radius)
+						radius_initial += 1;
+					else break;
 				}
+				while(typeof activity === "undefined");
+
+				//Change weather query or break loop if it wwas already as large as possible
+				if(weather === "clouds") weather_query = {"requirements.sun": {$in: [true,false]}};
+				else break;
 			}
 			while(typeof activity === "undefined");
 
-			console.log("ACTIVTY NAME: " + activity.main.name);
+			//If we could not find an activity
+			if(typeof activity === "undefined") {
+				//Delete previous activity selected
+				if(result_level > 0){
+					track_unwanted_id[result_level] = [];
+					remove_last_activity_from_results(); 
+					continue Algorithm;
+				}
+				else { 
+					results = best_results_so_far.results; 
+					break Algorithm;
+				}	
+			}
+
+			console.log("ACTIVITY NAME: " + activity.main.name);
 
 			//Determine open and close date of activity
 			var related_opening_hours_integer_of_activity = get_related_opening_hours_integer_of_activity(activity, previous_day, adjusted_start_hour_cursor, adjusted_end_hour_cursor);
@@ -473,6 +503,11 @@ Meteor.methods({
 			activity.end_date = new Date(activity.start_date.getTime() + activity.last.value*ms_in_min);
 			console.log("activity_end_date : " + activity.end_date);
 
+			//Temporary fix
+			activity.start_hour = activity.start_date.getHours();
+			activity.start_minutes = activity.start_date.getMinutes();
+			activity.end_hour = activity.end_date.getHours();
+			activity.end_minutes = activity.end_date.getMinutes();
 			//Define fields related to flexibility
 			activity.last.time_before_close = (activity_close_date - activity.end_date)/ms_in_min;
 			activity.last.time_after_open = (activity.start_date - activity_open_date)/ms_in_min;
