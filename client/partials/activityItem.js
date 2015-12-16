@@ -67,7 +67,7 @@ Template.activityItem.events({
     template.state.set('truncated', !Template.instance().state.get('truncated'));
     template.$('.activity-item__description__expand').text(Template.instance().state.get('truncated') ? "Show less" : "Show more");
   },
-  'click .activity-item__timeline': function(event, template){
+  'click .activity-item__timeline__lock': function(event, template){
     var self = this;
     var activities_locked = Session.get('activities_locked');
 
@@ -76,9 +76,38 @@ Template.activityItem.events({
     } else {
       activities_locked.push(self);
     }
-
     self.locked = !self.locked;
     template.state.set('isLocked',  self.locked);
     Session.set('activities_locked', activities_locked);
-  }
+  },
+  'click .activity-item__timeline__switch': function(event, template){
+    var self = this;
+    if(self.locked){
+      alert("Vous devez unlocker une activité avant de la switcher !");
+    }
+    else{
+      var activities_switched = typeof(Session.get('activities_switched')) == 'undefined' ? [] : Session.get('activities_switched');
+      activities_switched.push(this._id);
+      Session.set('activities_switched', activities_switched);
+      var activities_results = Session.get('activities_results');
+      var index = _.indexOf(activities_results, _.findWhere(activities_results, {_id: self._id}));
+      //Recording locations
+      if(index > 0) self.previous_coord = activities_results[index-1].index.coordinates;
+      if(index < activities_results.length - 1) self.next_coord = activities_results[index+1].index.coordinates; 
+      self.initial_coord = activities_results[0].index.coordinates;
+
+      var radius = 10 / 3963.192; //Converts miles into radians. Should be divided by 6378.137 for kilometers
+      Meteor.apply('switch_activity', [self,activities_switched,Session.get("weather"),radius], true, function(error, result) {
+        if (error)
+          console.log(error);
+        else {
+          if(typeof result === "object"){
+            activities_results.splice(index,1,result);
+            Session.set('activities_results',activities_results);
+          }
+          else alert(result);
+        }
+      });
+    }
+  },
 });

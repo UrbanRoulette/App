@@ -53,12 +53,12 @@ Template.map.onRendered(function() {
     });
 
     self.autorun(function() {
-      if (helper.markers.length != 0) {
+      if (helper.markers.length !== 0) {
         _.each(helper.markers, function(marker) {
           marker.setAnimation(null);
         });
       }
-      if (_.isNumber(Session.get('activity_hovered_index')) && helper.markers.length != 0) {
+      if (_.isNumber(Session.get('activity_hovered_index')) && helper.markers.length !== 0) {
         helper.markers[Session.get('activity_hovered_index')].setAnimation(google.maps.Animation.BOUNCE);
       }
     });
