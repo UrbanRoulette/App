@@ -14,9 +14,10 @@
 		var m = date.getMinutes();
 		var result = m/pace;
 		var quotient = Math.floor(result);
-		if (quotient === 0) date.setHours(h,m,0,0); //Date does not change
-		else if((quotient + 1) === 60/pace) date.setHours(h+1,0,0,0); //Important to set seconds and milliseconds to 0!
-		else date.setHours(h,(quotient+1)*pace,0,0);
+		//Important to set seconds and milliseconds to 0!
+		if((quotient + 1) === 60/pace) date.setHours(h+1,0,0,0); //If minutes was between 56 and 59
+		else if(quotient === result) date.setHours(h,m,0,0); //If minutes was a multiple of pace (i.e. if pace =5, then minutes is 15,20,25,...)
+		else date.setHours(h,(quotient+1)*pace,0,0); //Other cases
 		return date;
 	};
 	convert_hour_string_to_date = function(hour_string){
@@ -200,8 +201,9 @@
 
 Meteor.methods({
 
-	get_activities_results: function(center,max_radius,date,profile,timezoneOffset,weather,activities_locked){
+	get_activities_results: function(center,max_radius,date,timezoneOffset,profile,weather,activities_locked){
 
+		console.log("Weather : " + weather);
 		//INITIALIZATION
 //		var activities_locked = [];
 		var lat = center.lat;
@@ -549,11 +551,16 @@ Meteor.methods({
 			console.log('roulette_not_OK : ' + roulette_not_OK);
 		}
 		while(roulette_not_OK);
+		
 		console.log('roulette_not_OK : ' + roulette_not_OK);
 		console.log("Results of activities : " + JSON.stringify(results));
 		console.log("Date cursor : " + date_cursor);
 		console.log("Total time amount : " + total_time_amount);
 		console.log("Results Length : " + results.length);
+
+		_.each(results,function(result,index){
+			result.rank = index;
+		});
 		return results;
 	},
 
@@ -580,6 +587,7 @@ Meteor.methods({
 		var weather_query = get_weather_query(weather);
 		//Weather:
 		do {
+
 			var radius_activity = 2;
 			radius_initial = 3;
 			//Radius:
@@ -654,6 +662,7 @@ Meteor.methods({
 			new_activity.start_date = new Date(start_date);
 			new_activity.end_date = new Date(end_date);
 			new_activity.locked = false;
+			new_activity.rank = activity.rank;
 			//Temporary fix
 			new_activity.start_hour = new_activity.start_date.getHours();
 			new_activity.start_minutes = new_activity.start_date.getMinutes();
@@ -661,8 +670,7 @@ Meteor.methods({
 			new_activity.end_minutes = new_activity.end_date.getMinutes();
 
 		}
-		return new_activity;
-				
+		return new_activity;		
 	},
 
 	get_discoveries_and_transportation: function(legs){

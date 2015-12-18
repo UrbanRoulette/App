@@ -1,3 +1,17 @@
+var get_results = function(center,max_radius,date,timezoneOffset,profile){
+    Meteor.apply('get_activities_results', [center,max_radius,date,timezoneOffset,profile,Session.get("weather"), Session.get('activities_locked')], true, function(error, result) {
+      if (error) console.log(error);
+      else {
+        var activities_locked = [];
+        for(k=0;k<result.length;k++){
+          if(result[k].locked) activities_locked.push(result[k]);
+        }
+        Session.set('activities_locked', activities_locked);
+        Session.set('activities_results',result);
+      }
+    });
+};
+
 var callServer = function() {
   if (GoogleMaps.loaded()) {
     var geocoder = new google.maps.Geocoder();
@@ -10,34 +24,25 @@ var callServer = function() {
           lat: results[0].geometry.location.lat(),
           lng: results[0].geometry.location.lng()
         };
+        var max_radius = 10;// "/ 3963.192" converts miles into radians. Should be divided by 6378.137 for kilometers
         var date = new Date();
-
         var timezoneOffset = date.getTimezoneOffset();
         //console.log(timezoneOffset);
         var profile = ["gratuit", "cheap", "exterieur", "curieux", "couple", "solo", "potes", "prestige"];
-        //var timezoneOffset = 0;
+        Session.set("activities_locked", typeof(Session.get('activities_locked')) == 'undefined' ? [] : Session.get('activities_locked'));
+        //console.log(timezoneOffset);
+        
         if(typeof Session.get("weather") === "undefined"){
           Meteor.apply('get_weather',[center],true,function(error,result){
             if(error) console.log(error);
             else {
               Session.set("weather",result);
+              get_results(center,max_radius,date,timezoneOffset,profile);
+              console.log(weather);
             }
           });
         }
-        var activities_locked = typeof(Session.get('activities_locked')) == 'undefined' ? [] : Session.get('activities_locked');
-        //console.log(timezoneOffset);
-        var radius = 10 / 3963.192; //Converts miles into radians. Should be divided by 6378.137 for kilometers
-        Meteor.apply('get_activities_results', [center,radius,date,profile,timezoneOffset,Session.get("weather"), activities_locked], true, function(error, result) {
-          if (error) console.log(error);
-          else {
-            var activities_locked = [];
-            for(k=0;k<result.length;k++){
-              if(result[k].locked) activities_locked.push(result[k]);
-            }
-            Session.set('activities_locked', activities_locked);
-            Session.set('activities_results',result);
-          }
-        });
+        else get_results(center,max_radius,date,timezoneOffset,profile);
       }
     });
   }

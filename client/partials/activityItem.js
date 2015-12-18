@@ -1,19 +1,6 @@
 Template.activityItem.onCreated(function() {
+  var self = this;
   var canBeTruncated = this.data.main.description.length > 200;
-
-//   convert_date_to_readable_string = function(date){
-// //    date = new Date(date);
-//     console.log("Date ouverture/fermeture activite : ");
-//     console.log(date);
-//     var h = date.getHours();
-//     console.log("Hours" + h);
-//     var m = date.getMinutes();
-//     var hh = (h>=10) ? '' : '0';
-//     var mm = (m>=10) ? 'h' : 'h0';
-//     var readable_string = hh + h.toString() + mm + m.toString();    
-//     return readable_string;
-//   };
-
   this.locked = typeof(this.locked) == 'undefined' ? false : this.locked;
   this.state = new ReactiveDict();
   this.state.set('canBeTruncated', canBeTruncated);
@@ -46,7 +33,6 @@ Template.activityItem.helpers({
     var mm = (m>=10) ? 'h' : 'h0';
     var readable_string = hh + h.toString() + mm + m.toString();    
     return readable_string;
-//      return convert_date_to_readable_string(this.start_date);
 //    return moment(this.start_date).format('HH:mm');
   },
   time_end: function() {
@@ -56,9 +42,14 @@ Template.activityItem.helpers({
     var mm = (m>=10) ? 'h' : 'h0';
     var readable_string = hh + h.toString() + mm + m.toString();    
     return readable_string;
-//      return convert_date_to_readable_string(this.end_date);
 //    return moment(this.end_date).format('HH:mm');
   },
+  discovery: function(){
+    var results_length = Session.get("activities_results").length;
+    var discoveries = Session.get('discoveries');
+    if(discoveries[this.rank])
+      return discoveries[this.rank];
+  }
 });
 
 Template.activityItem.events({

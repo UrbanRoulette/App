@@ -1,0 +1,23 @@
+<template name="discoveryItem" >
+	<div class="discovery-item">
+		<div class="discovery-item__content" >
+			<div class="discovery-item__picture" style="background-image: url({{main.image}});" data-price="{{main.price}}€"></div>
+			<h2 class="discovery-item__title">{{main.specific}}<span class="discovery-item__title__name"> - {{main.name}}</span></h2>
+			<a class="discovery-item__address" href="http://maps.google.com/?q={{address}}" target="_blank">
+				<address>{{address.formatted_address}}</address>
+			</a>
+			<p class="discovery-item__description">
+				{{{description}}}
+				{{#if canBeTruncated}}
+					<a href="#" class="discovery-item__description__expand">
+						{{#if isTruncated}}Show more{{else}}Show Less{{/if}}
+					</a>
+				{{/if}}
+			</p>
+		</div>
+		
+		<div class="discovery-item__timeline">
+		</div>
+
+	</div>
+</template>
