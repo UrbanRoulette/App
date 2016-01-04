@@ -248,7 +248,7 @@ googleMapHelper = function(map) {
 //      var discoveries = Meteor.call('get_discoveries_and_transportation',legs);
       var discoveries = {};
       var duration = [];
-
+      
       for (i = 0; i < legs.length; i++) {
         var leg = legs[i];
         var steps = leg.steps;

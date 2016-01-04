@@ -30,7 +30,6 @@ var callServer = function() {
         //console.log(timezoneOffset);
         var profile = ["gratuit", "cheap", "exterieur", "curieux", "couple", "solo", "potes", "prestige"];
         Session.set("activities_locked", typeof(Session.get('activities_locked')) == 'undefined' ? [] : Session.get('activities_locked'));
-        //console.log(timezoneOffset);
         
         if(typeof Session.get("weather") === "undefined"){
           Meteor.apply('get_weather',[center],true,function(error,result){
@@ -38,7 +37,6 @@ var callServer = function() {
             else {
               Session.set("weather",result);
               get_results(center,max_radius,date,timezoneOffset,profile);
-              console.log(weather);
             }
           });
         }

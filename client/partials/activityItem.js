@@ -47,7 +47,7 @@ Template.activityItem.helpers({
   discovery: function(){
     var results_length = Session.get("activities_results").length;
     var discoveries = Session.get('discoveries');
-    if(discoveries[this.rank])
+    if(typeof discoveries !== "undefined")
       return discoveries[this.rank];
   }
 });
@@ -76,10 +76,11 @@ Template.activityItem.events({
     if(self.locked){
       alert("Vous devez unlocker une activité avant de la switcher !");
     }
-    else{
+    else {
       var activities_switched = typeof(Session.get('activities_switched')) == 'undefined' ? [] : Session.get('activities_switched');
       activities_switched.push(this._id);
       Session.set('activities_switched', activities_switched);
+
       var activities_results = Session.get('activities_results');
       var index = _.indexOf(activities_results, _.findWhere(activities_results, {_id: self._id}));
       //Recording locations
@@ -87,8 +88,9 @@ Template.activityItem.events({
       if(index < activities_results.length - 1) self.next_coord = activities_results[index+1].index.coordinates; 
       self.initial_coord = activities_results[0].index.coordinates;
 
+      var profile = ["gratuit", "cheap", "exterieur", "curieux", "couple", "solo", "potes", "prestige"];
       var radius = 10 / 3963.192; //Converts miles into radians. Should be divided by 6378.137 for kilometers
-      Meteor.apply('switch_activity', [self,activities_switched,Session.get("weather"),radius], true, function(error, result) {
+      Meteor.apply('switch_activity', [self,activities_switched,profile,Session.get("weather"),radius], true, function(error, result) {
         if (error)
           console.log(error);
         else {
