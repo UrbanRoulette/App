@@ -248,6 +248,7 @@ googleMapHelper = function(map) {
 //      var discoveries = Meteor.call('get_discoveries_and_transportation',legs);
       var discoveries = {};
       var duration = [];
+      var discoveries_id = [];
       
       for (i = 0; i < legs.length; i++) {
         var leg = legs[i];
@@ -258,6 +259,7 @@ googleMapHelper = function(map) {
           var discovery = null;
           for (l = 0; l < lat_lngs.length; l++) {
             discovery = Activities.findOne({
+              _id: {$nin: discoveries_id},
               "classification.class": {
                 $in: ["Discovery"]
               },
@@ -275,6 +277,7 @@ googleMapHelper = function(map) {
           }
           if (discovery) {
             discoveries[i] = Object(discovery);
+            discoveries_id.push(discovery._id);
             break;
           }
           else discoveries[i] = null;

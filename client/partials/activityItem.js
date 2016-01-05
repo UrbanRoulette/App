@@ -32,8 +32,8 @@ Template.activityItem.helpers({
     var hh = (h>=10) ? '' : '0';
     var mm = (m>=10) ? 'h' : 'h0';
     var readable_string = hh + h.toString() + mm + m.toString();    
-    return readable_string;
-//    return moment(this.start_date).format('HH:mm');
+//    return readable_string;
+    return moment(this.start_date).format('HH:mm');
   },
   time_end: function() {
     var h = this.end_hour;
@@ -41,8 +41,8 @@ Template.activityItem.helpers({
     var hh = (h>=10) ? '' : '0';
     var mm = (m>=10) ? 'h' : 'h0';
     var readable_string = hh + h.toString() + mm + m.toString();    
-    return readable_string;
-//    return moment(this.end_date).format('HH:mm');
+//    return readable_string;
+    return moment(this.end_date).format('HH:mm');
   },
   discovery: function(){
     var results_length = Session.get("activities_results").length;
