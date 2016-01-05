@@ -522,6 +522,8 @@ Meteor.methods({
 				}	
 			}
 
+			console.log("ACTIVITY NAME : " + activity.main.name);
+			
 			//TIME FLEXIBILITY
 			//Determine open and close date of activity
 			var related_opening_hours_integer_of_activity = get_related_opening_hours_integer_of_activity(activity, previous_day, adjusted_start_hour_cursor, adjusted_end_hour_cursor);
@@ -595,12 +597,12 @@ Meteor.methods({
 			roulette_not_OK = (total_time_amount < roulette_time_amount);
 		}
 		while(roulette_not_OK);
-
-		//To be able to position discoveries
+		
 		_.each(results,function(result,index){
-			result.rank = index;
+			result.rank = index; //To be able to position discoveries
+			//So that hours are displayed correctly in front-end
 			result.start_date = new Date(result.start_date.getTime() + timezoneOffset*min_in_ms);
-			result.end_date = new Date(result.start_date.getTime() + timezoneOffset*min_in_ms);
+			result.end_date = new Date(result.end_date.getTime() + timezoneOffset*min_in_ms);
 		});
 		return results;
 	},
