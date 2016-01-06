@@ -1,12 +1,12 @@
 var get_results = function(center,max_radius,date,timezoneOffset,profile){
-    Meteor.apply('get_activities_results', [center,max_radius,date,timezoneOffset,profile,Session.get("weather"), Session.get('activities_locked')], true, function(error, result) {
+    Meteor.apply('get_activities_results', [center,max_radius,date,timezoneOffset,profile,Session.get("weather"),Session.get("activities_locked")], true, function(error, result) {
       if (error) console.log(error);
       else {
         var activities_locked = [];
         for(k=0;k<result.length;k++){
           if(result[k].locked) activities_locked.push(result[k]);
         }
-        Session.set('activities_locked', activities_locked);
+        Session.set('activities_locked',activities_locked);
         Session.set('activities_results',result);
       }
     });
@@ -28,7 +28,7 @@ var callServer = function() {
         var date = new Date();
         var timezoneOffset = date.getTimezoneOffset();
         var profile = ["gratuit", "cheap", "exterieur", "curieux", "couple", "solo", "potes", "prestige"];
-        Session.set("activities_locked", typeof(Session.get('activities_locked')) == 'undefined' ? [] : Session.get('activities_locked'));
+        if(typeof Session.get("activities_locked") === 'undefined') Session.set("activities_locked", []);
         
         if(typeof Session.get("weather") === "undefined"){
           Meteor.apply('get_weather',[center],true,function(error,result){
@@ -68,6 +68,7 @@ Template.activityList.onRendered(function() {
 
 Template.activityList.events({
   'click .activity-list__retry': function() {
+    Session.set("activities_switched", []);
     callServer();
   },
   'mouseenter .activity-list__activity': function(event) {

@@ -50,12 +50,12 @@ Template.activityItem.events({
     var self = this;
     var activities_locked = Session.get('activities_locked');
 
-    if(self.locked) {
+    self.locked = !self.locked;
+    if(!self.locked) {
       activities_locked = _.without(activities_locked, _.findWhere(activities_locked, {_id: self._id}));
     } else {
       activities_locked.push(self);
     }
-    self.locked = !self.locked;
     template.state.set('isLocked',  self.locked);
     Session.set('activities_locked', activities_locked);
   },
@@ -78,7 +78,8 @@ Template.activityItem.events({
 
       var profile = ["gratuit", "cheap", "exterieur", "curieux", "couple", "solo", "potes", "prestige"];
       var radius = 10 / 3963.192; //Converts miles into radians. Should be divided by 6378.137 for kilometers
-      Meteor.apply('switch_activity', [self,activities_switched,profile,Session.get("weather"),radius], true, function(error, result) {
+      var timezoneOffset = new Date().getTimezoneOffset();
+      Meteor.apply('switch_activity', [self,activities_switched,radius,timezoneOffset,profile,Session.get("weather")], true, function(error, result) {
         if (error)
           console.log(error);
         else {
