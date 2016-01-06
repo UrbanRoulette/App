@@ -370,7 +370,6 @@ Meteor.methods({
 
 	get_activities_results: function(center,max_radius,date,timezoneOffset,profile,weather,activities_locked){
 
-		
 		//INITIALIZATION
 		lat = center.lat; //Must be defined globally
 		lng = center.lng; //Must be defined globally
@@ -384,7 +383,7 @@ Meteor.methods({
 		console.log("date before timeZoneOffset : " + date);
 		date = new Date(date.getTime() - timezoneOffset*min_in_ms);
 		console.log("date after timeZoneOffset : " + date);
-//		date.setHours(18,30,0,0);
+		date.setHours(15,30,0,0);
 		date_cursor = round_date_to_pace_date(date,pace); //Must be defined globally
 		var date_cursor_start = new Date(date_cursor);
 		var date_cursor_end = new Date(date_cursor.getTime() + roulette_time_amount*min_in_ms);
@@ -456,7 +455,9 @@ Meteor.methods({
 		//BEGINNING OF ALGORITHM
 		Algorithm:
 		do {
+
 			console.log("******* NEW LOOP *******");
+
 			//FOR LOCKED ACTIVITIES
 			var change_of_slot = 0;
 			while(activities_locked.length - 1 >= lock_index){
@@ -484,7 +485,6 @@ Meteor.methods({
 
 			slot_index += change_of_slot;
 			max_nb_of_activities_for_this_slot = (max_activities_nb - results.length - (activities_locked.length - lock_index)) - (nb_slots_to_fill - slot_index) + 1;
-
 
 			//CLASSIFICATION / PERSONNALIZATION
 			//Initialize required types with all existing types
@@ -523,7 +523,7 @@ Meteor.methods({
 			}
 
 			console.log("ACTIVITY NAME : " + activity.main.name);
-			
+
 			//TIME FLEXIBILITY
 			//Determine open and close date of activity
 			var related_opening_hours_integer_of_activity = get_related_opening_hours_integer_of_activity(activity, previous_day, adjusted_start_hour_cursor, adjusted_end_hour_cursor);
@@ -544,12 +544,6 @@ Meteor.methods({
 			var last_slices = total_last_slices;
 			activity.last.value = Math.min(Math.min(activity.last.min + last_slices*pace, time_before_activity_close), time_before_next_end_point);
 			activity.end_date = new Date(activity.start_date.getTime() + activity.last.value*min_in_ms);
-
-			//Temporary fix
-			activity.start_hour = activity.start_date.getHours();
-			activity.start_minutes = activity.start_date.getMinutes();
-			activity.end_hour = activity.end_date.getHours();
-			activity.end_minutes = activity.end_date.getMinutes();
 
 			//Define fields related to flexibility
 			activity.last.time_before_close = (activity_close_date - activity.end_date)/min_in_ms;
@@ -627,16 +621,9 @@ Meteor.methods({
 			new_activity.end_date = new Date(end_date);
 			new_activity.locked = false;
 			new_activity.rank = activity_to_switch.rank;
-			//Temporary fix
-			new_activity.start_hour = new_activity.start_date.getHours();
-			new_activity.start_minutes = new_activity.start_date.getMinutes();
-			new_activity.end_hour = new_activity.end_date.getHours();
-			new_activity.end_minutes = new_activity.end_date.getMinutes();
-
 		}
 		return new_activity;		
 	},
-
 	get_discoveries_and_transportation: function(legs){
 	  var discoveries = [];
 

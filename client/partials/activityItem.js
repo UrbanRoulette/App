@@ -27,21 +27,9 @@ Template.activityItem.helpers({
     return Template.instance().state.get('canBeTruncated');
   },
   time_start: function() {
-    var h = this.start_hour;
-    var m = this.start_minutes;
-    var hh = (h>=10) ? '' : '0';
-    var mm = (m>=10) ? 'h' : 'h0';
-    var readable_string = hh + h.toString() + mm + m.toString();    
-//    return readable_string;
     return moment(this.start_date).format('HH:mm');
   },
   time_end: function() {
-    var h = this.end_hour;
-    var m = this.end_minutes;
-    var hh = (h>=10) ? '' : '0';
-    var mm = (m>=10) ? 'h' : 'h0';
-    var readable_string = hh + h.toString() + mm + m.toString();    
-//    return readable_string;
     return moment(this.end_date).format('HH:mm');
   },
   discovery: function(){

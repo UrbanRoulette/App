@@ -27,7 +27,6 @@ var callServer = function() {
         var max_radius = 10;// "/ 3963.192" converts miles into radians. Should be divided by 6378.137 for kilometers
         var date = new Date();
         var timezoneOffset = date.getTimezoneOffset();
-        //console.log(timezoneOffset);
         var profile = ["gratuit", "cheap", "exterieur", "curieux", "couple", "solo", "potes", "prestige"];
         Session.set("activities_locked", typeof(Session.get('activities_locked')) == 'undefined' ? [] : Session.get('activities_locked'));
         
