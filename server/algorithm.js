@@ -7,6 +7,7 @@
 	//Parameters
 	pace = 5; // Pace (in number of minutes) (must divide 60)
 	min_in_ms = 60000; //Number of milliseconds in a minute
+	km_in_radians = 6378.137; //Should be 3963.192 for miles
 	min_rand = Activities.findOne({},{sort: {rand:1}}).rand; //
 
 	//Functions used in algorithm
@@ -162,7 +163,7 @@
 		results.push(activity_to_add);
 		if(activity_to_add.locked) lock_index += 1;
 		result_level += 1;
-		track_results_id.push(activity_to_add._id);
+		track_results_Ids.push(activity_to_add._id);
 		update_local_and_global_flex(results);
 		update_total_time_amount();
 		if(!activity_to_add.locked) types_excluded.push(activity_to_add.classification.type); //We already excluded the type of locked activities at the beginning of the algorithm
@@ -174,7 +175,7 @@
 		result_level -= 1;
 		track_unwanted_id[result_level].push(results[result_level]._id);
 		results.pop();
-		track_results_id.pop();
+		track_results_Ids.pop();
 		update_local_and_global_flex(results);
 		update_total_time_amount();
 		types_excluded.splice(types_excluded.indexOf(last_activity.classification.type),1);
@@ -241,124 +242,137 @@
 			else if(typeof next_coord === "undefined") next_coord = previous_coord; //In case activity was the last one
 		}
 
-		var weather_query = get_weather_query(weather);
-		var weather_query_already_changed = false;
+		var activities_drawn_Ids = Array.from(activities_drawn_ids);
 
-		Weather:
+		Activities_drawn:
 		do {
 
-			var radius_activity = 2;
-			radius_initial = 3;
+			var weather_query = get_weather_query(weather);
+			var weather_query_already_changed = false;
 
-			Radius:
+			Weather:
 			do {
 
-				var random = Math.random();
+				var radius_activity = 2;
+				radius_initial = 3;
 
-				Random:
+				Radius:
 				do {
-					var query;
-					if(type_of_search === "get_result"){
 
-						query = {
-									$and:
-										[
-											{
-												_id: { $nin: track_unwanted_id[result_level].concat(track_results_id) },
-												$and: [
-													{index : { $geoWithin: { $centerSphere : [ [ lng, lat ] , radius_initial/3963.2 ] } } }, //Designated location
-													{index : { $geoWithin: { $centerSphere : [ [ coord[0], coord[1] ] , radius_activity/3963.2 ] } } } //Previous activity point
-												],
-												rand: { $gte: random },
-												"classification.class": "Activity",
-												"classification.type": { $in: types_required, $nin: types_excluded },
-												tags: { $in: profile },
-												opening_hours: { $elemMatch: { 	"$or": [
-																						{"dates.beg": {$lte: date_cursor}, "dates.end": {$gte: date_cursor} },
-																						{"dates.beg": {$exists: false}, "dates.end": {$exists: false} }
-																				],
-																				"week": {$elemMatch: {
-																							days: day,
-																							hours: {$elemMatch: {
-																								$and: [
-																									{open: {$lte: adjusted_start_hour_cursor} }, //Make sure activity is open
-																									{open_plus_last_min: {$lte: end_point_hour_integer} }, //Make sure activity is not starting too late
-																									{close_minus_last_min: {$gte: adjusted_end_hour_cursor} }, //Make sure activity won't close too early (ie it will still be open if we had last.min do date_cursor)
-																									last_doc_query
-																								]
+					var random = Math.random();
+
+					Random:
+					do {
+
+						var query;
+						if(type_of_search === "get_result"){
+
+							query = {
+										$and:
+											[
+												{
+													_id: { $nin: track_unwanted_id[result_level].concat(track_results_Ids, activities_drawn_Ids) },
+													$and: [
+														{index : { $geoWithin: { $centerSphere : [ [ center_lng, center_lat ] , radius_initial/km_in_radians ] } } }, //Designated location
+														{index : { $geoWithin: { $centerSphere : [ [ coord[0], coord[1] ] , radius_activity/km_in_radians ] } } } //Previous activity point
+													],
+													rand: { $gte: random },
+													"classification.class": "Activity",
+													"classification.type": { $in: types_required, $nin: types_excluded },
+													tags: { $in: profile },
+													opening_hours: { $elemMatch: { 	"$or": [
+																							{"dates.beg": {$lte: date_cursor}, "dates.end": {$gte: date_cursor} },
+																							{"dates.beg": {$exists: false}, "dates.end": {$exists: false} }
+																					],
+																					"week": {$elemMatch: {
+																								days: day,
+																								hours: {$elemMatch: {
+																									$and: [
+																										{open: {$lte: adjusted_start_hour_cursor} }, //Make sure activity is open
+																										{open_plus_last_min: {$lte: end_point_hour_integer} }, //Make sure activity is not starting too late
+																										{close_minus_last_min: {$gte: adjusted_end_hour_cursor} }, //Make sure activity won't close too early (ie it will still be open if we had last.min do date_cursor)
+																										last_doc_query
+																									]
+																								} }
 																							} }
-																						} }
+																					}
+																				 },
+												"last.min": {$lte: time_before_next_end_point + global_flex_time_down}, //Avoid too long activities
+												},
+		//											weather_query,
+												last_max_query
+											]
+									};
+						}
+						else if (type_of_search === "switch_result"){
+
+							query = {
+										$and:
+											[
+												{
+													_id: { $nin: activities_switched_Ids },
+													$and: [
+														{index : { $geoWithin: { $centerSphere : [ [ initial_coord[0], initial_coord[1] ] , radius_initial/km_in_radians ] } } }, //Designated location
+														{index : { $geoWithin: { $centerSphere : [ [ previous_coord[0], previous_coord[1] ] , radius_activity/km_in_radians ] } } }, //Previous activity point
+														{index : { $geoWithin: { $centerSphere : [ [ next_coord[0], next_coord[1] ] , radius_activity/km_in_radians ] } } } //Next activity point
+													],
+													rand: { $gte: random },
+													"classification.class": "Activity",
+													"classification.type": activity_to_switch.classification.type,
+				//									tags: { $in: profile },
+													opening_hours: { $elemMatch: { 	"$or": [
+																							{"dates.beg": {$lte: switched_start_date}, "dates.end": {$gte: switched_end_date} },
+																							{"dates.beg": {$exists: false}, "dates.end": {$exists: false} }
+																					],
+																					"week": {$elemMatch: {
+																								days: switched_day,
+																								hours: {$elemMatch: {
+																									$and: [
+																										{open: {$lte: convert_date_to_hour_integer(switched_start_date)} }, //Make sure activity is open
+																										{close: {$gte: convert_date_to_hour_integer(switched_end_date)} }, //Make sure activity won't close too early
+																									]
+																								} }
+																							} }
 																				}
-																			 },
-											"last.min": {$lte: time_before_next_end_point + global_flex_time_down}, //Avoid too long activities
-											},
-	//											weather_query,
-											last_max_query
-										]
-								};
-					}
-					else if (type_of_search === "switch_result"){
+																	},
+													"last.min": {$lte: switched_last}, //Make sure activity is not too long
+													"last.max": {$gte: switched_last} //Make sure activity is not too short
+												}
+				//								weather_query
+											]
+										};	
+						}
 
-						query = {
-									$and:
-										[
-											{
-												_id: { $nin: activities_switched_ids },
-												$and: [
-													{index : { $geoWithin: { $centerSphere : [ [ initial_coord[0], initial_coord[1] ] , radius_initial/3963.2 ] } } }, //Designated location
-													{index : { $geoWithin: { $centerSphere : [ [ previous_coord[0], previous_coord[1] ] , radius_activity/3963.2 ] } } }, //Previous activity point
-													{index : { $geoWithin: { $centerSphere : [ [ next_coord[0], next_coord[1] ] , radius_activity/3963.2 ] } } } //Next activity point
-												],
-												rand: { $gte: random },
-												"classification.class": "Activity",
-												"classification.type": activity_to_switch.classification.type,
-			//									tags: { $in: profile },
-												opening_hours: { $elemMatch: { 	"$or": [
-																						{"dates.beg": {$lte: switched_start_date}, "dates.end": {$gte: switched_end_date} },
-																						{"dates.beg": {$exists: false}, "dates.end": {$exists: false} }
-																				],
-																				"week": {$elemMatch: {
-																							days: switched_day,
-																							hours: {$elemMatch: {
-																								$and: [
-																									{open: {$lte: convert_date_to_hour_integer(switched_start_date)} }, //Make sure activity is open
-																									{close: {$gte: convert_date_to_hour_integer(switched_end_date)} }, //Make sure activity won't close too early
-																								]
-																							} }
-																						} }
-																			}
-																},
-												"last.min": {$lte: switched_last}, //Make sure activity is not too long
-												"last.max": {$gte: switched_last} //Make sure activity is not too short
-											}
-			//								weather_query
-										]
-									};	
+						A = Activities.findOne({$query: query, $orderby: { rand: 1 } } );
+						//Change random or break loop if it was already as low as possible
+						if(random <= min_rand) break Random;
+						else random = random * Math.random();
+						
 					}
+					while(typeof A === "undefined");
 
-					A = Activities.findOne({$query: query, $orderby: { rand: 1 } } );
-					//Change random or break loop if it was already as low as possible
-					if(random > min_rand) random = random * Math.random();
-					else break Random;
+					if(radius_activity < max_radius && radius_activity <= radius_initial)
+						radius_activity = radius_initial*2; 
+					else if (radius_initial <= max_radius)
+						radius_initial += 1;
+					else break Radius;
 				}
 				while(typeof A === "undefined");
 
-				//Increase radius or break loop if already too large
-				if(radius_activity < max_radius && radius_activity <= radius_initial)
-					radius_activity = radius_initial*2; 
-				else if (radius_initial <= max_radius)
-					radius_initial += 1;
-				else break Radius;
+				if(weather !== "clear" || weather_query_already_changed) break Weather;
+				else {
+					weather_query = {"requirements.sun": {$in: [true,false]}};
+					weather_query_already_changed = true;
+				}
 			}
 			while(typeof A === "undefined");
-			//Change weather query or break loop if it was already as large as possible
-			if(weather === "clear" && !weather_query_already_changed){
-				weather_query = {"requirements.sun": {$in: [true,false]}};
-				weather_query_already_changed = true;
-			}
-			else break Weather;
+
+			console.log("activities_drawn_Ids : " + activities_drawn_Ids);
+
+			if(activities_drawn_Ids.length === 0) break Activities_drawn;
+			else activities_drawn_Ids = [];
 		}
-		while(typeof A === "undefined");	
+		while(typeof A === "undefined");
 
 		return A;
 	};
@@ -367,21 +381,20 @@
 
 Meteor.methods({
 
-	get_activities_results: function(center,max_radius,date,timezoneOffset,profile,weather,activities_locked){
+	get_activities_results: function(center,max_radius,date,timezoneOffset,profile,weather,activities_locked,activities_drawn,types_removed){
 
 		//INITIALIZATION
-		lat = center.lat; //Must be defined globally
-		lng = center.lng; //Must be defined globally
-		coord = [lng,lat]; //Must be defined globally
+		center_lat = center.lat; //Must be defined globally
+		center_lng = center.lng; //Must be defined globally
+		coord = [center_lng,center_lat]; //Must be defined globally
+		activities_drawn_ids = activities_drawn; //To define variable globally
 
 		var roulette_time_amount = 6*60;//6*60; //Length of day (in number of unit). Ex: If unit=30 (ie half-hour), then dayLength = 2 means 1 hour
 		var max_activities_nb = roulette_time_amount/120; //Max number of activities in the draw
 		max_radius = 10; //Maximum radius, in miles
 
 		//DATE CURSOR
-		console.log("date before timeZoneOffset : " + date);
 		date = new Date(date.getTime() - timezoneOffset*min_in_ms); //To have the same hour than on client
-		console.log("date after timeZoneOffset : " + date);
 //		date.setHours(15,30,0,0);
 		date_cursor = round_date_to_pace_date(date,pace); //Must be defined globally
 		var date_cursor_start = new Date(date_cursor);
@@ -391,7 +404,7 @@ Meteor.methods({
 
 		//TRACKING
 		//RESULTS TRACKING
-		track_results_id = []; //Must be defined globally
+		track_results_Ids = []; //Must be defined globally
 		track_unwanted_id = {}; //Must be defined globally
 		for(j=0;j < max_activities_nb;j++) track_unwanted_id[j] = [];
 		//TIME TRACKING
@@ -402,7 +415,7 @@ Meteor.methods({
 		//TYPES
 		var type_considered;
 		types_required = activity_types; //Must be defined globally
-		types_excluded = []; //Must be defined globally
+		types_excluded = types_removed; //Must be defined globally
 
 		//LOCKED ACTIVITIES
 		var end_points = [];
@@ -434,16 +447,14 @@ Meteor.methods({
 
 			nb_slots_to_fill = 0;
 
-			for (k=0;k<activities_locked.length;k++){
-
-				var act_locked = activities_locked[k];
-				exclude_type(act_locked.classification.type);
-
-				if(test_cursor.getTime() !== act_locked.start_date.getTime()) nb_slots_to_fill += 1;
-				test_cursor = new Date(act_locked.end_date);
+			_.each(activities_locked,function(activity_lock,index){
+				exclude_type(activity_lock.classification.type);
+				if(test_cursor.getTime() !== activity_lock.start_date.getTime()) nb_slots_to_fill += 1;
+				test_cursor = new Date(activity_lock.end_date);
 				new_passage.push(true);
-				end_points.push(act_locked.start_date);
-			}
+				end_points.push(activity_lock.start_date);
+			});
+
 			if(test_cursor < date_cursor_end) nb_slots_to_fill += 1;
 		}
 		end_points.push(date_cursor_end);
@@ -612,7 +623,7 @@ Meteor.methods({
 		
 		var new_activity;
 		activity_to_switch = activity_switched; //To define variable globally
-		activities_switched_ids = activities_switched; //To define variable globally
+		activities_switched_Ids = activities_switched; //To define variable globally
 
 		var min_rand = Activities.findOne({},{sort: {rand:1}}).rand;
 		switched_start_date = new Date(activity_to_switch.start_date - timezoneOffset*min_in_ms); //Must be defined globally
@@ -621,7 +632,11 @@ Meteor.methods({
 		new_activity = get_activity("switch_result",max_radius,profile,weather);
 
 		if(typeof new_activity === "undefined"){
-			new_activity = "Il n'y a plus aucune autre activité";
+			activities_switched_Ids = [activity_to_switch._id];
+			new_activity = get_activity("switch_result",max_radius,profile,weather);
+		}
+		if(typeof new_activity === "undefined"){
+			new_activity = "Il n'y a aucune autre activité de ce type correspondant à vos critères de recherche";
 		}
 		else {
 			new_activity.start_date = new Date(switched_start_date.getTime() + timezoneOffset*min_in_ms);

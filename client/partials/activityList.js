@@ -1,13 +1,20 @@
 var get_results = function(center,max_radius,date,timezoneOffset,profile){
-    Meteor.apply('get_activities_results', [center,max_radius,date,timezoneOffset,profile,Session.get("weather"),Session.get("activities_locked")], true, function(error, result) {
+    Meteor.apply('get_activities_results', [center,max_radius,date,timezoneOffset,profile,Session.get("weather"),Session.get("activities_locked"),Session.get("activities_drawn"),Session.get("types_removed")], true, function(error, result) {
       if (error) console.log(error);
       else {
         var activities_locked = [];
-        for(k=0;k<result.length;k++){
-          if(result[k].locked) activities_locked.push(result[k]);
-        }
-        Session.set('activities_locked',activities_locked);
-        Session.set('activities_results',result);
+        var activities_drawn = Session.get("activities_drawn");
+        _.each(Session.get("activities_locked"),function(activity,index){
+          activities_drawn.splice(activities_drawn.indexOf(activity._id),1);
+        });
+        if(_.some(result, function(activity){return activities_drawn.indexOf(activity._id) !== -1;})) activities_drawn = [];
+        _.each(result,function(activity,index){
+          if(activity.locked) activities_locked.push(activity);
+          activities_drawn.push(activity._id);
+        });
+        Session.set('activities_drawn', activities_drawn);
+        Session.set('activities_locked', activities_locked);
+        Session.set('activities_results', result);
       }
     });
 };
@@ -24,12 +31,16 @@ var callServer = function() {
           lat: results[0].geometry.location.lat(),
           lng: results[0].geometry.location.lng()
         };
-        var max_radius = 10;// "/ 3963.192" converts miles into radians. Should be divided by 6378.137 for kilometers
+        Session.set("currentSearchLatLng", [center.lng,center.lat]);
+
+        var max_radius = 10;
         var date = new Date();
         var timezoneOffset = date.getTimezoneOffset();
         var profile = ["gratuit", "cheap", "exterieur", "curieux", "couple", "solo", "potes", "prestige"];
+
         if(typeof Session.get("activities_locked") === 'undefined') Session.set("activities_locked", []);
-        
+        if(typeof Session.get("activities_drawn") === 'undefined') Session.set("activities_drawn", []);
+        if(typeof Session.get("types_removed") === 'undefined') Session.set("types_removed", []);
         if(typeof Session.get("weather") === "undefined"){
           Meteor.apply('get_weather',[center],true,function(error,result){
             if(error) console.log(error);
