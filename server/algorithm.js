@@ -220,7 +220,7 @@
 			end_point_hour_integer = (end_point.getHours() < date_cursor.getHours()) ? convert_date_to_hour_integer(end_point) + 2400 : convert_date_to_hour_integer(end_point);
 			time_before_next_end_point = (end_point.getTime() - date_cursor.getTime())/min_in_ms;
 
-			//If this is the last doc, make sure we pick an activity that is long enough and 
+			//If this is the last doc, make sure we pick an activity that is long enough and which closes after the end_point
 			last_max_query = (max_nb_of_activities_for_this_slot === 1) ? {"last.max": {$gte: time_before_next_end_point}} : {};
 			last_doc_query = (max_nb_of_activities_for_this_slot === 1) ? {close: {$gte: end_point_hour_integer}} : {};
 			//To know localization of latest_activity
@@ -367,8 +367,6 @@
 			}
 			while(typeof A === "undefined");
 
-			console.log("activities_drawn_Ids : " + activities_drawn_Ids);
-
 			if(activities_drawn_Ids.length === 0) break Activities_drawn;
 			else activities_drawn_Ids = [];
 		}
@@ -394,11 +392,14 @@ Meteor.methods({
 		max_radius = 10; //Maximum radius, in miles
 
 		//DATE CURSOR
-		date = new Date(date.getTime() - timezoneOffset*min_in_ms); //To have the same hour than on client
-//		date.setHours(15,30,0,0);
-		date_cursor = round_date_to_pace_date(date,pace); //Must be defined globally
+		console.log("date before timezoneOffset : " + date);
+		date_cursor = round_date_to_pace_date(new Date(date.getTime() - timezoneOffset*min_in_ms),pace); //Must be defined globally
+//		date_cursor.setHours(09,55,0,0);
+		console.log("date after timezoneOffset and rounded : " + date_cursor);
 		var date_cursor_start = new Date(date_cursor);
+		console.log("date_cursor_start : " + date_cursor_start);
 		var date_cursor_end = new Date(date_cursor.getTime() + roulette_time_amount*min_in_ms);
+		console.log("date_cursor_end : " + date_cursor_start);
 		day = convert_day_number_to_foursquare_day_number(date_cursor.getDay()); //Must be defined globally
 		previous_day = day; //Must be defined globally 
 
@@ -406,7 +407,7 @@ Meteor.methods({
 		//RESULTS TRACKING
 		track_results_Ids = []; //Must be defined globally
 		track_unwanted_id = {}; //Must be defined globally
-		for(j=0;j < max_activities_nb;j++) track_unwanted_id[j] = [];
+		for(j=0;j < max_activities_nb; j++) track_unwanted_id[j] = [];
 		//TIME TRACKING
 		total_time_amount = 0; //Must be defined globally
 		global_flex_time_up = 0; //Must be defined globally
@@ -435,7 +436,7 @@ Meteor.methods({
 
 			var first_locked = activities_locked[0];
 			var diff_time = date_cursor.getTime() - first_locked.start_date.getTime();
-			//Code below deals with one edge case: If user gets a roulette starting a 13h30 for instance, lock activities and relaunch a roulette which starts at 13h35 because some time passed inbetween
+			//IF Code below deals with one edge case: If user gets a roulette starting a 13h30 for instance, lock activities and relaunch a roulette which starts at 13h35 because some time passed inbetween
 			if(diff_time > 0){
 				//Modifies start_date
 				first_locked.start_date = new Date(date_cursor);
@@ -446,14 +447,14 @@ Meteor.methods({
 			}
 
 			nb_slots_to_fill = 0;
-
-			_.each(activities_locked,function(activity_lock,index){
-				exclude_type(activity_lock.classification.type);
-				if(test_cursor.getTime() !== activity_lock.start_date.getTime()) nb_slots_to_fill += 1;
-				test_cursor = new Date(activity_lock.end_date);
+ 			for (k=0;k<activities_locked.length;k++){
+ 				var act_locked = activities_locked[k];
+ 				exclude_type(act_locked.classification.type);
+ 				if(test_cursor.getTime() !== act_locked.start_date.getTime()) nb_slots_to_fill += 1;
+ 				test_cursor = new Date(act_locked.end_date);
 				new_passage.push(true);
-				end_points.push(activity_lock.start_date);
-			});
+				end_points.push(act_locked.start_date);
+			}
 
 			if(test_cursor < date_cursor_end) nb_slots_to_fill += 1;
 		}
@@ -478,6 +479,7 @@ Meteor.methods({
 			while(activities_locked.length - 1 >= lock_index){
 
 				var activity_locked = activities_locked[lock_index];
+				console.log("activity_locked : " + activity_locked.main.name);
 
 				if(activity_locked.start_date.getTime() === date_cursor.getTime()){
 
@@ -500,7 +502,7 @@ Meteor.methods({
 
 			slot_index += change_of_slot;
 			max_nb_of_activities_for_this_slot = (max_activities_nb - results.length - (activities_locked.length - lock_index)) - (nb_slots_to_fill - slot_index) + 1;
-
+			
 			//CLASSIFICATION / PERSONNALIZATION
 			//Initialize required types with all existing types
 			types_required = activity_types;
@@ -518,9 +520,12 @@ Meteor.methods({
 			//Adjusting hours to enqble time flexibility before searching activity
 			day = convert_day_number_to_foursquare_day_number(date_cursor.getDay());
 			end_point = end_points[lock_index]; //Must be defined globally
+
 			var hour_integer_cursor = (previous_day !== day) ? convert_date_to_hour_integer(date_cursor) + 2400 : convert_date_to_hour_integer(date_cursor);
 			adjusted_start_hour_cursor = add_time_amount_to_hour_integer(hour_integer_cursor, global_flex_time_up); //Must be defined globally
 			adjusted_end_hour_cursor = add_time_amount_to_hour_integer(hour_integer_cursor, - global_flex_time_down); //Must be defined globally
+
+			console.log("RESULT LEVEL : " + result_level);
 
 			activity = get_activity("get_result",max_radius,profile,weather);
 			
@@ -606,7 +611,6 @@ Meteor.methods({
 
 			console.log("total_time_amount : " + total_time_amount);
 			roulette_not_OK = (total_time_amount < roulette_time_amount);
-			console.log("roulette_not_OK : " + roulette_not_OK);
 		}
 		while(roulette_not_OK);
 		

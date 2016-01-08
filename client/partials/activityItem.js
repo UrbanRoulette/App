@@ -95,7 +95,10 @@ Template.activityItem.events({
   },
   'click .activity-item__timeline__delete': function(event, template){
     var self = this;
-    if(confirm("Supprimer cette activité évitera qu'elle ressorte au cours de prochains tirages de votre session.")){
+    if(self.locked){
+      alert("Vous devez unlocker cette activité avant de la supprimer !");
+    }
+    else if(confirm("Supprimer cette activité évitera qu'elle ressorte au cours de prochains tirages de votre session.")){
       //Removing types from next draws
       var types_removed = typeof(Session.get('types_removed')) !== 'undefined' ? Session.get('types_removed') : [];
       types_removed.push(self.classification.type);
