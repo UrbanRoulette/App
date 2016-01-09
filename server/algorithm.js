@@ -167,7 +167,7 @@
 		update_local_and_global_flex(results);
 		update_total_time_amount();
 		if(!activity_to_add.locked) types_excluded.push(activity_to_add.classification.type); //We already excluded the type of locked activities at the beginning of the algorithm
-		date_cursor = new Date(activity_to_add.end_date); //We update the date_cursor with the new time stamp
+		date_cursor = new Date(date_cursor.getTime() + activity_to_add.last.value*min_in_ms); //We update the date_cursor with the new time stamp
 	};
 	remove_last_activity_from_results = function(){
 		var last_activity = results[results.length - 1];
@@ -398,8 +398,8 @@ Meteor.methods({
 		console.log("date after timezoneOffset and rounded : " + date_cursor);
 		var date_cursor_start = new Date(date_cursor);
 		console.log("date_cursor_start : " + date_cursor_start);
-		var date_cursor_end = new Date(date_cursor.getTime() + roulette_time_amount*min_in_ms);
-		console.log("date_cursor_end : " + date_cursor_start);
+		var date_cursor_end = new Date(date_cursor_start.getTime() + roulette_time_amount*min_in_ms);
+		console.log("date_cursor_end : " + date_cursor_end);
 		day = convert_day_number_to_foursquare_day_number(date_cursor.getDay()); //Must be defined globally
 		previous_day = day; //Must be defined globally 
 
@@ -423,48 +423,44 @@ Meteor.methods({
 		nb_slots_to_fill = 1; //Must be defined globally
 		lock_index = 0; //Must be defined globally -- will enable to track the index of the locked activity that has not been added to results yet
 		var new_passage = [];
-		var test_cursor = new Date(date_cursor_start);
+		
 
 		if(activities_locked.length > 0){
 
 			activities_locked = activities_locked.sort(function(y,z){return ((y.start_date).getTime() - (z.start_date).getTime());});
+			//diff_time deals with one edge case: If user gets a roulette starting a 13h30 for instance, lock activities and relaunch a roulette which starts at 13h35 because some time passed inbetween
+			var diff_time = date_cursor_start.getTime() - (new Date(activities_locked[0].start_date.getTime() - timezoneOffset*min_in_ms)).getTime();
+			diff_time = (diff_time > 0) ? diff_time : 0;
 			//So that we are in the same time zone as server
-			_.each(activities_locked,function(activity_lock,index){
-				activity_lock.start_date = new Date(activity_lock.start_date.getTime() - timezoneOffset*min_in_ms);
-				activity_lock.end_date = new Date(activity_lock.end_date.getTime() - timezoneOffset*min_in_ms);
+			_.each(activities_locked,function(activity_locked,index){
+				activity_locked.start_date = new Date(activity_locked.start_date.getTime() + diff_time - timezoneOffset*min_in_ms);
+				activity_locked.end_date = new Date(activity_locked.end_date.getTime() + diff_time - timezoneOffset*min_in_ms );
 			});
 
-			var first_locked = activities_locked[0];
-			var diff_time = date_cursor.getTime() - first_locked.start_date.getTime();
-			//IF Code below deals with one edge case: If user gets a roulette starting a 13h30 for instance, lock activities and relaunch a roulette which starts at 13h35 because some time passed inbetween
-			if(diff_time > 0){
-				//Modifies start_date
-				first_locked.start_date = new Date(date_cursor);
-				//Check if necessary to modify the last end_date, and modifies it if it is
-				var last_locked = activities_locked[activities_locked.length - 1];
-				var theoretical_end = new Date(last_locked.end_date.getTime() + diff_time);
-				if(theoretical_end.getTime() === date_cursor_end.getTime()) last_locked.end_date = new Date(date_cursor_end);
-			}
-
 			nb_slots_to_fill = 0;
+			var test_cursor = new Date(date_cursor_start);
+			
  			for (k=0;k<activities_locked.length;k++){
- 				var act_locked = activities_locked[k];
- 				exclude_type(act_locked.classification.type);
- 				if(test_cursor.getTime() !== act_locked.start_date.getTime()) nb_slots_to_fill += 1;
- 				test_cursor = new Date(act_locked.end_date);
-				new_passage.push(true);
-				end_points.push(act_locked.start_date);
-			}
 
+ 				var activity_locked = activities_locked[k];
+ 				//Excluding types of activities locked
+ 				exclude_type(activity_locked.classification.type);
+ 				//Will be useful in the algorithm
+				new_passage.push(true);
+ 				//Determining the number of slots to fill and the end_points
+ 				if(test_cursor.getTime() !== activity_locked.start_date.getTime()) nb_slots_to_fill += 1;
+ 				end_points.push(activity_locked.start_date);
+ 				test_cursor = new Date(activity_locked.end_date);
+			}
 			if(test_cursor < date_cursor_end) nb_slots_to_fill += 1;
 		}
 		end_points.push(date_cursor_end);
-		var slot_index = (end_points[0].getTime() === date_cursor.getTime()) ? -1 : 0;
+		var slot_index = (end_points[0].getTime() === date_cursor_start.getTime()) ? -1 : 0;
 
 		//RESULTS
 		var activity;
 		results = []; //Must be defined globally
-		var best_results_so_far = { total_time_amount: 0, results: []}; //Will be used in case roulette cannot be completed
+		var best_results_so_far = { total_time_amount: 0, results: [] }; //Will be used in case roulette cannot be completed
 		result_level = 0; //Must be defined globally //Is the level at which the algorithm is currently looking for an activity: If level = 0, it is looking for the 1st activity, if level = 1, for the 2nd, etc...
 		var roulette_not_OK = true;
 
@@ -478,14 +474,14 @@ Meteor.methods({
 			var change_of_slot = 0;
 			while(activities_locked.length - 1 >= lock_index){
 
-				var activity_locked = activities_locked[lock_index];
-				console.log("activity_locked : " + activity_locked.main.name);
+				var a_locked = activities_locked[lock_index];
+				console.log("activity_locked : " + a_locked.main.name);
 
-				if(activity_locked.start_date.getTime() === date_cursor.getTime()){
+				if(a_locked.start_date.getTime() === date_cursor.getTime()){
 
 					if(new_passage[lock_index]){
 						new_passage[lock_index] = false;
-						add_activity_to_results(activity_locked);
+						add_activity_to_results(a_locked);
 						change_of_slot = 1;
 					}
 					else { //Enables to go up one level in the result to look for different activities
@@ -502,7 +498,8 @@ Meteor.methods({
 
 			slot_index += change_of_slot;
 			max_nb_of_activities_for_this_slot = (max_activities_nb - results.length - (activities_locked.length - lock_index)) - (nb_slots_to_fill - slot_index) + 1;
-			
+			console.log("max_nb_of_activities_for_this_slot : " + max_nb_of_activities_for_this_slot);
+
 			//CLASSIFICATION / PERSONNALIZATION
 			//Initialize required types with all existing types
 			types_required = activity_types;
