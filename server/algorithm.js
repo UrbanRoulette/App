@@ -172,7 +172,7 @@
 		var last_activity = results[results.length - 1];
 		if(last_activity.locked) lock_index -= 1;
 		result_level -= 1;
-		track_unwanted_id[result_level].push(last_activity._id);
+		track_unwanted_Ids[result_level].push(last_activity._id);
 		results.pop();
 		track_results_Ids.pop();
 		update_local_and_global_flex(results);
@@ -273,7 +273,7 @@
 										$and:
 											[
 												{
-													_id: { $nin: track_unwanted_id[result_level].concat(track_results_Ids, activities_drawn_Ids) },
+													_id: { $nin: track_unwanted_Ids[result_level].concat(track_results_Ids, activities_drawn_Ids) },
 													$and: [
 														{index : { $geoWithin: { $centerSphere : [ [ center_lng, center_lat ] , radius_initial/km_in_radians ] } } }, //Designated location
 														{index : { $geoWithin: { $centerSphere : [ [ coord[0], coord[1] ] , radius_activity/km_in_radians ] } } } //Previous activity point
@@ -407,8 +407,8 @@ Meteor.methods({
 		//TRACKING
 		//RESULTS TRACKING
 		track_results_Ids = []; //Must be defined globally
-		track_unwanted_id = {}; //Must be defined globally
-		for(j=0;j < max_activities_nb; j++) track_unwanted_id[j] = [];
+		track_unwanted_Ids = {}; //Must be defined globally
+		for(j=0;j < max_activities_nb; j++) track_unwanted_Ids[j] = [];
 		//TIME TRACKING
 		total_time_amount = 0; //Must be defined globally
 		global_flex_time_up = 0; //Must be defined globally
@@ -431,7 +431,7 @@ Meteor.methods({
 
 			activities_locked = activities_locked.sort(function(y,z){return ((y.start_date).getTime() - (z.start_date).getTime());});
 			//diff_time deals with one edge case: If user gets a roulette starting a 13h30 for instance, lock activities and relaunch a roulette which starts at 13h35 because some time passed inbetween
-			diff_time = (diff_time > 0) ? (Math.floor(diff_time/pace) + 1)*pace : 0;
+			diff_time = (diff_time > 0) ? (Math.floor((diff_time/min_in_ms)/pace) + 1)*pace : 0;
 
 			nb_slots_to_fill = 0;
 			var test_cursor = new Date(date_cursor_start);
@@ -461,9 +461,11 @@ Meteor.methods({
 		//RESULTS
 		var activity;
 		results = []; //Must be defined globally
-		var best_results_so_far = { total_time_amount: 0, results: [] }; //Will be used in case roulette cannot be completed
+		var best_results_so_far = { //Will be used in case roulette cannot be completed
+			total_time_amount: 0,
+			results = []
+		}; 
 		result_level = 0; //Must be defined globally //Is the level at which the algorithm is currently looking for an activity: If level = 0, it is looking for the 1st activity, if level = 1, for the 2nd, etc...
-		var roulette_not_OK = true;
 
 		//BEGINNING OF ALGORITHM
 		Algorithm:
@@ -505,7 +507,6 @@ Meteor.methods({
 			day = convert_day_number_to_foursquare_day_number(date_cursor.getDay());
 			end_point = end_points[lock_index]; //Must be defined globally
 			end_point_hour_integer =  convert_date_to_hour_integer(end_point); //Must be defined globally
-
 			var hour_integer_cursor = convert_date_to_hour_integer(date_cursor);
 			if (hour_integer_cursor > end_point_hour_integer) end_point_hour_integer += 2400; //end_point must always be higher than cursor
 			console.log("hour_integer_cursor : " + hour_integer_cursor);
@@ -538,7 +539,7 @@ Meteor.methods({
 			console.log("types_excluded : " + types_excluded);
 
 			console.log("RESULT LEVEL : " + result_level);
-			console.log("track_unwanted_id[" + result_level + "] : " + track_unwanted_id[result_level]);
+			console.log("track_unwanted_Ids[" + result_level + "] : " + track_unwanted_Ids[result_level]);
 
 			activity = get_activity("get_result",max_radius,profile,weather);
 			
@@ -546,12 +547,12 @@ Meteor.methods({
 			if(typeof activity === "undefined"){
 				//Delete previous activity selected
 				if(result_level > 0){
-					track_unwanted_id[result_level] = [];
+					track_unwanted_Ids[result_level] = [];
 					remove_last_activity_from_results(); 
 					continue Algorithm;
 				}
 				else { 
-					results = best_results_so_far.results; 
+					results = Array.from(best_results_so_far.results); 
 					break Algorithm;
 				}	
 			}
@@ -575,11 +576,11 @@ Meteor.methods({
 			else activity.start_date = new Date(date_cursor.getTime() - Math.max(0,diff_end)*min_in_ms);
 
 			console.log("global_flex_time_up : " + global_flex_time_up);
-			console.log("global_flex_time_down : " + global_flex_time_up);
+			console.log("global_flex_time_down : " + global_flex_time_down);
 
 			//Temporary check => Need to find a clever way to do this directly in the database request
 			if(global_flex_time_up < diff_beg || global_flex_time_down < diff_end){
-				track_unwanted_id[result_level] = [];
+				track_unwanted_Ids[result_level] = [];
 				remove_last_activity_from_results(); 
 				continue Algorithm;			
 			}
@@ -621,14 +622,12 @@ Meteor.methods({
 			//Keeps a record of the best result in case roulette cannot be completed
 			if(total_time_amount > best_results_so_far.total_time_amount){
 				best_results_so_far.total_time_amount = total_time_amount;
-				best_results_so_far.results = [];
-				for(k=0;k<results.length;k++) best_results_so_far.results.push(new Object(results[k]));
+				best_results_so_far.results = Array.from(results);
 			}
 
 			console.log("total_time_amount : " + total_time_amount);
-			roulette_not_OK = (total_time_amount < roulette_time_amount);
 		}
-		while(roulette_not_OK);
+		while(total_time_amount < roulette_time_amount);
 		
 		_.each(results,function(result,index){
 			result.rank = index; //To be able to position discoveries
