@@ -396,7 +396,7 @@ Meteor.methods({
 		//DATE CURSOR
 		console.log("date before timezoneOffset : " + date);
 		date_cursor = round_date_to_pace_date(new Date(date.getTime() - timezoneOffset*min_in_ms),pace); //Must be defined globally
-		date_cursor.setHours(22,15,0,0);
+//		date_cursor.setHours(22,15,0,0);
 		console.log("date after timezoneOffset and rounded : " + date_cursor);
 		var date_cursor_start = new Date(date_cursor);
 		console.log("date_cursor_start : " + date_cursor_start);
