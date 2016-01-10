@@ -22,6 +22,15 @@
 		else date.setHours(h,(quotient+1)*pace,0,0); //Other cases
 		return date;
 	};
+	//hour_string
+	convert_hour_integer_to_hour_string = function(hour_integer){
+		var hour_string;
+		if(hour_integer === 0) hour_string = "0000";
+		else if(hour_integer < 100) hour_string = "00" + hour_integer.toString();
+		else if(hour_integer < 1000) hour_string = "0" + hour_integer.toString();
+		else hour_string = hour_integer.toString();
+		return hour_string;
+	};
 	convert_hour_string_to_date = function(hour_string){
 		var date = new Date(date_cursor);
 		var h = parseInt(hour_string.substr(0,2));
@@ -30,13 +39,9 @@
 		return date;
 	};
 	//hour_integer
-	convert_hour_integer_to_hour_string = function(hour_integer){
-		var hour_string;
-		if(hour_integer === 0) hour_string = "0000";
-		else if(hour_integer < 100) hour_string = "00" + hour_integer.toString();
-		else if(hour_integer < 1000) hour_string = "0" + hour_integer.toString();
-		else hour_string = hour_integer.toString();
-		return hour_string;
+	convert_hour_integer_to_date = function(hour_integer){
+		var hour_string = convert_hour_integer_to_hour_string(hour_integer);
+		return convert_hour_string_to_date(hour_string);
 	};
 	convert_date_to_hour_integer = function(date){
 		var h = date.getHours();
@@ -46,24 +51,17 @@
 		var hour_string = hh + h.toString() + mm + m.toString();
 		return parseInt(hour_string);
 	};
-	convert_hour_integer_to_date = function(hour_integer){
-		var hour_string = convert_hour_integer_to_hour_string(hour_integer);
-		return convert_hour_string_to_date(hour_string);
-	};
-
 	//time
 	add_time_amount_to_hour_integer = function(hour_integer, time_amount){
 		//time_amount must be minutes
 		var int_to_date = convert_hour_integer_to_date(hour_integer);
 		var old_day = int_to_date.getDay();
 		int_to_date = new Date(int_to_date.getTime() + min_in_ms*time_amount);
-		var d = int_to_date.getDay();
+		var new_day = int_to_date.getDay();
 		//
 		var result;
-		if(old_day !== d && time_amount > 0) result = convert_date_to_hour_integer(int_to_date) + 2400;
-		else if(old_day !== d && time_amount < 0) result = convert_date_to_hour_integer(int_to_date) - 2400;
-		else if (old_day === d) result = convert_date_to_hour_integer(int_to_date);
-		if(hour_integer - 2400 > result) result += 2400;
+		if(old_day !== new_day && time_amount > 0) result = convert_date_to_hour_integer(int_to_date) + 2400;
+		else result = convert_date_to_hour_integer(int_to_date);
 
 		return result;
 	};
@@ -167,7 +165,7 @@
 		update_local_and_global_flex(results);
 		update_total_time_amount();
 		if(!activity_to_add.locked) types_excluded.push(activity_to_add.classification.type); //We already excluded the type of locked activities at the beginning of the algorithm
-		date_cursor = new Date(date_cursor.getTime() + activity_to_add.last.value*min_in_ms); //We update the date_cursor with the new time stamp
+		date_cursor = new Date(activity_to_add.end_date); //We update the date_cursor with the new time stamp
 	};
 	remove_last_activity_from_results = function(){
 		var last_activity = results[results.length - 1];
@@ -179,7 +177,7 @@
 		update_local_and_global_flex(results);
 		update_total_time_amount();
 		types_excluded.splice(types_excluded.indexOf(last_activity.classification.type),1);
-		date_cursor = new Date(date_cursor.getTime() - last_activity.last.value*min_in_ms);
+		date_cursor = new Date(last_activity.start_date);
 	};
 	require_type = function(type){
 		types_required = [];
@@ -204,9 +202,8 @@
 	
 		//If type of search === "get_result"
 		var time_before_next_end_point;
-		var end_point_hour_integer;
-		var last_max_query;
-		var last_doc_query;
+		var last_max_query = {};
+		var last_doc_query = {};
 
 		//If type of search === "switch_result"
 		var switched_day;
@@ -217,16 +214,16 @@
 
 		if(type_of_search === "get_result"){
 
-			end_point_hour_integer = (previous_day !== day) ? convert_date_to_hour_integer(end_point) + 2400 : convert_date_to_hour_integer(end_point);
 			time_before_next_end_point = (end_point.getTime() - date_cursor.getTime())/min_in_ms;
 			console.log("end_point_hour_integer : " + end_point_hour_integer);
 			console.log("time_before_next_end_point : " + time_before_next_end_point);
 
-			//If this is the last doc, make sure we pick an activity that is long enough and which closes after the end_point
-			last_max_query = (max_nb_of_activities_for_this_slot == 1) ? {"last.max": {$gte: time_before_next_end_point}} : {};
-			last_doc_query = (max_nb_of_activities_for_this_slot == 1) ? {close: {$gte: end_point_hour_integer}} : {};
-			console.log("last_max_query : " + JSON.stringify(last_max_query));
-			console.log("last_doc_query : " + JSON.stringify(last_doc_query));
+			if (max_nb_of_activities_for_this_slot == 1){ //If this is the last activity possible
+				last_max_query = {"last.max": {$gte: time_before_next_end_point}}; //Make sure activity will be long enough
+				last_doc_query = {close: {$gte: end_point_hour_integer}}; //Make sure activity closes after the end_point
+				console.log("last_max_query : " + JSON.stringify(last_max_query));
+				console.log("last_doc_query : " + JSON.stringify(last_doc_query));
+			}
 			//To know localization of latest_activity
 			coord = results.length > 0 ? results[results.length - 1].index.coordinates : coord;
 		}
@@ -295,7 +292,7 @@
 																									$and: [
 																										{open: {$lte: adjusted_start_hour_cursor} }, //Make sure activity is open
 																										{open_plus_last_min: {$lte: end_point_hour_integer} }, //Make sure activity is not starting too late
-																										{close_minus_last_min: {$gte: adjusted_end_hour_cursor} }, //Make sure activity won't close too early (ie it will still be open if we had last.min do date_cursor)
+																										{close_minus_last_min: {$gte: adjusted_end_hour_cursor} }, //Make sure activity won't close too early (ie it will still be open if we add at least last.min to date_cursor)
 																										last_doc_query
 																									]
 																								} }
@@ -399,7 +396,7 @@ Meteor.methods({
 		//DATE CURSOR
 		console.log("date before timezoneOffset : " + date);
 		date_cursor = round_date_to_pace_date(new Date(date.getTime() - timezoneOffset*min_in_ms),pace); //Must be defined globally
-//		date_cursor.setHours(09,55,0,0);
+		date_cursor.setHours(22,15,0,0);
 		console.log("date after timezoneOffset and rounded : " + date_cursor);
 		var date_cursor_start = new Date(date_cursor);
 		console.log("date_cursor_start : " + date_cursor_start);
@@ -524,11 +521,21 @@ Meteor.methods({
 			//Adjusting hours to enqble time flexibility before searching activity
 			day = convert_day_number_to_foursquare_day_number(date_cursor.getDay());
 			end_point = end_points[lock_index]; //Must be defined globally
+			end_point_hour_integer =  convert_date_to_hour_integer(end_point); //Must be defined globally
 
-			var hour_integer_cursor = (previous_day !== day) ? convert_date_to_hour_integer(date_cursor) + 2400 : convert_date_to_hour_integer(date_cursor);
+			var hour_integer_cursor = convert_date_to_hour_integer(date_cursor);
+			if (hour_integer_cursor > end_point_hour_integer) end_point_hour_integer += 2400; //end_point is always higher than cursor
 			console.log("hour_integer_cursor : " + hour_integer_cursor);
+
 			adjusted_start_hour_cursor = add_time_amount_to_hour_integer(hour_integer_cursor, global_flex_time_up); //Must be defined globally
 			adjusted_end_hour_cursor = add_time_amount_to_hour_integer(hour_integer_cursor, - global_flex_time_down); //Must be defined globally
+			if (adjusted_end_hour_cursor > adjusted_start_hour_cursor) {
+				adjusted_start_hour_cursor += 2400;
+				end_point_hour_integer += 2400;
+			}
+
+			console.log("adjusted_start_hour_cursor : " + adjusted_start_hour_cursor);
+			console.log("adjusted_end_hour_cursor : " + adjusted_end_hour_cursor);
 
 			console.log("RESULT LEVEL : " + result_level);
 			console.log("track_unwanted_id[" + result_level + "] : " + track_unwanted_id[result_level]);
@@ -554,14 +561,28 @@ Meteor.methods({
 			//TIME FLEXIBILITY
 			//Determine open and close date of activity
 			var related_opening_hours_integer_of_activity = get_related_opening_hours_integer_of_activity(activity, previous_day, adjusted_start_hour_cursor, adjusted_end_hour_cursor);
+			console.log("related_opening_hours_integer_of_activity : " + JSON.stringify(related_opening_hours_integer_of_activity));
 			var activity_open_date = convert_hour_integer_to_date(related_opening_hours_integer_of_activity.open);
 			var activity_close_date = new Date(Math.min(convert_hour_integer_to_date(related_opening_hours_integer_of_activity.close), end_point));
 
 			//Determine start_date of activity
 			var diff_beg = (activity_open_date - date_cursor)/min_in_ms;
-			var diff_end = (activity_close_date - date_cursor)/min_in_ms - activity.last.min;
-			if(diff_beg > 0) activity.start_date = new Date(date_cursor.getTime() + Math.max(0,diff_beg)*min_in_ms);
-			else activity.start_date = new Date(date_cursor.getTime() - Math.max(0, - diff_end)*min_in_ms);
+			console.log("diff_beg : " + diff_beg);
+			var diff_end = (new Date(date_cursor.getTime() + activity.last.min*min_in_ms) - activity_close_date)/min_in_ms;
+			console.log("diff_end : " + diff_end);
+			var diff = (Math.max(diff_beg,diff_end) > 0) ? Math.max(diff_beg,diff_end) : 0;
+			if(diff_beg > 0) activity.start_date = new Date(date_cursor.getTime() + diff_beg*min_in_ms);
+			else activity.start_date = new Date(date_cursor.getTime() - Math.max(0,diff_end)*min_in_ms);
+
+			console.log("global_flex_time_up : " + global_flex_time_up);
+			console.log("global_flex_time_down : " + global_flex_time_up);
+
+			//Temporary check => Need to find a clever way to do this directly in the database request
+			if(global_flex_time_up < diff_beg || global_flex_time_down < diff_end){
+				track_unwanted_id[result_level] = [];
+				remove_last_activity_from_results(); 
+				continue Algorithm;			
+			}
 
 			//Detemine last and end_date of activity
 			var time_before_activity_close = (activity_close_date - activity.start_date)/min_in_ms;
@@ -580,27 +601,20 @@ Meteor.methods({
 
 			//Update previous activities dates and flexibilities
 			var c = 0;
-			var previous_act;
-			var fill;
-			
-			while (diff_beg > 0){ //Need to flex up in this case (because activity opens after date_cursor)
-				previous_act = results[results.length - 1 - c];
-				fill = Math.min(diff_beg, previous_act.last.local_flex_time_up);
+			while (diff > 0){ 
+				var previous_act = results[results.length - 1 - c];
+				//We assume by default diff_beg > 0 => need to flex up in this case (because activity opens after date_cursor)
+				var sign = 1;
+				var fill = Math.min(diff, previous_act.last.local_flex_time_up);
+				if(diff_end > 0){ //If default hypothesis is false, then diff_end > 0 => need to flex down in this case (because date_cursor + last.min finishes after close_hour => activity is too long)
+					sign = -1;
+					fill = Math.min(diff_end, previous_act.last.local_flex_time_down);
+				}
 				if(fill === 0){ c+= 1; continue; }
-				update_activity_time_flexibilities(previous_act,fill,1);
-				if(c > 0) update_subsequent_activities_dates(c,fill,1);
+				update_activity_time_flexibilities(previous_act,fill,sign);
+				if(c > 0) update_subsequent_activities_dates(c,fill,sign);
 				//To make the while loop work
-				diff_beg -= fill;
-				c+= 1;
-			}
-			while (diff_end < 0){ //Need to flex down in this case (because date_cursor + last.min finishes after close_hour => activity is too long)
-				previous_act = results[results.length - 1 - c];
-				fill = Math.min( - diff_end, previous_act.last.local_flex_time_down);
-				if(fill === 0){ c+= 1; continue; }
-				update_activity_time_flexibilities(previous_act,fill,-1);
-				if(c > 0) update_subsequent_activities_dates(c,fill,-1);
-				//To make the while loop work
-				diff_end += fill;
+				diff -= fill;
 				c+= 1;
 			}
 			//Adding activity to result
