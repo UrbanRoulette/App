@@ -54,15 +54,15 @@
 	//time
 	add_time_amount_to_hour_integer = function(hour_integer, time_amount){
 		//time_amount must be minutes
-		var date = convert_hour_integer_to_date(hour_integer);
-		var previous_day = date.getDay();
-		date = new Date(date.getTime() + min_in_ms*time_amount);
-		var day = date.getDay();
+		var int_to_date = convert_hour_integer_to_date(hour_integer);
+		var old_day = int_to_date.getDay();
+		int_to_date = new Date(int_to_date.getTime() + min_in_ms*time_amount);
+		var d = int_to_date.getDay();
 		//
 		var result;
-		if(previous_day !== day && time_amount > 0) result = convert_date_to_hour_integer(date) + 2400;
-		else if(previous_day !== day && time_amount < 0) result = convert_date_to_hour_integer(date) - 2400;
-		else if (previous_day === day) result = convert_date_to_hour_integer(date);
+		if(old_day !== d && time_amount > 0) result = convert_date_to_hour_integer(int_to_date) + 2400;
+		else if(old_day !== d && time_amount < 0) result = convert_date_to_hour_integer(int_to_date) - 2400;
+		else if (old_day === d) result = convert_date_to_hour_integer(int_to_date);
 		if(hour_integer - 2400 > result) result += 2400;
 
 		return result;
@@ -217,7 +217,7 @@
 
 		if(type_of_search === "get_result"){
 
-			end_point_hour_integer = (end_point.getHours() < date_cursor.getHours()) ? convert_date_to_hour_integer(end_point) + 2400 : convert_date_to_hour_integer(end_point);
+			end_point_hour_integer = (previous_day !== day) ? convert_date_to_hour_integer(end_point) + 2400 : convert_date_to_hour_integer(end_point);
 			time_before_next_end_point = (end_point.getTime() - date_cursor.getTime())/min_in_ms;
 			console.log("end_point_hour_integer : " + end_point_hour_integer);
 			console.log("time_before_next_end_point : " + time_before_next_end_point);
@@ -458,7 +458,7 @@ Meteor.methods({
 			}
 			if(test_cursor < date_cursor_end) nb_slots_to_fill += 1;
 		}
-		end_points.push(date_cursor_end);
+		end_points.push(new Date(date_cursor_end));
 		console.log("end_points : " + end_points);
 		var slot_index = (end_points[0].getTime() === date_cursor_start.getTime()) ? -1 : 0;
 
