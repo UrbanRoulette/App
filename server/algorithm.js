@@ -431,7 +431,7 @@ Meteor.methods({
 
 			activities_locked = activities_locked.sort(function(y,z){return ((y.start_date).getTime() - (z.start_date).getTime());});
 			//diff_time deals with one edge case: If user gets a roulette starting a 13h30 for instance, lock activities and relaunch a roulette which starts at 13h35 because some time passed inbetween
-			diff_time = (diff_time > 0) ? (Math.floor(time_amount/pace) + 1)*pace : 0;
+			diff_time = (diff_time > 0) ? (Math.floor(diff_time/pace) + 1)*pace : 0;
 
 			nb_slots_to_fill = 0;
 			var test_cursor = new Date(date_cursor_start);
