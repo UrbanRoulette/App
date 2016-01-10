@@ -1,5 +1,15 @@
 var get_results = function(center,max_radius,date,timezoneOffset,profile){
-    Meteor.apply('get_activities_results', [center,max_radius,date,timezoneOffset,profile,Session.get("weather"),Session.get("activities_locked"),Session.get("activities_drawn"),Session.get("types_removed")], true, function(error, result) {
+
+    if(typeof Session.get("activities_locked") === 'undefined') Session.set("activities_locked", []);
+    if(typeof Session.get("activities_drawn") === 'undefined') Session.set("activities_drawn", []);
+    if(typeof Session.get("types_removed") === 'undefined') Session.set("types_removed", []);
+
+    var current_results = Session.get("activities_results");
+    var last_start_date = (typeof current_results !== "undefined") ? current_results[0].start_date : null;
+    var diff_time = last_start_date ? (new Date() - last_start_date) : 0;
+    if (diff_time < 0) diff_time = 0;
+
+    Meteor.apply('get_activities_results', [center,max_radius,date,timezoneOffset,diff_time,profile,Session.get("weather"),Session.get("activities_locked"),Session.get("activities_drawn"),Session.get("types_removed")], true, function(error, result) {
       if (error) console.log(error);
       else {
         var activities_locked = [];
@@ -38,9 +48,6 @@ var callServer = function() {
         var timezoneOffset = date.getTimezoneOffset();
         var profile = ["gratuit", "cheap", "exterieur", "curieux", "couple", "solo", "potes", "prestige"];
 
-        if(typeof Session.get("activities_locked") === 'undefined') Session.set("activities_locked", []);
-        if(typeof Session.get("activities_drawn") === 'undefined') Session.set("activities_drawn", []);
-        if(typeof Session.get("types_removed") === 'undefined') Session.set("types_removed", []);
         if(typeof Session.get("weather") === "undefined"){
           Meteor.apply('get_weather',[center],true,function(error,result){
             if(error) console.log(error);

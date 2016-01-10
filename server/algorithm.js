@@ -25,6 +25,9 @@
 		else date.setHours(h,(quotient+1)*pace,0,0); //Other cases
 		return date;
 	};
+	round_time_amount_to_pace = function(time_amount){
+		return (Math.floor(time_amount/pace) + 1)*pace;
+	};
 	//hour_string
 	convert_hour_integer_to_hour_string = function(hour_integer){
 		var hour_string;
@@ -55,7 +58,7 @@
 		return parseInt(hour_string);
 	};
 	//time
-	add_time_amount_to_hour_integer = function(hour_integer, time_amount){
+	add_time_amount_to_hour_integer = function(hour_integer,time_amount){
 		//time_amount must be minutes
 		var int_to_date = convert_hour_integer_to_date(hour_integer);
 		var old_day = int_to_date.getDay();
@@ -185,15 +188,13 @@
 		date_cursor = new Date(last_activity.start_date);
 	};
 	require_type = function(type){
-		types_required = [];
-		types_required.push(type);
+		types_allowed = [];
+		types_allowed.push(type);
 		var ind = types_excluded.indexOf(type);
 		if(ind > -1) types_excluded.splice(ind,1);
 	};
 	exclude_type = function(type){
 		if(types_excluded.indexOf(type) === -1) types_excluded.push(type);
-		var ind = types_required.indexOf(type);
-		if(ind > -1) types_required.splice(ind,1);
 	};
 	get_weather_query = function(weather){
 		var weather_query;
@@ -285,7 +286,7 @@
 													],
 													rand: { $gte: random },
 													"classification.class": "Activity",
-													"classification.type": { $in: types_required, $nin: types_excluded },
+													"classification.type": { $in: types_allowed, $nin: types_excluded },
 													tags: { $in: profile },
 													opening_hours: { $elemMatch: { 	"$or": [
 																							{"dates.beg": {$lte: date_cursor}, "dates.end": {$gte: date_cursor} },
@@ -386,7 +387,7 @@
 
 Meteor.methods({
 
-	get_activities_results: function(center,max_radius,date,timezoneOffset,profile,weather,activities_locked,activities_drawn,types_removed){
+	get_activities_results: function(center,max_radius,date,timezoneOffset,diff_time,profile,weather,activities_locked,activities_drawn,types_removed){
 
 		//INITIALIZATION
 		center_lat = center.lat; //Must be defined globally
@@ -421,8 +422,8 @@ Meteor.methods({
 
 		//TYPES
 		var type_considered;
-		types_required = Array.from(activity_types); //Must be defined globally
-		types_to_exclude = Array.from(types_removed); //Must be defined globally 
+		types_allowed = Array.from(activity_types); //Must be defined globally
+		types_to_exclude = Array.from(types_removed); //Must be defined globally  => Library of type to exclude (equivalent of activity_types for types_allowed)
 		types_excluded = Array.from(types_removed); //Must be defined globally
 
 		//LOCKED ACTIVITIES
@@ -436,8 +437,7 @@ Meteor.methods({
 
 			activities_locked = activities_locked.sort(function(y,z){return ((y.start_date).getTime() - (z.start_date).getTime());});
 			//diff_time deals with one edge case: If user gets a roulette starting a 13h30 for instance, lock activities and relaunch a roulette which starts at 13h35 because some time passed inbetween
-			var diff_time = date_cursor_start.getTime() - (new Date(activities_locked[0].start_date.getTime() - timezoneOffset*min_in_ms)).getTime();
-			diff_time = (diff_time > 0) ? diff_time : 0;
+			diff_time = round_time_amount_to_pace(diff_time/min_in_ms);
 
 			nb_slots_to_fill = 0;
 			var test_cursor = new Date(date_cursor_start);
@@ -527,8 +527,9 @@ Meteor.methods({
 			console.log("adjusted_hour_integer_cursor_start : " + adjusted_hour_integer_cursor_start);
 			console.log("adjusted_hour_integer_cursor_end : " + adjusted_hour_integer_cursor_end);
 			//CLASSIFICATION / PERSONNALIZATION
-			//Initialize required types with all existing types
-			types_required = Array.from(activity_types);
+			//Initialize required and excluded types
+			types_allowed = Array.from(activity_types);
+			types_excluded = Array.from(types_to_exclude);
 
 			//Restaurant
 			type_considered = 'restaurant';
@@ -539,7 +540,7 @@ Meteor.methods({
 			type_considered = "sport";
 			if(results.length > 0) exclude_type(type_considered);
 
-			console.log("types_required : " + types_required);
+			console.log("types_allowed : " + types_allowed);
 			console.log("types_excluded : " + types_excluded);
 
 			console.log("RESULT LEVEL : " + result_level);
