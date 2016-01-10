@@ -11,6 +11,9 @@
 	min_rand = Activities.findOne({},{sort: {rand:1}}).rand; //
 
 	//Functions used in algorithm
+	between = function(x,min,max){
+		return x >= min && x <= max;
+	};
 	round_date_to_pace_date = function(date,pace){
 		var h = date.getHours();
 		var m = date.getMinutes();
@@ -162,6 +165,7 @@
 		if(activity_to_add.locked) lock_index += 1;
 		result_level += 1;
 		track_results_Ids.push(activity_to_add._id);
+		results_types.push(activity_to_add.classification.type);
 		update_local_and_global_flex(results);
 		update_total_time_amount();
 		if(!activity_to_add.locked) types_excluded.push(activity_to_add.classification.type); //We already excluded the type of locked activities at the beginning of the algorithm
@@ -174,6 +178,7 @@
 		track_unwanted_id[result_level].push(last_activity._id);
 		results.pop();
 		track_results_Ids.pop();
+		results_types.pop();
 		update_local_and_global_flex(results);
 		update_total_time_amount();
 		types_excluded.splice(types_excluded.indexOf(last_activity.classification.type),1);
@@ -192,7 +197,7 @@
 	};
 	get_weather_query = function(weather){
 		var weather_query;
-		if(weather === "clear") weather_query = {"requirements.sun": true};
+		if(weather === "sun") weather_query = {"requirements.sun": true};
 		else if (weather === "clouds") weather_query = {"requirements.sun": {$in: [true,false]}};
 		else if (weather === "rain") weather_query = {"requirements.sun": false};
 		return weather_query;
@@ -290,9 +295,9 @@
 																								days: day,
 																								hours: {$elemMatch: {
 																									$and: [
-																										{open: {$lte: adjusted_start_hour_cursor} }, //Make sure activity is open
+																										{open: {$lte: adjusted_hour_integer_cursor_start} }, //Make sure activity is open
 																										{open_plus_last_min: {$lte: end_point_hour_integer} }, //Make sure activity is not starting too late
-																										{close_minus_last_min: {$gte: adjusted_end_hour_cursor} }, //Make sure activity won't close too early (ie it will still be open if we add at least last.min to date_cursor)
+																										{close_minus_last_min: {$gte: adjusted_hour_integer_cursor_end} }, //Make sure activity won't close too early (ie it will still be open if we add at least last.min to date_cursor)
 																										last_doc_query
 																									]
 																								} }
@@ -320,7 +325,7 @@
 													],
 													rand: { $gte: random },
 													"classification.class": "Activity",
-													"classification.type": activity_to_switch.classification.type,
+													"classification.type": { $in: [activity_to_switch.classification.type] },
 				//									tags: { $in: profile },
 													opening_hours: { $elemMatch: { 	"$or": [
 																							{"dates.beg": {$lte: switched_start_date}, "dates.end": {$gte: switched_end_date} },
@@ -361,7 +366,7 @@
 				}
 				while(typeof A === "undefined");
 
-				if(weather !== "clear" || weather_query_already_changed) break Weather;
+				if(weather !== "sun" || weather_query_already_changed) break Weather;
 				else {
 					weather_query = {"requirements.sun": {$in: [true,false]}};
 					weather_query_already_changed = true;
@@ -388,10 +393,10 @@ Meteor.methods({
 		center_lng = center.lng; //Must be defined globally
 		coord = [center_lng,center_lat]; //Must be defined globally
 		activities_drawn_ids = activities_drawn; //To define variable globally
+		max_radius = 10; //Must be defined globally
 
 		var roulette_time_amount = 6*60;//6*60; //Length of day (in number of unit). Ex: If unit=30 (ie half-hour), then dayLength = 2 means 1 hour
 		var max_activities_nb = roulette_time_amount/120; //Max number of activities in the draw
-		max_radius = 10; //Maximum radius, in miles
 
 		//DATE CURSOR
 		console.log("date before timezoneOffset : " + date);
@@ -403,7 +408,6 @@ Meteor.methods({
 		var date_cursor_end = new Date(date_cursor_start.getTime() + roulette_time_amount*min_in_ms);
 		console.log("date_cursor_end : " + date_cursor_end);
 		day = convert_day_number_to_foursquare_day_number(date_cursor.getDay()); //Must be defined globally
-		previous_day = day; //Must be defined globally 
 
 		//TRACKING
 		//RESULTS TRACKING
@@ -417,7 +421,8 @@ Meteor.methods({
 
 		//TYPES
 		var type_considered;
-		types_required = activity_types; //Must be defined globally
+		var results_types = [];
+		types_required = Array.from(activity_types); //Must be defined globally
 		types_excluded = types_removed; //Must be defined globally
 
 		//LOCKED ACTIVITIES
@@ -502,14 +507,33 @@ Meteor.methods({
 			max_nb_of_activities_for_this_slot = (max_activities_nb - results.length - (activities_locked.length - lock_index)) - (nb_slots_to_fill - slot_index) + 1;
 			console.log("max_nb_of_activities_for_this_slot : " + max_nb_of_activities_for_this_slot);
 
+			//Adjusting hours to enable time flexibility before searching activity
+			day = convert_day_number_to_foursquare_day_number(date_cursor.getDay());
+			end_point = end_points[lock_index]; //Must be defined globally
+			end_point_hour_integer =  convert_date_to_hour_integer(end_point); //Must be defined globally
+
+			var hour_integer_cursor = convert_date_to_hour_integer(date_cursor);
+			if (hour_integer_cursor > end_point_hour_integer) end_point_hour_integer += 2400; //end_point must always be higher than cursor
+			console.log("hour_integer_cursor : " + hour_integer_cursor);
+
+			adjusted_hour_integer_cursor_start = add_time_amount_to_hour_integer(hour_integer_cursor, global_flex_time_up); //Must be defined globally
+			adjusted_hour_integer_cursor_end = add_time_amount_to_hour_integer(hour_integer_cursor, - global_flex_time_down); //Must be defined globally
+			if (adjusted_hour_integer_cursor_end > adjusted_hour_integer_cursor_start) { 
+				adjusted_hour_integer_cursor_start += 2400; //adjusted_hour_integer_cursor_start can only be >= to adjusted_hour_integer_cursor_end
+				end_point_hour_integer += 2400; //end_point must always be higher than cursor
+				day = (day === 1) ? 7 : day - 1; //In this case, we go back to previous day
+			}
+
+			console.log("adjusted_hour_integer_cursor_start : " + adjusted_hour_integer_cursor_start);
+			console.log("adjusted_hour_integer_cursor_end : " + adjusted_hour_integer_cursor_end);
 			//CLASSIFICATION / PERSONNALIZATION
 			//Initialize required types with all existing types
-			types_required = activity_types;
+			types_required = Array.from(activity_types);
 
 			//Restaurant
 			type_considered = 'restaurant';
 			var hour = date_cursor.getHours();
-			if (eatingHours.indexOf(hour) > -1 && types_excluded.indexOf(type_considered) === -1) require_type(type_considered);
+			if (eatingHours.indexOf(hour) > -1 && results_types.indexOf(type_considered) === -1) require_type(type_considered);
 			else exclude_type(type_considered);
 			//Sport
 			type_considered = "sport";
@@ -517,25 +541,6 @@ Meteor.methods({
 
 			console.log("types_required : " + types_required);
 			console.log("types_excluded : " + types_excluded);
-
-			//Adjusting hours to enqble time flexibility before searching activity
-			day = convert_day_number_to_foursquare_day_number(date_cursor.getDay());
-			end_point = end_points[lock_index]; //Must be defined globally
-			end_point_hour_integer =  convert_date_to_hour_integer(end_point); //Must be defined globally
-
-			var hour_integer_cursor = convert_date_to_hour_integer(date_cursor);
-			if (hour_integer_cursor > end_point_hour_integer) end_point_hour_integer += 2400; //end_point is always higher than cursor
-			console.log("hour_integer_cursor : " + hour_integer_cursor);
-
-			adjusted_start_hour_cursor = add_time_amount_to_hour_integer(hour_integer_cursor, global_flex_time_up); //Must be defined globally
-			adjusted_end_hour_cursor = add_time_amount_to_hour_integer(hour_integer_cursor, - global_flex_time_down); //Must be defined globally
-			if (adjusted_end_hour_cursor > adjusted_start_hour_cursor) {
-				adjusted_start_hour_cursor += 2400;
-				end_point_hour_integer += 2400;
-			}
-
-			console.log("adjusted_start_hour_cursor : " + adjusted_start_hour_cursor);
-			console.log("adjusted_end_hour_cursor : " + adjusted_end_hour_cursor);
 
 			console.log("RESULT LEVEL : " + result_level);
 			console.log("track_unwanted_id[" + result_level + "] : " + track_unwanted_id[result_level]);
@@ -560,7 +565,7 @@ Meteor.methods({
 
 			//TIME FLEXIBILITY
 			//Determine open and close date of activity
-			var related_opening_hours_integer_of_activity = get_related_opening_hours_integer_of_activity(activity, previous_day, adjusted_start_hour_cursor, adjusted_end_hour_cursor);
+			var related_opening_hours_integer_of_activity = get_related_opening_hours_integer_of_activity(activity, day, adjusted_hour_integer_cursor_start, adjusted_hour_integer_cursor_end);
 			console.log("related_opening_hours_integer_of_activity : " + JSON.stringify(related_opening_hours_integer_of_activity));
 			var activity_open_date = convert_hour_integer_to_date(related_opening_hours_integer_of_activity.open);
 			var activity_close_date = new Date(Math.min(convert_hour_integer_to_date(related_opening_hours_integer_of_activity.close), end_point));
@@ -587,10 +592,7 @@ Meteor.methods({
 			//Detemine last and end_date of activity
 			var time_before_activity_close = (activity_close_date - activity.start_date)/min_in_ms;
 			time_before_next_end_point = (end_point.getTime() - activity.start_date.getTime())/min_in_ms;
-			var total_last_slices = (activity.last.max - activity.last.min)/pace;
-//			var last_slices = (max_nb_of_activities_for_this_slot === 1) ? total_last_slices : Math.floor(Math.random() * (total_last_slices + 1));
-			var last_slices = total_last_slices;
-			activity.last.value = Math.min(Math.min(activity.last.min + last_slices*pace, time_before_activity_close), time_before_next_end_point);
+			activity.last.value = Math.min(Math.min(activity.last.max, time_before_activity_close), time_before_next_end_point);
 			activity.end_date = new Date(activity.start_date.getTime() + activity.last.value*min_in_ms);
 
 			//Define fields related to flexibility
@@ -619,7 +621,6 @@ Meteor.methods({
 			}
 			//Adding activity to result
 			activity.locked = false;
-			previous_day = day;
 			add_activity_to_results(activity);
 
 			//Keeps a record of the best result in case roulette cannot be completed
