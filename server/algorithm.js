@@ -165,7 +165,7 @@
 		if(activity_to_add.locked) lock_index += 1;
 		result_level += 1;
 		track_results_Ids.push(activity_to_add._id);
-		results_types.push(activity_to_add.classification.type);
+		types_to_exclude.push(activity_to_add.classification.type);
 		update_local_and_global_flex(results);
 		update_total_time_amount();
 		if(!activity_to_add.locked) types_excluded.push(activity_to_add.classification.type); //We already excluded the type of locked activities at the beginning of the algorithm
@@ -178,9 +178,9 @@
 		track_unwanted_id[result_level].push(last_activity._id);
 		results.pop();
 		track_results_Ids.pop();
-		results_types.pop();
 		update_local_and_global_flex(results);
 		update_total_time_amount();
+		types_to_exclude.splice(types_to_exclude.indexOf(last_activity.classification.type),1);
 		types_excluded.splice(types_excluded.indexOf(last_activity.classification.type),1);
 		date_cursor = new Date(last_activity.start_date);
 	};
@@ -421,9 +421,9 @@ Meteor.methods({
 
 		//TYPES
 		var type_considered;
-		results_types = []; //Must be defined globally
 		types_required = Array.from(activity_types); //Must be defined globally
-		types_excluded = types_removed; //Must be defined globally
+		types_to_exclude = Array.from(types_removed); //Must be defined globally 
+		types_excluded = Array.from(types_removed); //Must be defined globally
 
 		//LOCKED ACTIVITIES
 		var end_points = [];
@@ -533,7 +533,7 @@ Meteor.methods({
 			//Restaurant
 			type_considered = 'restaurant';
 			var hour = date_cursor.getHours();
-			if (eatingHours.indexOf(hour) > -1 && results_types.indexOf(type_considered) === -1) require_type(type_considered);
+			if (eatingHours.indexOf(hour) > -1 && types_to_exclude.indexOf(type_considered) === -1) require_type(type_considered);
 			else exclude_type(type_considered);
 			//Sport
 			type_considered = "sport";
