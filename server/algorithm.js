@@ -421,7 +421,7 @@ Meteor.methods({
 
 		//TYPES
 		var type_considered;
-		var results_types = [];
+		results_types = []; //Must be defined globally
 		types_required = Array.from(activity_types); //Must be defined globally
 		types_excluded = types_removed; //Must be defined globally
 
