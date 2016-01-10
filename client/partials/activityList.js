@@ -1,13 +1,18 @@
-var get_results = function(center,max_radius,date,timezoneOffset,profile){
+var get_results = function(center){
+
+    var date = new Date();
+    var timezoneOffset = date.getTimezoneOffset();
+    var max_radius = 10;
+    var profile = ["gratuit", "cheap", "exterieur", "curieux", "couple", "solo", "potes", "prestige"];
+
+    var current_results = Session.get("activities_results");
+    var last_start_date = (typeof current_results !== "undefined") ? current_results[0].start_date : null;
+    var diff_time = last_start_date ? (date - last_start_date) : 0;
+    if (diff_time < 0) diff_time = 0;
 
     if(typeof Session.get("activities_locked") === 'undefined') Session.set("activities_locked", []);
     if(typeof Session.get("activities_drawn") === 'undefined') Session.set("activities_drawn", []);
     if(typeof Session.get("types_removed") === 'undefined') Session.set("types_removed", []);
-
-    var current_results = Session.get("activities_results");
-    var last_start_date = (typeof current_results !== "undefined") ? current_results[0].start_date : null;
-    var diff_time = last_start_date ? (new Date() - last_start_date) : 0;
-    if (diff_time < 0) diff_time = 0;
 
     Meteor.apply('get_activities_results', [center,max_radius,date,timezoneOffset,diff_time,profile,Session.get("weather"),Session.get("activities_locked"),Session.get("activities_drawn"),Session.get("types_removed")], true, function(error, result) {
       if (error) console.log(error);
@@ -42,22 +47,16 @@ var callServer = function() {
           lng: results[0].geometry.location.lng()
         };
         Session.set("currentSearchLatLng", [center.lng,center.lat]);
-
-        var max_radius = 10;
-        var date = new Date();
-        var timezoneOffset = date.getTimezoneOffset();
-        var profile = ["gratuit", "cheap", "exterieur", "curieux", "couple", "solo", "potes", "prestige"];
-
         if(typeof Session.get("weather") === "undefined"){
           Meteor.apply('get_weather',[center],true,function(error,result){
             if(error) console.log(error);
             else {
               Session.set("weather",result);
-              get_results(center,max_radius,date,timezoneOffset,profile);
+              get_results(center);
             }
           });
         }
-        else get_results(center,max_radius,date,timezoneOffset,profile);
+        else get_results(center);
       }
     });
   }

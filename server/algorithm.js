@@ -450,8 +450,8 @@ Meteor.methods({
  				//Will be useful in the algorithm
 				new_passage.push(true);
  				//So that we are in the same time zone as server
-				activity_locked.start_date = new Date(activity_locked.start_date.getTime() + diff_time - timezoneOffset*min_in_ms);
-				activity_locked.end_date = new Date(activity_locked.end_date.getTime() + diff_time - timezoneOffset*min_in_ms );
+				activity_locked.start_date = new Date(activity_locked.start_date.getTime() + (diff_time - timezoneOffset)*min_in_ms);
+				activity_locked.end_date = new Date(activity_locked.end_date.getTime() + (diff_time - timezoneOffset)*min_in_ms );
  				//Determining the number of slots to fill and the end_points
  				if(test_cursor.getTime() !== activity_locked.start_date.getTime()) nb_slots_to_fill += 1;
  				end_points.push(activity_locked.start_date);
