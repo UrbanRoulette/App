@@ -11,9 +11,6 @@
 	min_rand = Activities.findOne({},{sort: {rand:1}}).rand; //
 
 	//Functions used in algorithm
-	between = function(x,min,max){
-		return x >= min && x <= max;
-	};
 	round_date_to_pace_date = function(date,pace){
 		var h = date.getHours();
 		var m = date.getMinutes();
@@ -24,9 +21,6 @@
 		else if(quotient === result) date.setHours(h,m,0,0); //If minutes was a multiple of pace (i.e. if pace =5, then minutes is 15,20,25,...)
 		else date.setHours(h,(quotient+1)*pace,0,0); //Other cases
 		return date;
-	};
-	round_time_amount_to_pace = function(time_amount){
-		return (Math.floor(time_amount/pace) + 1)*pace;
 	};
 	//hour_string
 	convert_hour_integer_to_hour_string = function(hour_integer){
@@ -437,7 +431,7 @@ Meteor.methods({
 
 			activities_locked = activities_locked.sort(function(y,z){return ((y.start_date).getTime() - (z.start_date).getTime());});
 			//diff_time deals with one edge case: If user gets a roulette starting a 13h30 for instance, lock activities and relaunch a roulette which starts at 13h35 because some time passed inbetween
-			diff_time = round_time_amount_to_pace(diff_time/min_in_ms);
+			diff_time = (diff_time > 0) ? (Math.floor(time_amount/pace) + 1)*pace : 0;
 
 			nb_slots_to_fill = 0;
 			var test_cursor = new Date(date_cursor_start);

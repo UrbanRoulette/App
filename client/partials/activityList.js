@@ -1,14 +1,12 @@
 var get_results = function(center){
 
-    var date = new Date();
-    var timezoneOffset = date.getTimezoneOffset();
     var max_radius = 10;
     var profile = ["gratuit", "cheap", "exterieur", "curieux", "couple", "solo", "potes", "prestige"];
-
+    var date = new Date();
+    var timezoneOffset = date.getTimezoneOffset();
     var current_results = Session.get("activities_results");
     var last_start_date = (typeof current_results !== "undefined") ? current_results[0].start_date : null;
     var diff_time = last_start_date ? (date - last_start_date) : 0;
-    if (diff_time < 0) diff_time = 0;
 
     if(typeof Session.get("activities_locked") === 'undefined') Session.set("activities_locked", []);
     if(typeof Session.get("activities_drawn") === 'undefined') Session.set("activities_drawn", []);
