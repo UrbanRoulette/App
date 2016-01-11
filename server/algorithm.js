@@ -463,7 +463,7 @@ Meteor.methods({
 		results = []; //Must be defined globally
 		var best_results_so_far = { //Will be used in case roulette cannot be completed
 			total_time_amount: 0,
-			results = []
+			results: []
 		}; 
 		result_level = 0; //Must be defined globally //Is the level at which the algorithm is currently looking for an activity: If level = 0, it is looking for the 1st activity, if level = 1, for the 2nd, etc...
 
