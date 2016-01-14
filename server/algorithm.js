@@ -22,6 +22,11 @@
 		else date.setHours(h,(quotient+1)*pace,0,0); //Other cases
 		return date;
 	};
+	//days
+	convert_day_number_to_foursquare_day_number = function(day_nb){
+		if(day_nb === 0) day_nb = 7;
+		return day_nb;
+	};
 	//hour_string
 	convert_hour_integer_to_hour_string = function(hour_integer){
 		var hour_string;
@@ -32,7 +37,7 @@
 		return hour_string;
 	};
 	convert_hour_string_to_date = function(hour_string){
-		var date = new Date(date_cursor);
+		var date = new Date(date_cursor_start);
 		var h = parseInt(hour_string.substr(0,2));
 		var m = parseInt(hour_string.substr(2,2));
 		date.setHours(h,m,0,0);
@@ -44,34 +49,21 @@
 		return convert_hour_string_to_date(hour_string);
 	};
 	convert_date_to_hour_integer = function(date){
+		var day = convert_day_number_to_foursquare_day_number(date.getDay());
 		var h = date.getHours();
 		var m = date.getMinutes();
 		var hh = (h>=10) ? '' : '0';
 		var mm = (m>=10) ? '' : '0';
 		var hour_string = hh + h.toString() + mm + m.toString();
-		return parseInt(hour_string);
+		return (day !== day_start) ? parseInt(hour_string) + 2400 : parseInt(hour_string);
 	};
 	//time
 	add_time_amount_to_hour_integer = function(hour_integer,time_amount){
 		//time_amount must be minutes
-		var int_to_date = convert_hour_integer_to_date(hour_integer);
-		var old_day = int_to_date.getDay();
-		int_to_date = new Date(int_to_date.getTime() + min_in_ms*time_amount);
-		var new_day = int_to_date.getDay();
-		//
-		var result;
-		if(old_day !== new_day && time_amount > 0) result = convert_date_to_hour_integer(int_to_date) + 2400;
-		else result = convert_date_to_hour_integer(int_to_date);
-
-		return result;
+		var integer_to_date = convert_hour_integer_to_date(hour_integer);
+		integer_to_date = new Date(integer_to_date.getTime() + time_amount*min_in_ms);
+		return convert_date_to_hour_integer(integer_to_date);
 	};
-
-	//days
-	convert_day_number_to_foursquare_day_number = function(day_nb){
-		if(day_nb === 0) day_nb = 7;
-		return day_nb;
-	};
-
 	//Related to LAST flexibility
 	get_related_opening_hours_integer_of_activity = function(activity,day_number,start_cursor,end_cursor){
 
@@ -197,6 +189,11 @@
 		else if (weather === "rain") weather_query = {"requirements.sun": false};
 		return weather_query;
 	};
+	delete_useless_keys = function(obj){
+		delete obj._id;
+		delete obj.opening_hours;
+		delete obj.rand;
+	};
 	get_activity = function(type_of_search,max_radius,profile,weather){
 		var A;
 	
@@ -206,8 +203,6 @@
 		var last_doc_query = {};
 
 		//If type of search === "switch_result"
-		var switched_day;
-		var switched_last;
 		var initial_coord;
 		var previous_coord;
 		var next_coord;
@@ -228,9 +223,6 @@
 			coord = results.length > 0 ? results[results.length - 1].index.coordinates : coord;
 		}
 		else if(type_of_search === "switch_result"){
-
-			switched_day = convert_day_number_to_foursquare_day_number(switched_start_date.getDay());
-			switched_last = activity_to_switch.last.value;
 
 			initial_coord = activity_to_switch.initial_coord;
 			previous_coord = activity_to_switch.previous_coord;
@@ -287,7 +279,7 @@
 																							{"dates.beg": {$exists: false}, "dates.end": {$exists: false} }
 																					],
 																					"week": {$elemMatch: {
-																								days: day,
+																								days: day_start,
 																								hours: {$elemMatch: {
 																									$and: [
 																										{open: {$lte: adjusted_hour_integer_cursor_start} }, //Make sure activity is open
@@ -327,11 +319,11 @@
 																							{"dates.beg": {$exists: false}, "dates.end": {$exists: false} }
 																					],
 																					"week": {$elemMatch: {
-																								days: switched_day,
+																								days: day_start,
 																								hours: {$elemMatch: {
 																									$and: [
-																										{open: {$lte: convert_date_to_hour_integer(switched_start_date)} }, //Make sure activity is open
-																										{close: {$gte: convert_date_to_hour_integer(switched_end_date)} }, //Make sure activity won't close too early
+																										{open: {$lte: switched_hour_integer_start} }, //Make sure activity is open
+																										{close: {$gte: switched_hour_integer_end} }, //Make sure activity won't close too early
 																									]
 																								} }
 																							} }
@@ -381,7 +373,7 @@
 
 Meteor.methods({
 
-	get_activities_results: function(center,max_radius,date,timezoneOffset,diff_time,profile,weather,activities_locked,activities_drawn,types_removed){
+	get_activities_results: function(center,max_radius,initial_date,timezoneOffset,diff_time,profile,weather,activities_locked,activities_drawn,types_removed){
 
 		//INITIALIZATION
 		center_lat = center.lat; //Must be defined globally
@@ -394,15 +386,15 @@ Meteor.methods({
 		var max_activities_nb = roulette_time_amount/120; //Max number of activities in the draw
 
 		//DATE CURSOR
-		console.log("date before timezoneOffset : " + date);
-		date_cursor = round_date_to_pace_date(new Date(date.getTime() - timezoneOffset*min_in_ms),pace); //Must be defined globally
+		console.log("date before timezoneOffset : " + initial_date);
+		date_cursor = round_date_to_pace_date(new Date(initial_date.getTime() - timezoneOffset*min_in_ms),pace); //Must be defined globally
 //		date_cursor.setHours(22,15,0,0);
 		console.log("date after timezoneOffset and rounded : " + date_cursor);
-		var date_cursor_start = new Date(date_cursor);
+		date_cursor_start = new Date(date_cursor); //Must be defined globally
+		day_start = convert_day_number_to_foursquare_day_number(date_cursor_start.getDay()); //Must be defined globally
 		console.log("date_cursor_start : " + date_cursor_start);
 		var date_cursor_end = new Date(date_cursor_start.getTime() + roulette_time_amount*min_in_ms);
-		console.log("date_cursor_end : " + date_cursor_end);
-		day = convert_day_number_to_foursquare_day_number(date_cursor.getDay()); //Must be defined globally
+		console.log("date_cursor_end : " + date_cursor_end);		
 
 		//TRACKING
 		//RESULTS TRACKING
@@ -443,14 +435,22 @@ Meteor.methods({
  				exclude_type(activity_locked.classification.type);
  				//Will be useful in the algorithm
 				new_passage.push(true);
- 				//So that we are in the same time zone as server
+
+ 				//Code to check whether locked activities is still open during its new hours (if diff_time > 0)
+//				activity_locked.start_date = new Date(activity_locked.start_date.getTime() - timezoneOffset*min_in_ms);
+//				activity_locked.end_date = new Date(activity_locked.end_date.getTime() - timezoneOffset*min_in_ms);				
+//				var activity_locked_start_hour_integer = convert_date_to_hour_integer(activity_locked.start_date);
+//				activity_locked_end_hour_integer = add_time_amount_to_hour_integer(activity_locked_start_hour_integer, diff_time + activity_locked.last.value);
+//				var diff_end_locked = 
+
+				//So that we are in the same time zone as server
 				activity_locked.start_date = new Date(activity_locked.start_date.getTime() + (diff_time - timezoneOffset)*min_in_ms);
-				activity_locked.end_date = new Date(activity_locked.end_date.getTime() + (diff_time - timezoneOffset)*min_in_ms );
+				activity_locked.end_date = new Date(activity_locked.end_date.getTime() + (diff_time - timezoneOffset)*min_in_ms);
+
  				//Determining the number of slots to fill and the end_points
  				if(test_cursor.getTime() !== activity_locked.start_date.getTime()) nb_slots_to_fill += 1;
  				end_points.push(activity_locked.start_date);
  				test_cursor = new Date(activity_locked.end_date);
-
 			}
 			if(test_cursor < date_cursor_end) nb_slots_to_fill += 1;
 		}
@@ -504,20 +504,12 @@ Meteor.methods({
 			console.log("max_nb_of_activities_for_this_slot : " + max_nb_of_activities_for_this_slot);
 
 			//Adjusting hours to enable time flexibility before searching activity
-			day = convert_day_number_to_foursquare_day_number(date_cursor.getDay());
 			end_point = end_points[lock_index]; //Must be defined globally
 			end_point_hour_integer =  convert_date_to_hour_integer(end_point); //Must be defined globally
 			var hour_integer_cursor = convert_date_to_hour_integer(date_cursor);
-			if (hour_integer_cursor > end_point_hour_integer) end_point_hour_integer += 2400; //end_point must always be higher than cursor
 			console.log("hour_integer_cursor : " + hour_integer_cursor);
-
 			adjusted_hour_integer_cursor_start = add_time_amount_to_hour_integer(hour_integer_cursor, global_flex_time_up); //Must be defined globally
 			adjusted_hour_integer_cursor_end = add_time_amount_to_hour_integer(hour_integer_cursor, - global_flex_time_down); //Must be defined globally
-			if (adjusted_hour_integer_cursor_end > adjusted_hour_integer_cursor_start) { 
-				adjusted_hour_integer_cursor_start += 2400; //adjusted_hour_integer_cursor_start can only be >= to adjusted_hour_integer_cursor_end
-				end_point_hour_integer += 2400; //end_point must always be higher than cursor
-				day = (day === 1) ? 7 : day - 1; //In this case, we go back to previous day
-			}
 
 			console.log("adjusted_hour_integer_cursor_start : " + adjusted_hour_integer_cursor_start);
 			console.log("adjusted_hour_integer_cursor_end : " + adjusted_hour_integer_cursor_end);
@@ -561,7 +553,7 @@ Meteor.methods({
 
 			//TIME FLEXIBILITY
 			//Determine open and close date of activity
-			var related_opening_hours_integer_of_activity = get_related_opening_hours_integer_of_activity(activity, day, adjusted_hour_integer_cursor_start, adjusted_hour_integer_cursor_end);
+			var related_opening_hours_integer_of_activity = get_related_opening_hours_integer_of_activity(activity, day_start, adjusted_hour_integer_cursor_start, adjusted_hour_integer_cursor_end);
 			console.log("related_opening_hours_integer_of_activity : " + JSON.stringify(related_opening_hours_integer_of_activity));
 			var activity_open_date = convert_hour_integer_to_date(related_opening_hours_integer_of_activity.open);
 			var activity_close_date = new Date(Math.min(convert_hour_integer_to_date(related_opening_hours_integer_of_activity.close), end_point));
@@ -585,18 +577,6 @@ Meteor.methods({
 				continue Algorithm;			
 			}
 
-			//Detemine last and end_date of activity
-			var time_before_activity_close = (activity_close_date - activity.start_date)/min_in_ms;
-			time_before_next_end_point = (end_point.getTime() - activity.start_date.getTime())/min_in_ms;
-			activity.last.value = Math.min(Math.min(activity.last.max, time_before_activity_close), time_before_next_end_point);
-			activity.end_date = new Date(activity.start_date.getTime() + activity.last.value*min_in_ms);
-
-			//Define fields related to flexibility
-			activity.last.time_before_close = (activity_close_date - activity.end_date)/min_in_ms;
-			activity.last.time_after_open = (activity.start_date - activity_open_date)/min_in_ms;
-			activity.last.flex_time_up = Math.min(activity.last.flex_time_up, activity.last.max - activity.last.value);
-			activity.last.flex_time_down = Math.min(activity.last.flex_time_down,activity.last.value - activity.last.min);
-
 			//Update previous activities dates and flexibilities
 			var c = 0;
 			while (diff > 0){ 
@@ -615,6 +595,20 @@ Meteor.methods({
 				diff -= fill;
 				c+= 1;
 			}
+
+			activity.related_opening_hours_integer_of_activity = related_opening_hours_integer_of_activity; //This will be useful for locked activities
+			//Detemine last and end_date of activity
+			var time_before_activity_close = (activity_close_date - activity.start_date)/min_in_ms;
+			time_before_next_end_point = (end_point.getTime() - activity.start_date.getTime())/min_in_ms;
+			activity.last.value = Math.min(Math.min(activity.last.max, time_before_activity_close), time_before_next_end_point);
+			activity.end_date = new Date(activity.start_date.getTime() + activity.last.value*min_in_ms);
+
+			//Define fields related to flexibility
+			activity.last.time_before_close = (activity_close_date - activity.end_date)/min_in_ms;
+			activity.last.time_after_open = (activity.start_date - activity_open_date)/min_in_ms;
+			activity.last.flex_time_up = activity.last.max - activity.last.value;
+			activity.last.flex_time_down = activity.last.value - activity.last.min;
+
 			//Adding activity to result
 			activity.locked = false;
 			add_activity_to_results(activity);
@@ -634,6 +628,7 @@ Meteor.methods({
 			//So that we have the right time client side
 			result.start_date = new Date(result.start_date.getTime() + timezoneOffset*min_in_ms);
 			result.end_date = new Date(result.end_date.getTime() + timezoneOffset*min_in_ms);
+			delete_useless_keys(result);
 		});
 		return results;
 	},
@@ -644,15 +639,15 @@ Meteor.methods({
 		activity_to_switch = activity_switched; //To define variable globally
 		activities_switched_Ids = activities_switched; //To define variable globally
 
-		var min_rand = Activities.findOne({},{sort: {rand:1}}).rand;
-		switched_start_date = new Date(activity_to_switch.start_date - timezoneOffset*min_in_ms); //Must be defined globally
-		switched_end_date = new Date(activity_to_switch.end_date - timezoneOffset*min_in_ms); //Must be defined globally
+		switched_hour_integer_start = convert_date_to_hour_integer(new Date(activity_to_switch.start_date - timezoneOffset*min_in_ms)); //Must be defined globally
+		switched_hour_integer_end = convert_date_to_hour_integer(new Date(activity_to_switch.end_date - timezoneOffset*min_in_ms)); //Must be defined globally
+		switched_last = activity_to_switch.last.value; //Must be defined globally
 
 		new_activity = get_activity("switch_result",max_radius,profile,weather);
 
 		if(typeof new_activity === "undefined"){
 			activities_switched_Ids = [activity_to_switch._id];
-			new_activity = get_activity("switch_result",max_radius,profile,weather);
+			new_activity = get_activity("switch_result", max_radius, profile, weather);
 		}
 		if(typeof new_activity === "undefined"){
 			new_activity = "Il n'y a aucune autre activité de ce type correspondant à vos critères de recherche";
@@ -662,6 +657,7 @@ Meteor.methods({
 			new_activity.end_date = new Date(switched_end_date.getTime() + timezoneOffset*min_in_ms);
 			new_activity.locked = false;
 			new_activity.rank = activity_to_switch.rank;
+			delete_useless_keys(new_activity);
 		}
 		return new_activity;		
 	},
