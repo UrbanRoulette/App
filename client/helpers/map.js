@@ -158,9 +158,8 @@ googleMapHelper = function(map) {
     });
   };
 
-  this.addMarker = function(position, icon, metadata) {
+  this.addMarker = function(position, icon) {
     icon = typeof(icon) == 'undefined' ? 'pin.svg' : icon;
-
 
     var marker = new google.maps.Marker({
       map: self.map.instance,
@@ -245,52 +244,52 @@ googleMapHelper = function(map) {
 
       if (secondRun) return;
 
-//      var discoveries = Meteor.call('get_discoveries_and_transportation',legs);
-      var discoveries = {};
-      var duration = [];
-      var discoveries_id = [];
+      // var discoveries = Meteor.call('get_discoveries_and_transportation',legs);
+      // var discoveries = {};
+      // var duration = [];
+      // var discoveries_id = [];
       
-      for (i = 0; i < legs.length; i++) {
-        var leg = legs[i];
-        var steps = leg.steps;
-        duration.push(leg.duration.text);
-        for (j = 0; j < steps.length; j++) {
-          var lat_lngs = steps[j].lat_lngs;
-          var discovery = null;
-          for (l = 0; l < lat_lngs.length; l++) {
-            discovery = Activities.findOne({
-              _id: {$nin: discoveries_id},
-              "classification.class": {
-                $in: ["Discovery"]
-              },
-              index: {
-                $near: {
-                  $geometry: {
-                    type: "Point",
-                    coordinates: [lat_lngs[l].lng(), lat_lngs[l].lat()]
-                  },
-                  $maxDistance: 200 //Distance is in meters
-                }
-              }
-            });
-            if (discovery) break;
-          }
-          if (discovery) {
-            discoveries[i] = Object(discovery);
-            discoveries_id.push(discovery._id);
-            break;
-          }
-          else discoveries[i] = null;
-        }
-      }
-      Session.set('discoveries', discoveries);
+      // for (i = 0; i < legs.length; i++) {
+      //   var leg = legs[i];
+      //   var steps = leg.steps;
+      //   duration.push(leg.duration.text);
+      //   for (j = 0; j < steps.length; j++) {
+      //     var lat_lngs = steps[j].lat_lngs;
+      //     var discovery = null;
+      //     for (l = 0; l < lat_lngs.length; l++) {
+      //       discovery = Activities.findOne({
+      //         _id: {$nin: discoveries_id},
+      //         "classification.class": {
+      //           $in: ["Discovery"]
+      //         },
+      //         index: {
+      //           $near: {
+      //             $geometry: {
+      //               type: "Point",
+      //               coordinates: [lat_lngs[l].lng(), lat_lngs[l].lat()]
+      //             },
+      //             $maxDistance: 200 //Distance is in meters
+      //           }
+      //         }
+      //       });
+      //       if (discovery) break;
+      //     }
+      //     if (discovery) {
+      //       discoveries[i] = Object(discovery);
+      //       discoveries_id.push(discovery._id);
+      //       break;
+      //     }
+      //     else discoveries[i] = null;
+      //   }
+      // }
+      // Session.set('discoveries', discoveries);
 
-      _.each(_.values(discoveries), function(discovery) {
-        if(discovery){
-          var location = new google.maps.LatLng(discovery.index.coordinates[1], discovery.index.coordinates[0]);
-          self.addMarker(location, 'pin--star.svg');
-        }
-      });
+      // _.each(_.values(discoveries), function(discovery) {
+      //   if(discovery){
+      //     var location = new google.maps.LatLng(discovery.index.coordinates[1], discovery.index.coordinates[0]);
+      //     self.addMarker(location, 'pin--star.svg');
+      //   }
+      // });
 
     });
   };

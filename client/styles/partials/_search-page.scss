@@ -3,7 +3,6 @@
   width: 100%;
 
   @include display(flex);
-
   @include flex-direction(column);
 
   .navigation {
@@ -12,10 +11,12 @@
 
   &__content {
     @include flex(1 0 auto);
-
     @include display(flex);
-
     @include flex-direction(row);
+
+    &--is-loading {
+      opacity: 0.2;
+    }
   }
 
   &__content {

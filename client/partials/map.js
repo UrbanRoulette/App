@@ -29,16 +29,14 @@ Template.map.onRendered(function() {
         if (Session.get('activities_results').length === 0) {
           return;
         }
-
+        
         // Loop trough each result
-        _.each(Session.get('activities_results'), function(activity) {
-
-          // Create location object
+        _.each(Session.get('activities_results'), function(activity, index) {
           var location = new google.maps.LatLng(activity.index.coordinates[1], activity.index.coordinates[0]);
           helper.addLocation(location);
 
           // If last address
-          if (activity._id == _.last(Session.get('activities_results'))._id) {
+          if (index + 1 === Session.get('activities_results').length) {
 
             // Reset style to normal
             helper.mapActive();

@@ -1,4 +1,4 @@
-var get_results = function(center){
+var get_results = function(center, callback){
 
     var max_radius = 10;
     var profile = ["gratuit", "cheap", "exterieur", "curieux", "couple", "solo", "potes", "prestige"];
@@ -28,11 +28,14 @@ var get_results = function(center){
         Session.set('activities_drawn', activities_drawn);
         Session.set('activities_locked', activities_locked);
         Session.set('activities_results', result);
+
+        if(typeof(callback) == 'function') callback();
       }
     });
 };
 
 var callServer = function() {
+  Session.set('loading', true)
   if (GoogleMaps.loaded()) {
     var geocoder = new google.maps.Geocoder();
 
@@ -50,11 +53,15 @@ var callServer = function() {
             if(error) console.log(error);
             else {
               Session.set("weather",result);
-              get_results(center);
+              get_results(center, function(){
+                Session.set('loading', false)
+              });
             }
           });
         }
-        else get_results(center);
+        else get_results(center, function(){
+          Session.set('loading', false)
+        });
       }
     });
   }

@@ -3,7 +3,7 @@
 		
 		{{>navigation}}
 
-		<div class="search-page__content">
+		<div class="search-page__content {{#if isLoading}}search-page__content--is-loading{{/if}}">
 			<div class="search-page__content__result">
 				<!-- {{result}} -->
 				{{> activityList}}
