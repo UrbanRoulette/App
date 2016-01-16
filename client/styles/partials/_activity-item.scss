@@ -93,16 +93,16 @@
       @include flex(1 0 auto);
     }
 
-    &__lock {
+    .oi {
       display: none;
-      &--locked {
-        display: block;
-      }
+    }
+    .oi[data-glyph=lock-locked] {
+      display: block;
     }
   }
 
   &:hover {
-    .activity-item__timeline__lock {
+    .oi {
       display: block;
     }
   }
