@@ -1,3 +1,37 @@
+var get_results = function(center){
+
+    var max_radius = 10;
+    var profile = ["gratuit", "cheap", "exterieur", "curieux", "couple", "solo", "potes", "prestige"];
+    var date = new Date();
+    var timezoneOffset = date.getTimezoneOffset();
+    var current_results = Session.get("activities_results");
+    var last_start_date = (typeof current_results !== "undefined") ? current_results[0].start_date : null;
+    var diff_time = last_start_date ? (date - last_start_date) : 0;
+
+    if(typeof Session.get("activities_locked") === 'undefined') Session.set("activities_locked", []);
+    if(typeof Session.get("activities_drawn") === 'undefined') Session.set("activities_drawn", []);
+    if(typeof Session.get("types_removed") === 'undefined') Session.set("types_removed", []);
+
+    Meteor.apply('get_activities_results', [center,max_radius,date,timezoneOffset,diff_time,profile,Session.get("weather"),Session.get("activities_locked"),Session.get("activities_drawn"),Session.get("types_removed")], true, function(error, result) {
+      if (error) console.log(error);
+      else {
+        var activities_locked = [];
+        var activities_drawn = Session.get("activities_drawn");
+        _.each(Session.get("activities_locked"),function(activity,index){
+          activities_drawn.splice(activities_drawn.indexOf(activity._id),1);
+        });
+        if(_.some(result, function(activity){return activities_drawn.indexOf(activity._id) !== -1;})) activities_drawn = [];
+        _.each(result,function(activity,index){
+          if(activity.locked) activities_locked.push(activity);
+          activities_drawn.push(activity._id);
+        });
+        Session.set('activities_drawn', activities_drawn);
+        Session.set('activities_locked', activities_locked);
+        Session.set('activities_results', result);
+      }
+    });
+};
+
 var callServer = function() {
   if (GoogleMaps.loaded()) {
     var geocoder = new google.maps.Geocoder();
@@ -10,27 +44,17 @@ var callServer = function() {
           lat: results[0].geometry.location.lat(),
           lng: results[0].geometry.location.lng()
         };
-        var date = new Date();
-
-        //var timezoneOffset = date.getTimezoneOffset();
-        var profile = ["gratuit", "cheap", "exterieur", "curieux", "couple", "solo", "potes", "prestige"];
-        var timezoneOffset = 0;
-        var activities_locked = Session.get('activities_locked');
-        if(activities_locked){} else activities_locked = [];
-        //console.log(timezoneOffset);
-        var radius = 10 / 3963.192; //Converts miles into radians. Should be divided by 6378.137 for kilometers
-        Meteor.apply('get_activities_results', [center,radius,date,profile,timezoneOffset,activities_locked], true, function(error, result) {
-          if (error)
-            console.log(error);
-          else {
-            var activities_locked = [];
-            for(k=0;k<result.length;k++){
-              if(result[k].locked) activities_locked.push(result[k]);
+        Session.set("currentSearchLatLng", [center.lng,center.lat]);
+        if(typeof Session.get("weather") === "undefined"){
+          Meteor.apply('get_weather',[center],true,function(error,result){
+            if(error) console.log(error);
+            else {
+              Session.set("weather",result);
+              get_results(center);
             }
-            Session.set('activities_locked', activities_locked);
-            Session.set('activities_results',result);
-          }
-        });
+          });
+        }
+        else get_results(center);
       }
     });
   }
@@ -54,11 +78,12 @@ Template.activityList.onRendered(function() {
     if (_.isNumber(Session.get('pin_hovered_id'))) {
       self.$('.activity-list__activity:eq(' + Session.get('pin_hovered_id') + ')').addClass('activity-list__activity--hovered');
     }
-  })
-})
+  });
+});
 
 Template.activityList.events({
   'click .activity-list__retry': function() {
+    Session.set("activities_switched", []);
     callServer();
   },
   'mouseenter .activity-list__activity': function(event) {

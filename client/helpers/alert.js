@@ -4,4 +4,4 @@ Alert = function(text, type) {
   setTimeout(function() {
     $('.alert').remove();
   }, 2000);
-}
+};

@@ -27,8 +27,19 @@
 					lock?
 				{{/if}}
 			</span>
+			<span class="activity-item__timeline__switch">
+				switch
+			</span>
+			<span class="activity-item__timeline__delete">
+				delete
+			</span>
 			<hr>
 			<time>{{time_end}}</time>
 		</div>
 	</div>
+
+	{{#with discovery}}
+		{{> discoveryItem}}
+	{{/with}}
+
 </template>

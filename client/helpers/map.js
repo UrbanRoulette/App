@@ -243,12 +243,13 @@ googleMapHelper = function(map) {
         }
       });
 
-      // if (secondRun) return;
+      if (secondRun) return;
 
-      // var discoveries = Meteor.call('get_discoveries_and_transportation',legs);
-      var discoveries = [];
+//      var discoveries = Meteor.call('get_discoveries_and_transportation',legs);
+      var discoveries = {};
       var duration = [];
-
+      var discoveries_id = [];
+      
       for (i = 0; i < legs.length; i++) {
         var leg = legs[i];
         var steps = leg.steps;
@@ -258,6 +259,7 @@ googleMapHelper = function(map) {
           var discovery = null;
           for (l = 0; l < lat_lngs.length; l++) {
             discovery = Activities.findOne({
+              _id: {$nin: discoveries_id},
               "classification.class": {
                 $in: ["Discovery"]
               },
@@ -274,15 +276,20 @@ googleMapHelper = function(map) {
             if (discovery) break;
           }
           if (discovery) {
-            discoveries.push(Object(discovery));
+            discoveries[i] = Object(discovery);
+            discoveries_id.push(discovery._id);
             break;
           }
+          else discoveries[i] = null;
         }
       }
+      Session.set('discoveries', discoveries);
 
-      _.each(discoveries, function(discovery) {
-        var location = new google.maps.LatLng(discovery.index.coordinates[1], discovery.index.coordinates[0]);
-        self.addMarker(location, 'pin--star.svg');
+      _.each(_.values(discoveries), function(discovery) {
+        if(discovery){
+          var location = new google.maps.LatLng(discovery.index.coordinates[1], discovery.index.coordinates[0]);
+          self.addMarker(location, 'pin--star.svg');
+        }
       });
 
     });
