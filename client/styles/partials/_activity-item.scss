@@ -95,10 +95,18 @@
 
     .oi {
       display: none;
+      color: $c-grey;
     }
+
     .oi[data-glyph=lock-locked] {
       display: block;
     }
+    .oi:hover{
+      cursor: pointer;
+    }
+    .oi[data-glyph=ban]:hover { color: $c-red; }
+    .oi[data-glyph=loop]:hover { color: $c-blue; }
+    .oi[data-glyph=lock-locked]:hover,.oi[data-glyph=lock-unlocked]:hover { color: $c-blue;}
   }
 
   &:hover {
