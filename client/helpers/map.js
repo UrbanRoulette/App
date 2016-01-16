@@ -229,6 +229,7 @@ googleMapHelper = function(map) {
     };
 
     self.directionsService.route(request, function(result, status) {
+      self.clearMarkers();
       if (status == google.maps.DirectionsStatus.OK) self.directionsDisplay.setDirections(result);
       var legs = result.routes[0].legs;
       _.each(legs, function(leg, index) {
