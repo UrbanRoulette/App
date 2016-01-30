@@ -1,6 +1,6 @@
 <template name="navigation">
 	<div class="navigation">
-		<a class="navigation__logo" href="{{pathFor route='home'}}"><h5>UrbanRoulette</h5></a>
+		<a class="navigation__logo" href="{{pathFor route='home'}}"><h5>UR</h5></a>
 
 		{{> searchForm}}
 
@@ -21,11 +21,11 @@
 		</select> -->
 
 		{{#if currentUser}}
-     <a href="{{pathFor route='profile'}}">Profile</a>
-     <a href="#" class="logout">Logout</a>
+     <!-- <a class="navigation__profile" href="{{pathFor route='profile'}}">Profile</a>
+     <a class="navigation__logout" href="#" class="logout">Logout</a> -->
      {{else}}
-     <a href="{{pathFor route='login'}}">login</a>
-     <a href="{{pathFor route='signup'}}">signup</a>
+     <!-- <a class="navigation__login" href="{{pathFor route='login'}}">login</a>
+     <a class="navigation__signup" href="{{pathFor route='signup'}}">signup</a> -->
      {{/if}}
 	</div>
 </template>

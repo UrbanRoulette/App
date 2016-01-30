@@ -1,15 +1,17 @@
 .navigation {
   background: $c-white;
   border: 1px solid #ddd;
-  @include rem(padding, 0.5, 0);
+  @include rem(padding, 1);
   @include display(flex);
   @include align-items(center);
   @include justify-content(center);
   @include flex-direction(row);
 
+
   &__logo {
     color: $c-primary;
     text-decoration: none;
+    @include rem(margin-right, 0.5);
   }
 
   .search-form {
@@ -17,6 +19,6 @@
   }
 
   a {
-    @include rem(padding, 0.5, 1);
+    // @include rem(padding, 0.5, 1);
   }
 }

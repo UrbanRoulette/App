@@ -2,6 +2,9 @@
   .input-wrapper {
     position: relative;
     width: 100%;
+    input {
+      @include rem(padding-right, 2);
+    }
     .input-clear {
       position: absolute;
       top: 50%;

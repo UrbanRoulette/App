@@ -14,6 +14,10 @@
     @include display(flex);
     @include flex-direction(row);
 
+    @include respond-to(handhelds) {
+      flex-direction: column-reverse;
+    }
+
     &--is-loading {
       opacity: 0.2;
     }
@@ -22,14 +26,21 @@
   &__content {
     &__map, &__result {
       @include flex(1 0 auto);
+      @include respond-to(handhelds) {
+        width: 100%!important;
+      }
     }
 
     &__result {
       position: relative;
-      width: 600px;
+      width: 60%;
+      @include respond-to(handhelds) {
+        @include flex(3);
+      }
 
       .activity-list {
         overflow: scroll;
+        -webkit-overflow-scrolling: touch;
         position: absolute;
         left: 0;
         right: 0;
@@ -40,15 +51,15 @@
 
     &__map {
       position: relative;
-      width: calc(100% - 600px);
-
+      width: 40%;
       @include align-items(stretch);
-
       @include display(flex);
 
-      .map-container {
-        // @include flex(1);
+      @include respond-to(handhelds) {
+        @include flex(1);
+      }
 
+      .map-container {
         position: absolute;
         left: 0;
         right: 0;
