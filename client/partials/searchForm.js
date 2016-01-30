@@ -7,7 +7,13 @@ Template.searchForm.onRendered(function() {
         types: ["geocode"]
       });
     }
+    if(self.$('input[name="location"]').val().length > 0) {
+      self.$('.input-clear').show();
+    } else {
+      self.$('.input-clear').hide();
+    }
   });
+
 });
 
 Template.searchForm.helpers({
@@ -40,6 +46,21 @@ Template.searchForm.events({
       keyword: location
     });
 
+  },
+
+  // Show/hide input cleaner
+  'input input, focus input': function(event, template) {
+    if(event.currentTarget.value.length > 0) {
+      template.$('.input-clear').show();
+    } else {
+      template.$('.input-clear').hide();
+    }
+  },
+
+  'click .input-clear': function(event, template) {
+    event.preventDefault();
+    template.$('input[name="location"]').val('');
+    template.$('.input-clear').hide();
   },
 
   // When submitting the form

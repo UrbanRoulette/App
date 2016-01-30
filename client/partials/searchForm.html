@@ -1,6 +1,9 @@
 <template name="searchForm">
 	<form class="search-form single-input">
-		<input name="location" type="text" value="{{searchValue}}" placeholder="Type a neighborhood or an address" required disabled="{{#if isLoading}}disabled{{/if}}">
+    <div class="input-wrapper">
+  		<input name="location" type="text" value="{{searchValue}}" placeholder="Type a neighborhood or an address" required disabled="{{#if isLoading}}disabled{{/if}}">
+      <a href="#" class="input-clear"><i class="oi" data-glyph="x"></i></a>
+    </div>
 		<button type="submit" disabled="{{#if isLoading}}disabled{{/if}}">Go</button>
 	</form>
 </template>

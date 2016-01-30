@@ -1,4 +1,17 @@
-.search-form {}
+.search-form {
+  .input-wrapper {
+    position: relative;
+    width: 100%;
+    .input-clear {
+      position: absolute;
+      top: 50%;
+      padding: 0;
+      color: $c-grey;
+      @include transform(translateY(-50%));
+      @include rem(right, 0.5);
+    }
+  }
+}
 
 /*------------------------------------*\
   SINGLE INPUT DISPLAY
