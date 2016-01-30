@@ -1,7 +1,7 @@
 Template.activityItem.onCreated(function() {
   var self = this;
   var canBeTruncated = this.data.main.description.length > 200;
-  this.locked = typeof(this.locked) == 'undefined' ? false : this.locked;
+  this.locked = typeof(this.data.locked) == 'undefined' ? false : this.data.locked;
   this.state = new ReactiveDict();
   this.state.set('canBeTruncated', canBeTruncated);
   this.state.set('truncated', true);
@@ -68,9 +68,10 @@ Template.activityItem.events({
   },
   'click .activity-item__timeline__switch': function(event, template){
     event.preventDefault();
-    switchActivity(this._id);
+    switchActivity(this);
   },
   'click .activity-item__timeline__delete': function(event, template){
+    event.preventDefault();
     var confirmText = "Supprimer cette activité évitera qu'elle ressorte au cours de prochains tirages de votre session.";
     if(confirmText) removeActivity(this);
   }

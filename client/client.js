@@ -70,22 +70,22 @@ callServer = function() {
 };
 
 // Should be BE method
-switchActivity = function(id){
+switchActivity = function(activity){
   var activities_switched = typeof(Session.get('activities_switched')) !== 'undefined' ? Session.get('activities_switched') : [];
-  activities_switched.push(id);
+  activities_switched.push(activity._id);
   Session.set('activities_switched', activities_switched);
 
   var activities_results = Session.get('activities_results');
-  var index = _.indexOf(activities_results, _.findWhere(activities_results, {_id: self._id}));
+  var index = _.indexOf(activities_results, _.findWhere(activities_results, {_id: activity._id}));
   //Recording locations
-  if(index > 0) self.previous_coord = activities_results[index-1].index.coordinates;
-  if(index < activities_results.length - 1) self.next_coord = activities_results[index+1].index.coordinates; 
-  self.initial_coord = Session.get("currentSearchLatLng");
+  if(index > 0) activity.previous_coord = activities_results[index-1].index.coordinates;
+  if(index < activities_results.length - 1) activity.next_coord = activities_results[index+1].index.coordinates; 
+  activity.initial_coord = Session.get("currentSearchLatLng");
 
   var profile = ["gratuit", "cheap", "exterieur", "curieux", "couple", "solo", "potes", "prestige"];
   var max_radius = 10; //Converts miles into radians. Should be divided by 6378.137 for kilometers
   var timezoneOffset = new Date().getTimezoneOffset();
-  Meteor.apply('switch_activity', [self,activities_switched,max_radius,timezoneOffset,profile,Session.get("weather")], true, function(error, result) {
+  Meteor.apply('switch_activity', [activity,activities_switched,max_radius,timezoneOffset,profile,Session.get("weather")], true, function(error, result) {
     if (error)
       console.log(error);
     else {
