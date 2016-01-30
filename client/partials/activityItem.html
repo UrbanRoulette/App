@@ -4,10 +4,10 @@
 		<div class="activity-item__content" >
 			<div class="activity-item__picture" style="background-image: url({{main.image}});" data-price="{{main.price}}€"></div>
 			<h2 class="activity-item__title">{{main.specific}}<span class="activity-item__title__name"> - {{main.name}}</span></h2>
-			<a class="activity-item__address" href="http://maps.google.com/?q={{address}}" target="_blank">
+			<a class="activity-item__address" href="http://maps.google.com/?q={{address.formatted_address}}" target="_blank">
 				<address>{{address.formatted_address}}</address>
 			</a>
-			<p class="activity-item__description">
+			<p class="activity-item__description" style="display:none;">
 				{{{description}}}
 				{{#if canBeTruncated}}
 					<a href="#" class="activity-item__description__expand">
@@ -37,9 +37,11 @@
 			<time>{{time_end}}</time>
 		</div>
 	</div>
-
-	{{#with discovery}}
+	
+	<!-- 
+	{{##with discovery}}
 		{{> discoveryItem}}
 	{{/with}}
+	 -->
 
 </template>
