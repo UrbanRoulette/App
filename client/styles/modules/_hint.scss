@@ -1,0 +1,37 @@
+$hint-background: $c-black;
+$hint-color: $c-white;
+
+[data-hint] {
+  position: relative;
+  &:after {
+    display: none;
+    content: attr(data-hint);
+    position: absolute;
+    background: $hint-background;
+    color: $hint-color;
+    white-space: nowrap;
+    border-radius: 3px;
+    @include font-size(0.9);
+    @include rem(padding, 0.3, 0.5);
+  }
+
+  &[data-hint-right]:after, &[data-hint-left]:after {
+    top: 50%;
+    @include transform(translateY(-50%));
+  }
+
+  &[data-hint-right]:after { left: 100%; }
+  &[data-hint-left]:after { right: 100%;}
+
+  &[data-hint-top]:after, &[data-hint-bottom]:after {
+    left: 50%;
+    @include transform(translateX(-50%));
+  }
+
+  &[data-hint-top]:after { bottom: 100%; }
+  &[data-hint-bottom]:after { top: 100%; }
+
+  &:hover:after {
+    display: inline-block;
+  }
+}

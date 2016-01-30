@@ -1,14 +1,16 @@
 <template name="activityList">
 	<ul class="activity-list">
-		{{#if isNotEmpty}}
-			<li class="activity-list__retry"><button class="button--full-width">Retry</button></li>
+		{{#if showEmpty}}
+			<li class="activity-list__empty" >
+				{{>emptyView title=getEmptyTitle text=getEmptyText showSpinner=isLoading}}
+			</li>
+		{{else}}
+			<li class="activity-list__retry">
+				<button class="button--full-width">Retry</button>
+			</li>
 			{{#each activities}}
 				<li class="activity-list__activity" data-index="{{@index}}">{{> activityItem}}</li>
 	    {{/each}}
-		{{else}}
-		<li class="activity-list__empty" >
-			{{>emptyView title="No result" text="Sorry, it seems like there is no activity to display for this location. Try to search for another address!"}}
-		</li>
 		{{/if}}
 	</ul>
 </template>

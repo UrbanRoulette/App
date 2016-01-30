@@ -1,72 +1,3 @@
-var get_results = function(center, callback){
-
-    var max_radius = 10;
-    var profile = ["gratuit", "cheap", "exterieur", "curieux", "couple", "solo", "potes", "prestige"];
-    var date = new Date();
-    var timezoneOffset = date.getTimezoneOffset();
-    var current_results = Session.get("activities_results");
-    var last_start_date = (typeof current_results !== "undefined") ? current_results[0].start_date : null;
-    var diff_time = last_start_date ? (date - last_start_date) : 0;
-
-    if(typeof Session.get("activities_locked") === 'undefined') Session.set("activities_locked", []);
-    if(typeof Session.get("activities_drawn") === 'undefined') Session.set("activities_drawn", []);
-    if(typeof Session.get("types_removed") === 'undefined') Session.set("types_removed", []);
-
-    Meteor.apply('get_activities_results', [center,max_radius,date,timezoneOffset,diff_time,profile,Session.get("weather"),Session.get("activities_locked"),Session.get("activities_drawn"),Session.get("types_removed")], true, function(error, result) {
-      if (error) console.log(error);
-      else {
-        var activities_locked = [];
-        var activities_drawn = Session.get("activities_drawn");
-        _.each(Session.get("activities_locked"),function(activity,index){
-          activities_drawn.splice(activities_drawn.indexOf(activity._id),1);
-        });
-        if(_.some(result, function(activity){return activities_drawn.indexOf(activity._id) !== -1;})) activities_drawn = [];
-        _.each(result,function(activity,index){
-          if(activity.locked) activities_locked.push(activity);
-          activities_drawn.push(activity._id);
-        });
-        Session.set('activities_drawn', activities_drawn);
-        Session.set('activities_locked', activities_locked);
-        Session.set('activities_results', result);
-
-        if(typeof(callback) == 'function') callback();
-      }
-    });
-};
-
-var callServer = function() {
-  Session.set('loading', true)
-  if (GoogleMaps.loaded()) {
-    var geocoder = new google.maps.Geocoder();
-
-    geocoder.geocode({
-      'address': Session.get("currentSearch")
-    }, function(results, status) {
-      if (status === google.maps.GeocoderStatus.OK) {
-        var center = {
-          lat: results[0].geometry.location.lat(),
-          lng: results[0].geometry.location.lng()
-        };
-        Session.set("currentSearchLatLng", [center.lng,center.lat]);
-        if(typeof Session.get("weather") === "undefined"){
-          Meteor.apply('get_weather',[center],true,function(error,result){
-            if(error) console.log(error);
-            else {
-              Session.set("weather",result);
-              get_results(center, function(){
-                Session.set('loading', false)
-              });
-            }
-          });
-        }
-        else get_results(center, function(){
-          Session.set('loading', false)
-        });
-      }
-    });
-  }
-};
-
 Template.activityList.onCreated(function() {
   var self = this;
   if (!Session.get('activities_results')) return callServer();
@@ -105,8 +36,21 @@ Template.activityList.helpers({
   activities: function() {
     return Session.get('activities_results');
   },
-  isNotEmpty: function() {
-    if (typeof(Session.get('activities_results')) === 'undefined') return false;
-    return Session.get('activities_results').length !== 0;
+  showEmpty: function(){
+    return Helpers.activity.isEmpty() || Session.get('loading');
   },
+  getEmptyTitle: function(){
+    if(Session.get('loading')) return "Loading";
+    if(Helpers.activity.isEmpty()) return "No result";
+  },
+  getEmptyText: function(){
+    if(Session.get('loading')) return "We're loading your result, hang tight!";
+    if(Helpers.activity.isEmpty()) return "Sorry, it seems like there is no activity to display for this location. Try to search for another address!";
+  },
+  isEmpty: function() {
+    return Helpers.activity.isEmpty();
+  },
+  isLoading: function() {
+    return Session.get('loading')
+  }
 });

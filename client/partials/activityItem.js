@@ -37,7 +37,13 @@ Template.activityItem.helpers({
     var discoveries = Session.get('discoveries');
     if(typeof discoveries !== "undefined")
       return discoveries[this.rank];
-  }
+  },
+  showSwitch: function() {
+    return !Template.instance().state.get('isLocked');
+  },
+  showDelete: function() {
+    return !Template.instance().state.get('isLocked');
+  },
 });
 
 Template.activityItem.events({
@@ -47,6 +53,7 @@ Template.activityItem.events({
     template.$('.activity-item__description__expand').text(Template.instance().state.get('truncated') ? "Show less" : "Show more");
   },
   'click .activity-item__timeline__lock': function(event, template){
+    event.preventDefault();
     var self = this;
     var activities_locked = Session.get('activities_locked');
 
@@ -60,53 +67,11 @@ Template.activityItem.events({
     Session.set('activities_locked', activities_locked);
   },
   'click .activity-item__timeline__switch': function(event, template){
-    var self = this;
-    if(self.locked){
-      alert("Vous devez unlocker cette activité avant de la switcher !");
-    }
-    else {
-      var activities_switched = typeof(Session.get('activities_switched')) !== 'undefined' ? Session.get('activities_switched') : [];
-      activities_switched.push(this._id);
-      Session.set('activities_switched', activities_switched);
-
-      var activities_results = Session.get('activities_results');
-      var index = _.indexOf(activities_results, _.findWhere(activities_results, {_id: self._id}));
-      //Recording locations
-      if(index > 0) self.previous_coord = activities_results[index-1].index.coordinates;
-      if(index < activities_results.length - 1) self.next_coord = activities_results[index+1].index.coordinates; 
-      self.initial_coord = Session.get("currentSearchLatLng");
-
-      var profile = ["gratuit", "cheap", "exterieur", "curieux", "couple", "solo", "potes", "prestige"];
-      var max_radius = 10; //Converts miles into radians. Should be divided by 6378.137 for kilometers
-      var timezoneOffset = new Date().getTimezoneOffset();
-      Meteor.apply('switch_activity', [self,activities_switched,max_radius,timezoneOffset,profile,Session.get("weather")], true, function(error, result) {
-        if (error)
-          console.log(error);
-        else {
-          if(typeof result === "object"){
-            if(activities_switched.indexOf(result._id) > -1) Session.set('activities_switched',[result._id]);
-            activities_results.splice(index,1,result);
-            Session.set('activities_results',activities_results);
-          }
-          else alert(result);
-        }
-      });
-    }
+    event.preventDefault();
+    switchActivity(this._id);
   },
   'click .activity-item__timeline__delete': function(event, template){
-    var self = this;
-    if(self.locked){
-      alert("Vous devez unlocker cette activité avant de la supprimer !");
-    }
-    else if(confirm("Supprimer cette activité évitera qu'elle ressorte au cours de prochains tirages de votre session.")){
-      //Removing types from next draws
-      var types_removed = typeof(Session.get('types_removed')) !== 'undefined' ? Session.get('types_removed') : [];
-      types_removed.push(self.classification.type);
-      Session.set('types_removed', types_removed);
-      //Deleting activity
-      var activities_results = Session.get("activities_results");
-      activities_results.splice(_.indexOf(activities_results, _.findWhere(activities_results, {_id: self._id})),1);
-      Session.set("activities_results",activities_results);
-    }
-  },
+    var confirmText = "Supprimer cette activité évitera qu'elle ressorte au cours de prochains tirages de votre session.";
+    if(confirmText) removeActivity(this);
+  }
 });

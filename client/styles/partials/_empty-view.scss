@@ -12,4 +12,12 @@
     @include rem(margin-top, 1);
     @include font-size(1.1);
   }
+
+  &__spinner-wrapper {
+    width: 60px;
+    height: 60px;
+    position: relative;
+    display: inline-block;
+    @include rem(margin-bottom, 0);
+  }
 }

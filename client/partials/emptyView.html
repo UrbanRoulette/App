@@ -1,5 +1,8 @@
 <template name="emptyView">
-  <div class="empty-view">  
+  <div class="empty-view">
+    {{#if showSpinner}}
+      <div class="empty-view__spinner-wrapper">{{> spinner}}</div>
+    {{/if}}
     <h4 class="empty-view__title">{{title}}</h4>
     <p class="empty-view__text">{{text}}</p>
   </div>
