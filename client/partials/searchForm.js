@@ -13,6 +13,9 @@ Template.searchForm.onRendered(function() {
 Template.searchForm.helpers({
   searchValue: function() {
     return Session.get('currentSearch') ? Session.get('currentSearch') : "";
+  },
+  isLoading: function() {
+    return Session.get('loading');
   }
 });
 

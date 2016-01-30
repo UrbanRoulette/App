@@ -89,7 +89,7 @@ switchActivity = function(activity){
     if (error)
       console.log(error);
     else {
-      if(typeof result === "object"){
+      if(typeof result === "object") {
         if(activities_switched.indexOf(result._id) > -1) Session.set('activities_switched',[result._id]);
         activities_results.splice(index,1,result);
         Session.set('activities_results',activities_results);

@@ -26,6 +26,7 @@ $button-radius: $base-radius;
   &:disabled {
     background: tint($colour, 40);
     border: 1px solid tint($colour, 40);
+    color: rgba(text-color($colour), 0.5);
   }
 }
 
@@ -39,21 +40,14 @@ $button-radius: $base-radius;
   cursor: pointer;
   font-weight: 500;
   position: relative;
-
+  
   @include box-shadow(none);
-
   @include block-align(middle);
-
   @include transition-property(background-color, outline, color);
-
   @include transition-duration(0.2s);
-
   @include transition-timing-function($transition-easing);
-
   @include button($c-primary);
-
   @include font-size(1);
-
   @include round-px("padding", 1 / 3, 1);
 
   &.button--full-width {
